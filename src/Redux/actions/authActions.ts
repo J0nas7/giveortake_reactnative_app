@@ -1,5 +1,5 @@
 import { Dispatch } from 'redux';
-import { setAuthUser, setIsLoggedIn } from '../slices/authSlice';
+import { setAuthUser, setAuthUserOrganisation, setAuthUserSeat, setAuthUserTaskTimeTrack, setIsLoggedIn } from '../slices/authSlice';
 import { useStorage, useAxios } from '@/src/Hooks';
 
 export const useAuthActions = () => {
@@ -19,7 +19,7 @@ export const useAuthActions = () => {
     // Fetches the user's logged-in status from the server and updates the Redux store accordingly.
     const fetchIsLoggedInStatus = () => async (dispatch: Dispatch) => {
         try {
-            const data = await httpGetRequest('auth/me');
+            const data = await httpGetRequest("auth/me")
             
             if (
                 data &&
@@ -29,6 +29,13 @@ export const useAuthActions = () => {
                 // Update the Redux store with the user's logged-in status and details
                 dispatch(setIsLoggedIn(true));
                 dispatch(setAuthUser(data.userData));
+
+                if (Array.isArray(data.userSeats) && data.userSeats.length) {
+                    dispatch(setAuthUserSeat({ "data": data.userSeats[0] }))
+                }
+                
+                dispatch(setAuthUserOrganisation({ "data": data.userOrganisation }))
+                dispatch(setAuthUserTaskTimeTrack(data.userActiveTimeTrack))
             } else {
                 // Handle user not logged in (clear stored tokens)
                 await deleteItem('accessToken'); // Remove token from AsyncStorage

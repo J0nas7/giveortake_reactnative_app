@@ -1,21 +1,34 @@
 // External
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { View, Text, Button, StyleSheet, ScrollView, TouchableOpacity, FlatList, Dimensions, DimensionValue } from "react-native";
-import { useRoute, useNavigation } from "@react-navigation/native";
+import { useRoute, useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import { faClock, faSliders } from "@fortawesome/free-solid-svg-icons";
+import { faClock, faLightbulb, faSliders } from "@fortawesome/free-solid-svg-icons";
 import { PieChart } from 'react-native-chart-kit';
 
 // Internal
 import { Project, TaskTimeTrack, TeamUserSeat } from "@/src/Types";
 import { useProjectsContext, useTaskTimeTrackContext, useTeamUserSeatsContext } from "@/src/Contexts";
 import { SecondsToTimeDisplay } from "../Components/CreatedAtToTimeSince";
+import useMainViewJumbotron from "../Hooks/useMainViewJumbotron";
 
 export const TimeTracksView = () => {
+    // Hooks
     const route = useRoute();
     const navigation = useNavigation();
     const { t } = useTranslation(["timetrack"]);
+    const { projectById, readProjectById } = useProjectsContext();
+    const { taskTimeTracksByProjectId, getTaskTimeTracksByProject } = useTaskTimeTrackContext();
+    const { teamUserSeatsById, readTeamUserSeatsByTeamId } = useTeamUserSeatsContext();
+    const { handleScroll, handleFocusEffect } = useMainViewJumbotron({
+        title: `Time Entries`,
+        faIcon: faClock,
+        visibility: 100,
+        rightIcon: faLightbulb,
+        rightIconActionRoute: "Project",
+        rightIconActionParams: { id: ((projectById && projectById?.Project_ID) ?? "").toString() },
+    })
 
     const {
         id: projectId,
@@ -31,14 +44,12 @@ export const TimeTracksView = () => {
         taskIds?: string;
     };
 
+    // State
     const [filterTimeEntries, setFilterTimeEntries] = useState(false);
 
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
     const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
 
-    const { projectById, readProjectById } = useProjectsContext();
-    const { taskTimeTracksByProjectId, getTaskTimeTracksByProject } = useTaskTimeTrackContext();
-    const { teamUserSeatsById, readTeamUserSeatsByTeamId } = useTeamUserSeatsContext();
 
     const [renderProject, setRenderProject] = useState<Project | undefined>();
     const [renderTimeTracks, setRenderTimeTracks] = useState<TaskTimeTrack[] | undefined>();
@@ -46,6 +57,7 @@ export const TimeTracksView = () => {
     const [sortedByDuration, setSortedByDuration] = useState<TaskTimeTrack[]>([]);
     const [sortedByLatest, setSortedByLatest] = useState<TaskTimeTrack[]>([]);
 
+    // Methods
     const getPreviousWeekStartAndEnd = () => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -73,6 +85,7 @@ export const TimeTracksView = () => {
     const [startDate, setStartDate] = useState<string>(startDateParam || defaultStart);
     const [endDate, setEndDate] = useState<string>(endDateParam || defaultEnd);
 
+    // Effects
     useEffect(() => {
         if (urlUserIds) {
             // If userIds exist in the URL, use them
@@ -149,25 +162,16 @@ export const TimeTracksView = () => {
         }
     }, [renderProject]);
 
+    useFocusEffect(
+        useCallback(() => {
+            handleFocusEffect();
+        }, [])
+    );
+
     if (!renderProject) return null;
 
     return (
         <ScrollView style={styles.timeTracksContainer}>
-            <TouchableOpacity onPress={() => navigation.goBack()}>
-                <Text style={styles.backLink}>&laquo; Go to Project</Text>
-            </TouchableOpacity>
-
-            <View style={styles.header}>
-                <Text style={styles.title}>{t("timetrack.title")}: {renderProject.Project_Name}</Text>
-                <TouchableOpacity
-                    onPress={() => setFilterTimeEntries(!filterTimeEntries)}
-                    style={styles.filterButton}
-                >
-                    <FontAwesomeIcon icon={faSliders} />
-                    <Text style={styles.filterButtonText}>Filter Time Entries</Text>
-                </TouchableOpacity>
-            </View>
-
             <View style={styles.section}>
                 <TimeSummary timeTracks={renderTimeTracks} />
             </View>

@@ -47,3 +47,23 @@ export const SecondsToTimeDisplay = ({ totalSeconds }: { totalSeconds: number })
 
     return <>{formattedTime}</>
 }
+
+export const TimeSpentDisplay = ({ startTime }: { startTime: string }) => {
+    const [diffInSeconds, setDiffInSeconds] = useState<number>(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const startDate = new Date(startTime);
+            const currentDate = new Date();
+            const diffInMilliseconds = currentDate.getTime() - startDate.getTime();
+            const diffInSeconds = Math.floor(diffInMilliseconds / 1000);
+
+            setDiffInSeconds(diffInSeconds)
+        }, 1000);
+
+        // Cleanup interval on component unmount
+        return () => clearInterval(interval);
+    }, [startTime]);
+
+    return <SecondsToTimeDisplay totalSeconds={diffInSeconds} />
+};

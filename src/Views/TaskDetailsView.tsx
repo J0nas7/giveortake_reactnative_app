@@ -1,24 +1,37 @@
 // External
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, TextInput, Image, Button, ViewStyle, Clipboard, Alert } from 'react-native';
-import { NavigationProp, useNavigation, useRoute } from '@react-navigation/native';
+import { NavigationProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faArrowUpFromBracket, faPaperPlane, faPencil, faTrashCan, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faArrowUpFromBracket, faLightbulb, faPaperPlane, faPencil, faPlay, faStop, faTrashCan, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { Picker } from '@react-native-picker/picker';
 
 // Internal
-import { useTaskCommentsContext, useTaskMediaFilesContext, useTasksContext } from '@/src/Contexts';
-import { MainStackParamList, Task, TaskComment, TaskMediaFile, User } from '@/src/Types';
-import { CreatedAtToTimeSince } from '../Components/CreatedAtToTimeSince';
-import { selectAuthUser, useTypedSelector } from '../Redux';
+import { useTaskCommentsContext, useTaskMediaFilesContext, useTasksContext, useTaskTimeTrackContext } from '@/src/Contexts';
+import { MainStackParamList, Task, TaskComment, TaskMediaFile, TaskTimeTrack, User } from '@/src/Types';
+import { CreatedAtToTimeSince, SecondsToTimeDisplay, TimeSpentDisplay } from '../Components/CreatedAtToTimeSince';
+import { selectAuthUser, selectAuthUserTaskTimeTrack, useTypedSelector } from '../Redux';
+import useMainViewJumbotron from '../Hooks/useMainViewJumbotron';
 
 export const TaskDetailsView = () => {
+    // Hooks
     const navigation = useNavigation<NavigationProp<MainStackParamList>>();
     const route = useRoute();
     const { projectKey, taskKey } = route.params as { projectKey: string; taskKey: string };
     const { taskByKeys, readTaskByKeys, setTaskDetail } = useTasksContext();
+    const { handleScroll, handleFocusEffect } = useMainViewJumbotron({
+        title: `Task Details`,
+        faIcon: undefined,
+        visibility: 100,
+        rightIcon: faLightbulb,
+        rightIconActionRoute: "Project",
+        rightIconActionParams: { id: (taskByKeys?.Project_ID ?? "").toString() }
+    })
 
+    // State
     const [theTask, setTheTask] = useState<Task | undefined>(undefined);
 
+    // Effects
     useEffect(() => {
         const fetchTask = async () => {
             if (projectKey && taskKey) {
@@ -34,11 +47,13 @@ export const TaskDetailsView = () => {
         if (taskByKeys) setTheTask(taskByKeys);
     }, [taskByKeys]);
 
-    const handleGoBack = () => {
-        setTaskDetail(undefined);
-        navigation.goBack();
-    };
+    useFocusEffect(
+        useCallback(() => {
+            handleFocusEffect()
+        }, [])
+    )
 
+    // Methods
     if (!theTask) {
         return (
             <View style={styles.pageContent}>
@@ -50,23 +65,13 @@ export const TaskDetailsView = () => {
     return (
         <ScrollView contentContainerStyle={styles.pageContent}>
             <View style={styles.wrapper}>
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => navigation.navigate("Project", { id: (theTask.project?.Project_ID ?? "").toString() })}>
-                        <Text style={{ color: "#007AFF", marginBottom: 10 }}>&laquo; Go to Project</Text>
-                    </TouchableOpacity>
-                </View>
-
                 <View style={styles.content}>
-                    <View style={styles.leftPanel}>
-                        <TitleArea task={theTask} />
-                        <DescriptionArea task={theTask} />
-                        <MediaFilesArea task={theTask} />
-                        <CommentsArea task={theTask} />
-                    </View>
-                    <View style={styles.rightPanel}>
-                        <CtaButtons task={theTask} />
-                        {/* CtaButtons, TaskDetailsArea */}
-                    </View>
+                    <TitleArea task={theTask} />
+                    <DescriptionArea task={theTask} />
+                    <MediaFilesArea task={theTask} />
+                    <CommentsArea task={theTask} />
+                    <CtaButtons task={theTask} />
+                    <TaskInfoArea task={theTask} />
                 </View>
             </View>
         </ScrollView>
@@ -83,11 +88,6 @@ const styles = StyleSheet.create({
         flex: 1,
         gap: 16,
     },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
     link: {
         color: '#007bff',
         fontSize: 16,
@@ -97,13 +97,23 @@ const styles = StyleSheet.create({
         gap: 16,
         flex: 1,
     },
-    leftPanel: {
-        flex: 1,
-        paddingRight: 8,
-    },
-    rightPanel: {
-        flex: 1,
-        paddingLeft: 8,
+});
+
+interface CardProps {
+    children: React.ReactNode;
+    style?: ViewStyle | ViewStyle[];
+}
+
+export const Card: React.FC<CardProps> = ({ children, style }) => {
+    return <View style={[cardStyles.card, style]}>{children}</View>;
+};
+
+const cardStyles = StyleSheet.create({
+    card: {
+        backgroundColor: "#ffffff",
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 16,
     },
 });
 
@@ -907,20 +917,203 @@ const ctaButtonsStyles = StyleSheet.create({
     },
 });
 
-interface CardProps {
-    children: React.ReactNode;
-    style?: ViewStyle | ViewStyle[];
-}
+const TaskInfoArea: React.FC<{ task: Task }> = ({ task }) => {
+    const route = useRoute<any>();
+    const { projectId, taskId } = route.params;
 
-export const Card: React.FC<CardProps> = ({ children, style }) => {
-    return <View style={[cardStyles.card, style]}>{children}</View>;
+    const { readTasksByProjectId, readTaskByKeys, taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext();
+    const { taskTimeTracksById, readTaskTimeTracksByTaskId, handleTaskTimeTrack } = useTaskTimeTrackContext();
+
+    const [taskTimeSpent, setTaskTimeSpent] = useState<number>(0);
+
+    useEffect(() => {
+        if (task.Task_ID) {
+            readTaskTimeTracksByTaskId(task.Task_ID);
+        }
+    }, [task]);
+
+    useEffect(() => {
+        if (Array.isArray(taskTimeTracksById)) {
+            const totalTime = taskTimeTracksById.reduce((sum, track) => sum + (track.Time_Tracking_Duration || 0), 0);
+            setTaskTimeSpent(totalTime);
+        }
+    }, [taskTimeTracksById]);
+
+    // Handle status change
+    const handleStatusChange = (newStatus: Task["Task_Status"]) => {
+        handleTaskChanges("Task_Status", newStatus);
+    };
+
+    const handleAssigneeChange = (newAssigneeID: Task["Assigned_User_ID"]) => {
+        if (newAssigneeID) handleTaskChanges("Assigned_User_ID", newAssigneeID.toString());
+    }
+
+    const handleTaskChanges = async (field: keyof Task, value: string) => {
+        await saveTaskChanges({ ...task, [field]: value }, task.Project_ID);
+
+        if (task.Project_ID) readTasksByProjectId(task.Project_ID, true);
+        if (task.Task_Key && task.project?.Project_Key)
+            await readTaskByKeys(task.project.Project_Key, task.Task_Key.toString());
+
+        if (taskDetail) {
+            setTaskDetail({ ...taskDetail, [field]: value });
+        }
+    };
+
+    return (
+        <TaskInfoView
+            task={task}
+            taskDetail={taskDetail}
+            taskTimeSpent={taskTimeSpent}
+            taskTimeTracksById={taskTimeTracksById}
+            setTaskDetail={setTaskDetail}
+            saveTaskChanges={saveTaskChanges}
+            handleStatusChange={handleStatusChange}
+            handleAssigneeChange={handleAssigneeChange}
+            handleTaskChanges={handleTaskChanges}
+            handleTaskTimeTrack={handleTaskTimeTrack}
+        />
+    );
 };
 
-const cardStyles = StyleSheet.create({
-    card: {
-        backgroundColor: "#ffffff",
-        borderRadius: 12,
+interface TaskInfoViewProps {
+    task: Task
+    taskDetail: Task | undefined
+    taskTimeSpent: number
+    taskTimeTracksById: TaskTimeTrack[]
+    setTaskDetail: React.Dispatch<React.SetStateAction<Task | undefined>>
+    saveTaskChanges: (taskChanges: Task, parentId: number) => void
+    handleStatusChange: (newStatus: Task["Task_Status"]) => void
+    handleAssigneeChange: (newAssigneeID: Task["Assigned_User_ID"]) => void
+    handleTaskChanges: (field: keyof Task, value: string) => void
+    handleTaskTimeTrack: (action: "Play" | "Stop", task: Task) => Promise<Task | undefined>
+}
+
+const TaskInfoView: React.FC<TaskInfoViewProps> = ({
+    task,
+    taskDetail,
+    taskTimeSpent,
+    taskTimeTracksById,
+    setTaskDetail,
+    saveTaskChanges,
+    handleTaskChanges,
+    handleTaskTimeTrack,
+}) => {
+    return (
+        <Card style={taskDetailsAreaStyles.container}>
+            <Text style={taskDetailsAreaStyles.heading}>Task Details</Text>
+
+            <Text style={taskDetailsAreaStyles.label}>Status:</Text>
+            <Text>{task.Task_Status}</Text>
+            {/* <Picker
+                selectedValue={task.Task_Status}
+                onValueChange={(itemValue) => handleTaskChanges("Task_Status", itemValue)}
+            >
+                <Picker.Item label="To Do" value="To Do" />
+                <Picker.Item label="In Progress" value="In Progress" />
+                <Picker.Item label="Waiting for Review" value="Waiting for Review" />
+                <Picker.Item label="Done" value="Done" />
+            </Picker> */}
+
+            <Text style={taskDetailsAreaStyles.label}>Assigned To:</Text>
+            {(() => {
+                const assignedUser = task.project?.team?.user_seats?.find(userSeat => userSeat.user?.User_ID === task.Assigned_User_ID);
+                if (assignedUser) {
+                    return (
+                        <Text>{`${assignedUser.user?.User_FirstName} ${assignedUser.user?.User_Surname}`}</Text>
+                    );
+                } else {
+                    return <Text>Unassigned</Text>;
+                }
+            })()}
+            {/* <Picker
+                selectedValue={task.Assigned_User_ID || ""}
+                onValueChange={(itemValue) => handleTaskChanges("Assigned_User_ID", itemValue.toString())}
+            >
+                <Picker.Item label="Unassigned" value="" />
+                {task.project?.team?.user_seats?.map(userSeat => (
+                    <Picker.Item
+                        key={userSeat.user?.User_ID}
+                        label={`${userSeat.user?.User_FirstName} ${userSeat.user?.User_Surname}`}
+                        value={userSeat.user?.User_ID}
+                    />
+                ))}
+            </Picker> */}
+
+            <Text><Text style={taskDetailsAreaStyles.label}>Team:</Text> {task.project?.team?.Team_Name}</Text>
+            <Text><Text style={taskDetailsAreaStyles.label}>Created At:</Text> {task.Task_CreatedAt && <CreatedAtToTimeSince dateCreatedAt={task.Task_CreatedAt} />}</Text>
+            <Text><Text style={taskDetailsAreaStyles.label}>Due Date:</Text> {task.Task_Due_Date ? new Date(task.Task_Due_Date).toLocaleString() : "N/A"}</Text>
+
+            <Text style={taskDetailsAreaStyles.label}>Time Tracking:</Text>
+            <TimeSpentDisplayView task={task} handleTaskTimeTrack={handleTaskTimeTrack} />
+
+            <Text style={taskDetailsAreaStyles.label}>Time Spent:</Text>
+            <Text><SecondsToTimeDisplay totalSeconds={taskTimeSpent} /> ({taskTimeTracksById.length} entries)</Text>
+        </Card>
+    );
+};
+
+const taskDetailsAreaStyles = StyleSheet.create({
+    container: {
         padding: 16,
-        marginBottom: 16,
+    },
+    heading: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 12,
+    },
+    label: {
+        fontWeight: '600',
+        marginTop: 10,
+    },
+});
+
+interface TimeSpentDisplayViewProps {
+    task: Task
+    handleTaskTimeTrack: (action: "Play" | "Stop", task: Task) => Promise<Task | undefined>
+}
+
+const TimeSpentDisplayView: React.FC<TimeSpentDisplayViewProps> = ({ task, handleTaskTimeTrack }) => {
+    const authUser = useTypedSelector(selectAuthUser);
+    const taskTimeTrack = useTypedSelector(selectAuthUserTaskTimeTrack);
+
+    const isTracking = taskTimeTrack && taskTimeTrack.Task_ID === task.Task_ID;
+
+    return (
+        <View style={timeSpentDisplayViewStyles.container}>
+            {isTracking ? (
+                <>
+                    <TouchableOpacity style={timeSpentDisplayViewStyles.stopButton} onPress={() => handleTaskTimeTrack("Stop", task)}>
+                        <FontAwesomeIcon icon={faStop} color="#fff" />
+                    </TouchableOpacity>
+                    <Text>
+                        <TimeSpentDisplay startTime={taskTimeTrack.Time_Tracking_Start_Time} />
+                    </Text>
+                </>
+            ) : (
+                <TouchableOpacity style={timeSpentDisplayViewStyles.playButton} onPress={() => handleTaskTimeTrack("Play", task)}>
+                    <FontAwesomeIcon icon={faPlay} color="#fff" />
+                </TouchableOpacity>
+            )}
+        </View>
+    );
+};
+
+const timeSpentDisplayViewStyles = StyleSheet.create({
+    container: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        marginVertical: 8,
+    },
+    stopButton: {
+        backgroundColor: '#ff4d4f',
+        padding: 10,
+        borderRadius: '100%',
+    },
+    playButton: {
+        backgroundColor: '#52c41a',
+        padding: 10,
+        borderRadius: '100%',
     },
 });

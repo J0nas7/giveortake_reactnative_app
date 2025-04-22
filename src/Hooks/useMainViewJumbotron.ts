@@ -48,7 +48,10 @@ const useMainViewJumbotron = (defaultJumbo: MainViewJumbotronType | undefined) =
     const handleFocusEffect = () => {
         dispatch(setMainViewJumbotron({
             ...mainViewJumbotron,
-            ...defaultJumboState
+            ...defaultJumboState,
+            rightIcon: defaultJumboState?.rightIcon ?? undefined,
+            rightIconActionRoute: defaultJumboState?.rightIconActionRoute ?? undefined,
+            rightIconActionParams: defaultJumboState?.rightIconActionParams ?? undefined
         }))
     }
 

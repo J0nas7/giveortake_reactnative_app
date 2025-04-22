@@ -1,10 +1,11 @@
 // External
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import { Alert, GestureResponderEvent } from 'react-native';
 
 // Internal
 import { RootState } from '@/src/Redux'
-import { Organisation, TaskTimeTrack, TeamUserSeat, User } from '@/src/Types'
+import { MainStackParamList, Organisation, TaskTimeTrack, TeamUserSeat, User } from '@/src/Types'
 
 export type MainViewJumbotronType = {
     faIcon?: IconDefinition;
@@ -12,6 +13,9 @@ export type MainViewJumbotronType = {
     title: string;
     iconAction?: Function,
     visibility: number;
+    rightIcon?: IconDefinition;
+    rightIconActionRoute?: keyof MainStackParamList;
+    rightIconActionParams?: any;
 }
 
 export interface AuthState {

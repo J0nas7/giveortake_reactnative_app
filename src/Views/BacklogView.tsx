@@ -1,5 +1,5 @@
 // External
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import { NavigationProp, useNavigation, useRoute } from '@react-navigation/native';
+import { NavigationProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
 
@@ -19,13 +19,15 @@ import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
 import { useProjectsContext, useTasksContext } from '@/src/Contexts';
 import { useTypedSelector, selectAuthUser } from '@/src/Redux';
 import { MainStackParamList, Task } from '../Types';
+import useMainViewJumbotron from '../Hooks/useMainViewJumbotron';
+import { faLightbulb, faList } from '@fortawesome/free-solid-svg-icons';
 
 export const BacklogView = () => {
+    // Hooks
     const { t } = useTranslation(['backlog']);
     const navigation = useNavigation<NavigationProp<MainStackParamList>>();
     const route = useRoute();
     const { id: projectId } = route.params as { id: string };
-
     const { projectById, readProjectById } = useProjectsContext();
     const {
         tasksById,
@@ -35,11 +37,21 @@ export const BacklogView = () => {
         addTask,
         removeTask,
     } = useTasksContext();
-    const authUser = useTypedSelector(selectAuthUser);
+    const { handleScroll, handleFocusEffect } = useMainViewJumbotron({
+        title: `Backlog`,
+        faIcon: faList,
+        visibility: 100,
+        rightIcon: faLightbulb,
+        rightIconActionRoute: "Project",
+        rightIconActionParams: { id: ((projectById && projectById?.Project_ID) ?? "").toString() },
+    })
 
+    // State
+    const authUser = useTypedSelector(selectAuthUser);
     const [renderProject, setRenderProject] = useState<any>();
     const [renderTasks, setRenderTasks] = useState<Task[]>([]);
 
+    // Effects
     useEffect(() => {
         readProjectById(parseInt(projectId));
         readTasksByProjectId(parseInt(projectId));
@@ -53,6 +65,13 @@ export const BacklogView = () => {
         setRenderTasks(tasksById);
     }, [tasksById]);
 
+    useFocusEffect(
+        useCallback(() => {
+            handleFocusEffect()
+        }, [])
+    )
+
+    // Methods
     const handleCreateTask = async () => {
         const newTaskData = {
             Project_ID: parseInt(projectId),
@@ -67,10 +86,6 @@ export const BacklogView = () => {
     
     return (
         <View style={styles.container}>
-            <Text style={styles.heading}>
-                {t('backlog:backlog')}: {renderProject?.Project_Name}
-            </Text>
-            
             <FlatList
                 data={renderTasks}
                 keyExtractor={(item) => (item.Task_ID ?? "").toString()}

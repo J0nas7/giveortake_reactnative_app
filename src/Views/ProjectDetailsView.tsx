@@ -1,25 +1,36 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, TextInput, ScrollView, Button, TouchableOpacity } from "react-native";
-import { NavigationProp, useNavigation, useRoute } from "@react-navigation/native";
+import { NavigationProp, useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import { faGauge, faList, faWindowRestore, faClock, faLightbulb } from "@fortawesome/free-solid-svg-icons";
+import { faGauge, faList, faWindowRestore, faClock, faLightbulb, faUsers } from "@fortawesome/free-solid-svg-icons";
 
 // Internal
 import { useProjectsContext } from "@/src/Contexts";
 import { MainStackParamList, Project, ProjectFields } from "@/src/Types";
 import { selectAuthUser, useTypedSelector } from "@/src/Redux";
 import { ReadOnlyRow } from "../Components/ReadOnlyRow";
+import useMainViewJumbotron from "../Hooks/useMainViewJumbotron";
 
 export const ProjectDetailsView: React.FC = () => {
+    // Hooks
     const navigation = useNavigation<NavigationProp<MainStackParamList>>();
     const route = useRoute();
-    const { id: projectId } = route.params as { id: string };  // Get id as projectId from route params
-
     const { projectById, readProjectById, saveProjectChanges, removeProject } = useProjectsContext();
-    const authUser = useTypedSelector(selectAuthUser);
+    const { handleScroll, handleFocusEffect } = useMainViewJumbotron({
+        title: `Project Info`,
+        faIcon: faLightbulb,
+        visibility: 100,
+        rightIcon: faUsers,
+        rightIconActionRoute: "Team",
+        rightIconActionParams: { id: ((projectById && projectById?.team?.Team_ID) ?? "").toString() },
+    })
 
+    // State
+    const { id: projectId } = route.params as { id: string };  // Get id as projectId from route params
+    const authUser = useTypedSelector(selectAuthUser);
     const [renderProject, setRenderProject] = useState<Project | undefined>(undefined);
 
+    // Effects
     useEffect(() => {
         if (projectId) {
             readProjectById(parseInt(projectId));
@@ -32,6 +43,13 @@ export const ProjectDetailsView: React.FC = () => {
         }
     }, [projectById]);
 
+    useFocusEffect(
+        useCallback(() => {
+            handleFocusEffect()
+        }, [])
+    )
+
+    // Methods
     const handleProjectChange = (field: ProjectFields, value: string) => {
         setRenderProject((prev) =>
             prev ? { ...prev, [field]: value } : undefined
@@ -59,23 +77,12 @@ export const ProjectDetailsView: React.FC = () => {
 
     return (
         <ScrollView contentContainerStyle={{ padding: 16 }}>
-            {/* Back */}
-            <TouchableOpacity onPress={() => navigation.navigate("Team", { id: (renderProject.team?.Team_ID ?? "").toString() })}>
-                <Text style={{ color: "#007AFF", marginBottom: 10 }}>&laquo; Go to Team</Text>
-            </TouchableOpacity>
-
-            {/* Header */}
-            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
-                <FontAwesomeIcon icon={faLightbulb} size={20} style={{ marginRight: 10 }} />
-                <Text style={{ fontSize: 24, fontWeight: "bold" }}>Project Info</Text>
-            </View>
-
             {/* Navigation Links */}
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 20 }}>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginBottom: 20 }}>
                 <ProjectNavButton icon={faGauge} label="Dashboard" route="Dashboard" projectId={renderProject.Project_ID} />
                 <ProjectNavButton icon={faList} label="Backlog" route="Backlog" projectId={renderProject.Project_ID} />
-                <ProjectNavButton icon={faWindowRestore} label="Kanban Board" route="KanbanBoard" projectId={renderProject.Project_ID} />
-                <ProjectNavButton icon={faClock} label="Time Entries" route="TimeTracks" projectId={renderProject.Project_ID} />
+                <ProjectNavButton icon={faWindowRestore} label="Kanban Board" route="Kanban" projectId={renderProject.Project_ID} />
+                <ProjectNavButton icon={faClock} label="Time Entries" route="Time" projectId={renderProject.Project_ID} />
             </View>
 
             {/* Content */}
@@ -156,25 +163,25 @@ const ProjectNavButton = ({
 }: {
     icon: any;
     label: string;
-    route: string;
+    route: keyof MainStackParamList;
     projectId?: number;
 }) => {
     const navigation = useNavigation<any>();
     return (
         <TouchableOpacity
             style={{
+                width: "48%",
                 backgroundColor: "#EFEFFF",
                 padding: 10,
                 borderRadius: 10,
                 flexDirection: "row",
                 alignItems: "center",
-                marginRight: 8,
                 marginBottom: 8
             }}
             onPress={() => navigation.navigate(route, { id: projectId })}
         >
             <FontAwesomeIcon icon={icon} size={16} style={{ marginRight: 6 }} />
-            <Text style={{ color: "#007AFF" }}>{label}</Text>
+            <Text style={{ fontSize: 16, color: "#007AFF" }}>{label}</Text>
         </TouchableOpacity>
     );
 };

@@ -1,5 +1,5 @@
 // External
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -10,7 +10,7 @@ import {
     Alert,
     TouchableOpacity,
 } from 'react-native';
-import { useRoute, useNavigation, NavigationProp } from '@react-navigation/native';
+import { useRoute, useNavigation, NavigationProp, useFocusEffect } from '@react-navigation/native';
 import { Dimensions } from 'react-native';
 
 // Internal
@@ -18,18 +18,33 @@ import { useTeamsContext } from '@/src/Contexts';
 import { MainStackParamList, Team, TeamFields, User } from '@/src/Types';
 import { useTypedSelector, selectAuthUser } from '@/src/Redux';
 import { ReadOnlyRow } from '../Components/ReadOnlyRow';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faBuilding, faUsers } from '@fortawesome/free-solid-svg-icons';
+import useMainViewJumbotron from '../Hooks/useMainViewJumbotron';
 
 const screenWidth = Dimensions.get('window').width;
 
 export const TeamDetailsView: React.FC = () => {
+    // Hooks
     const route = useRoute();
     const navigation = useNavigation<NavigationProp<MainStackParamList>>();
     const { id: teamId } = route.params as { id: string };
     const { teamById, readTeamById, saveTeamChanges, removeTeam } = useTeamsContext();
+    const { handleScroll, handleFocusEffect } = useMainViewJumbotron({
+        title: `Team Settings`,
+        faIcon: faUsers,
+        visibility: 100,
+        rightIcon: faBuilding,
+        rightIconActionRoute: "Organisation",
+        rightIconActionParams: { id: ((teamById && teamById.Organisation_ID) ?? "").toString() },
+    })
+
+    // State
     const authUser = useTypedSelector(selectAuthUser);
-
     const [renderTeam, setRenderTeam] = useState<Team | undefined>(undefined);
+    const [isOwner, setIsOwner] = useState<boolean | undefined>(authUser && renderTeam?.organisation?.User_ID === authUser.User_ID);
 
+    // Effects
     useEffect(() => {
         readTeamById(parseInt(teamId));
     }, [teamId]);
@@ -40,6 +55,13 @@ export const TeamDetailsView: React.FC = () => {
         }
     }, [teamById]);
 
+    useFocusEffect(
+        useCallback(() => {
+            handleFocusEffect()
+        }, [])
+    )
+
+    // Methods
     const handleTeamChange = (field: TeamFields, value: string) => {
         if (!renderTeam) return;
 
@@ -69,16 +91,8 @@ export const TeamDetailsView: React.FC = () => {
         return <Text>Loading...</Text>;
     }
 
-    const isOwner = authUser && renderTeam.organisation?.User_ID === authUser.User_ID;
-
     return (
         <ScrollView style={styles.container}>
-            <TouchableOpacity onPress={() => navigation.navigate("Organisation", { id: renderTeam.Organisation_ID.toString() })}>
-                <Text style={styles.link}>&laquo; Go to Organisation</Text>
-            </TouchableOpacity>
-
-            <Text style={styles.title}>Team Settings</Text>
-
             {isOwner ? (
                 <View style={styles.section}>
                     <Text style={styles.label}>Team Name</Text>
@@ -175,7 +189,8 @@ const styles = StyleSheet.create({
         borderColor: '#ddd',
     },
     buttonGroup: {
-        marginTop: 16,
-        gap: 10,
+        marginTop: 20,
+        flexDirection: "row",
+        justifyContent: "space-between",
     },
 });

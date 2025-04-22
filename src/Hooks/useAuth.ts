@@ -39,7 +39,7 @@ export const useAuth = () => {
         dispatch(setIsLoggedIn(true))
         dispatch(setAuthUser(newAuthUser))
 
-        navigation.navigate("GoTFrontView")
+        navigation.navigate("Home")
         return true
     }
 
@@ -102,7 +102,7 @@ export const useAuth = () => {
         dispatch(setAccessToken(""))
         dispatch(setIsLoggedIn(false))
         dispatch(setAuthUser(undefined))
-        navigation.navigate("SignInView")  // Navigate to sign-in screen after logout
+        navigation.navigate("SignIn")  // Navigate to sign-in screen after logout
     }
 
     // Check if the user is logged in when the app starts

@@ -1,5 +1,5 @@
 // External
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -9,7 +9,7 @@ import {
     StyleSheet,
     Alert,
 } from 'react-native';
-import { useRoute, useNavigation, NavigationProp } from '@react-navigation/native';
+import { useRoute, useNavigation, NavigationProp, useFocusEffect } from '@react-navigation/native';
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import { faBuilding } from '@fortawesome/free-regular-svg-icons';
 import { faUsers } from '@fortawesome/free-solid-svg-icons';
@@ -19,14 +19,22 @@ import { useOrganisationsContext } from '@/src/Contexts';
 import { useTypedSelector, selectAuthUser } from '@/src/Redux';
 import { MainStackParamList, Organisation } from '../Types';
 import { CreatedAtToTimeSince } from '../Components/CreatedAtToTimeSince';
+import useMainViewJumbotron from '../Hooks/useMainViewJumbotron';
 
 export const OrganisationDetailsView = () => {
+    // Hooks
     const navigation = useNavigation<NavigationProp<MainStackParamList>>();
     const route = useRoute();
     const { id: organisationId } = route.params as { id: string };
     const { organisationById, readOrganisationById, saveOrganisationChanges, removeOrganisation } = useOrganisationsContext();
-    const authUser = useTypedSelector(selectAuthUser);
+    const { handleScroll, handleFocusEffect } = useMainViewJumbotron({
+        title: `Organisation Settings`,
+        faIcon: faBuilding,
+        visibility: 100,
+    })
 
+    // State
+    const authUser = useTypedSelector(selectAuthUser);
     const [organisation, setOrganisation] = useState<Organisation>();
 
     useEffect(() => {
@@ -38,6 +46,12 @@ export const OrganisationDetailsView = () => {
             setOrganisation(organisationById);
         }
     }, [organisationById]);
+
+    useFocusEffect(
+        useCallback(() => {
+            handleFocusEffect()
+        }, [])
+    )
 
     const handleOrganisationChange = (field: string, value: string) => {
         setOrganisation((prev: any) => ({
@@ -59,7 +73,7 @@ export const OrganisationDetailsView = () => {
         const confirmed = await removeOrganisation(organisation.Organisation_ID, organisation.User_ID);
         if (confirmed) {
             Alert.alert('Organisation deleted');
-            navigation.navigate('GoTFrontView');
+            navigation.navigate('Home');
         }
     };
 
@@ -67,10 +81,6 @@ export const OrganisationDetailsView = () => {
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.heading}>
-                <FontAwesomeIcon icon={faBuilding} size={20} /> Organisation Settings
-            </Text>
-
             {authUser?.User_ID === organisation.User_ID && (
                 <>
                     <TextInput

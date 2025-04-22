@@ -1,7 +1,7 @@
 // External
 import React, { useEffect, useState } from 'react'
 import SplashScreen from 'react-native-splash-screen'
-import { NavigationContainer, useNavigation } from '@react-navigation/native'
+import { getFocusedRouteNameFromRoute, NavigationContainer, useNavigation, useNavigationState } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator, Alert } from 'react-native'
@@ -29,9 +29,11 @@ import {
 } from '@/src/Redux'
 import { GuestStackParamList, MainStackParamList } from '@/src/Types'
 import { HeadlineJumbotron } from '../Core-UI/HeadlineJumbotron'
-import { faHome } from '@fortawesome/free-solid-svg-icons'
+import { faBuilding, faClock, faGauge, faHouseChimney, faLightbulb, faList, faUsers, faWindowRestore } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import DashboardView from './DashboardView'
+import { TaskTimeTrackPlayer } from '../Components/TaskTimeTrackPlayer'
+import { current } from '@reduxjs/toolkit'
 
 type MenuStackProps = { name: keyof MainStackParamList; component: React.FC<{}> }
 
@@ -42,6 +44,29 @@ const DeviceIsLoggedIn = () => {
         const Tab = createBottomTabNavigator()
         const navigation = useNavigation<NavigationProp>()
 
+        const currentRoute = useNavigationState((state) => {
+            if (!state) return null; // Handle undefined state
+            const tabRoute = state.routes[state.index];
+            // If tabRoute has nested routes (like stacks), you may want to go deeper:
+            const nestedRoute = tabRoute?.state?.routes?.[tabRoute.state.index ?? 0]?.name;
+            return nestedRoute ?? tabRoute?.name;
+        });
+
+        const routesNotInBottomNav: { name: keyof MainStackParamList; component: React.FC }[] = [
+            { name: "Organisation", component: OrganisationDetailsView },
+            { name: "Team", component: TeamDetailsView },
+            { name: "Project", component: ProjectDetailsView },
+            { name: "Task", component: TaskDetailsView }
+        ];
+
+        const routesInBottomNav: { name: keyof MainStackParamList; component: React.FC }[] = [
+            { name: "Home", component: StartpageView },
+            { name: "Dashboard", component: DashboardView },
+            { name: "Backlog", component: BacklogView },
+            { name: "Kanban", component: KanbanBoardView },
+            { name: "Time", component: TimeTracksView },
+        ];
+
         const isNotificationsDetermined = useTypedSelector(selectIsNotificationsDetermined)
         const isNotificationsSkipped = useTypedSelector(selectIsNotificationsSkipped)
 
@@ -49,7 +74,7 @@ const DeviceIsLoggedIn = () => {
             if (isNotificationsDetermined === false && isNotificationsSkipped === false) {
                 navigation.navigate('NotificationsInstructionsView')
             } else {
-                navigation.navigate('GoTFrontView')
+                navigation.navigate('Home')
             }
         }, [isNotificationsDetermined, isNotificationsSkipped, navigation])
 
@@ -60,61 +85,40 @@ const DeviceIsLoggedIn = () => {
                 <>
                     <HeadlineJumbotron />
                     {children}
+                    <TaskTimeTrackPlayer />
                 </>
-            )
+            );
+
+            const withJumbotron = (Component: React.FC): React.FC => {
+                return (props: any) => (
+                    <ScreenWithJumbotron>
+                        <Component {...props} />
+                    </ScreenWithJumbotron>
+                );
+            };
 
             return (
-                <MainStack.Navigator
-                    initialRouteName="GoTFrontView"
-                    screenOptions={{
-                        headerShown: false,  // Global setting to hide the header
-                    }}
-                >
-                    <MainStack.Screen name={name} component={component} />
-
-                    <MainStack.Screen name="Organisation" component={() => (
-                        <ScreenWithJumbotron>
-                            <OrganisationDetailsView />
-                        </ScreenWithJumbotron>
-                    )} />
-                    <MainStack.Screen name="Team" component={() => (
-                        <ScreenWithJumbotron>
-                            <TeamDetailsView />
-                        </ScreenWithJumbotron>
-                    )} />
-                    <MainStack.Screen name="Project" component={() => (
-                        <ScreenWithJumbotron>
-                            <ProjectDetailsView />
-                        </ScreenWithJumbotron>
-                    )} />
-                    <MainStack.Screen name="Task" component={() => (
-                        <ScreenWithJumbotron>
-                            <TaskDetailsView />
-                        </ScreenWithJumbotron>
-                    )} />
-
-                    <MainStack.Screen name="Dashboard" component={() => (
-                        <ScreenWithJumbotron>
-                            <DashboardView />
-                        </ScreenWithJumbotron>
-                    )} />
-                    <MainStack.Screen name="Backlog" component={() => (
-                        <ScreenWithJumbotron>
-                            <BacklogView />
-                        </ScreenWithJumbotron>
-                    )} />
-                    <MainStack.Screen name="KanbanBoard" component={() => (
-                        <ScreenWithJumbotron>
-                            <KanbanBoardView />
-                        </ScreenWithJumbotron>
-                    )} />
-                    <MainStack.Screen name="TimeTracks" component={() => (
-                        <ScreenWithJumbotron>
-                            <TimeTracksView />
-                        </ScreenWithJumbotron>
-                    )} />
-
-                    <MainStack.Screen name="SignIn" component={SignInView} />
+                <MainStack.Navigator initialRouteName={name} screenOptions={{ headerShown: false }}>
+                    <MainStack.Screen
+                        name={name}
+                        component={withJumbotron(component)}
+                        initialParams={{ id: '1' }}
+                    />
+                    {routesNotInBottomNav.map(({ name: subname, component }) => {
+                        // let initialParams: { id: string; projectKey?: string; taskKey?: string } = { id: '1' }
+                        // if (subname === "Task") {
+                        //     initialParams = { id: '', projectKey: '', taskKey: '' }
+                        // }
+                        
+                        return (
+                            <MainStack.Screen
+                                key={subname}
+                                name={subname}
+                                component={withJumbotron(component)}
+                                // initialParams={initialParams}
+                            />
+                        )
+                    })}
                 </MainStack.Navigator>
             );
         };
@@ -123,10 +127,28 @@ const DeviceIsLoggedIn = () => {
         return (
             <>
                 <Tab.Navigator
-                    initialRouteName="GoTFrontView"
+                    initialRouteName="Home"
                     screenOptions={({ route }) => ({
                         tabBarIcon: ({ focused, color, size }) => {
-                            let iconName = faHome; // Default icon
+                            let iconName = faHouseChimney; // Default icon
+
+                            if (route.name === 'Home') {
+                                iconName = faHouseChimney
+                            } else if (route.name === 'Organisation') {
+                                iconName = faBuilding
+                            } else if (route.name === 'Team') {
+                                iconName = faUsers
+                            } else if (route.name === 'Project') {
+                                iconName = faLightbulb
+                            } else if (route.name === 'Dashboard') {
+                                iconName = faGauge
+                            } else if (route.name === 'Backlog') {
+                                iconName = faList
+                            } else if (route.name === 'Kanban') {
+                                iconName = faWindowRestore
+                            } else if (route.name === 'Time') {
+                                iconName = faClock
+                            }
 
                             return <FontAwesomeIcon icon={iconName} size={size} color={color} />;
                         },
@@ -139,9 +161,13 @@ const DeviceIsLoggedIn = () => {
                         headerShown: false,  // Hide header title for all screens in this navigator
                     })}
                 >
-                    <Tab.Screen name="GoTFrontView">
-                        {() => <MenuStackNavigator name="GoTFrontView" component={StartpageView} />}
-                    </Tab.Screen>
+                    {routesInBottomNav.map(({ name, component }) => {
+                        return (
+                            <Tab.Screen name={name} key={name}>
+                                {() => <MenuStackNavigator name={name} component={component} />}
+                            </Tab.Screen>
+                        )
+                    })}
                 </Tab.Navigator>
             </>
         )

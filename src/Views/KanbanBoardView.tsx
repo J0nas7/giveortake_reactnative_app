@@ -1,23 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert } from "react-native";
-import { NavigationProp, useNavigation, useRoute } from "@react-navigation/native";
+import { NavigationProp, useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 // import DraggableFlatList from "react-native-draggable-flatlist";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import { faTrash, faWindowRestore } from "@fortawesome/free-solid-svg-icons";
+import { faLightbulb, faTrash, faWindowRestore } from "@fortawesome/free-solid-svg-icons";
 
 import { useProjectsContext, useTasksContext } from "@/src/Contexts";
 import { Task, Project, MainStackParamList } from "@/src/Types";
 import { FlatList } from "react-native-gesture-handler";
+import useMainViewJumbotron from "../Hooks/useMainViewJumbotron";
 
 const STATUSES = ["To Do", "In Progress", "Waiting for Review", "Done"] as const;
 
 type Status = typeof STATUSES[number];
 
 export const KanbanBoardView: React.FC = () => {
+    // Hooks
     const navigation = useNavigation<NavigationProp<MainStackParamList>>();
     const route = useRoute<any>();
     const { id: projectId } = route.params as { id: string };
-
     const { projectById, readProjectById } = useProjectsContext();
     const {
         tasksById,
@@ -26,10 +27,20 @@ export const KanbanBoardView: React.FC = () => {
         removeTask,
         setTaskDetail,
     } = useTasksContext();
+    const { handleScroll, handleFocusEffect } = useMainViewJumbotron({
+        title: `Kanban Board`,
+        faIcon: faWindowRestore,
+        visibility: 100,
+        rightIcon: faLightbulb,
+        rightIconActionRoute: "Project",
+        rightIconActionParams: { id: ((projectById && projectById?.Project_ID) ?? "").toString() },
+    })
 
+    // State
     const [project, setProject] = useState<Project | undefined>();
     const [tasks, setTasks] = useState<Task[]>([]);
 
+    // Effects
     useEffect(() => {
         readProjectById(parseInt(projectId));
         readTasksByProjectId(parseInt(projectId));
@@ -41,8 +52,15 @@ export const KanbanBoardView: React.FC = () => {
 
     useEffect(() => {
         setTasks(tasksById);
-    }, [tasksById]);
+    }, [tasksById])
+    
+    useFocusEffect(
+        useCallback(() => {
+            if (typeof handleFocusEffect === "function") handleFocusEffect()
+        }, [])
+    )
 
+    // Methods
     const handleArchive = async (task: Task) => {
         if (!task.Task_ID) return
         await removeTask(task.Task_ID, task.Project_ID);
@@ -69,10 +87,6 @@ export const KanbanBoardView: React.FC = () => {
 
     return (
         <ScrollView style={styles.container}>
-            <Text style={styles.title}>
-                <FontAwesomeIcon icon={faWindowRestore} /> Kanban: {project?.Project_Name}
-            </Text>
-
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {STATUSES.map((status) => (
                     <View key={status} style={styles.column}>

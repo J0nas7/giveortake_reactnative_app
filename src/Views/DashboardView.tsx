@@ -1,27 +1,39 @@
 // External
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { View, Text, ScrollView, StyleSheet, Dimensions } from "react-native"
-import { useRoute } from "@react-navigation/native"
+import { useFocusEffect, useRoute } from "@react-navigation/native"
 import { PieChart, BarChart } from "react-native-chart-kit"
 import { useTranslation } from "react-i18next"
 
 // Internal
 import { useProjectsContext, useTasksContext } from "@/src/Contexts"
 import { Project, Task } from "@/src/Types"
+import useMainViewJumbotron from "../Hooks/useMainViewJumbotron"
+import { faGauge, faLightbulb } from "@fortawesome/free-solid-svg-icons"
 
 const screenWidth = Dimensions.get("window").width
 
 const DashboardView = () => {
+    // Hooks
     const route = useRoute()
     const { projectId } = route.params as { projectId: string }
     const { t } = useTranslation(["dashboard"])
-
     const { tasksById, readTasksByProjectId } = useTasksContext()
     const { projectById, readProjectById } = useProjectsContext()
+    const { handleScroll, handleFocusEffect } = useMainViewJumbotron({
+        title: `Dashboard`,
+        faIcon: faGauge,
+        visibility: 100,
+        rightIcon: faLightbulb,
+        rightIconActionRoute: "Project",
+        rightIconActionParams: { id: ((projectById && projectById?.Project_ID) ?? "").toString() },
+    })
 
+    // State
     const [renderProject, setRenderProject] = useState<Project | undefined>()
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>()
 
+    // Effects
     useEffect(() => {
         readTasksByProjectId(parseInt(projectId))
         readProjectById(parseInt(projectId))
@@ -37,6 +49,13 @@ const DashboardView = () => {
         }
     }, [tasksById])
 
+    useFocusEffect(
+        useCallback(() => {
+            handleFocusEffect()
+        }, [])
+    )
+
+    // Dashboard-related calculations
     const safeTasks = Array.isArray(renderTasks) ? renderTasks : []
 
     const taskStatuses = useMemo(() => {
@@ -115,7 +134,7 @@ const DashboardView = () => {
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.title}>{t("dashboard.title")}: {renderProject?.Project_Name}</Text>
+            <Text style={styles.title}>{renderProject?.Project_Name}</Text>
 
             <View style={styles.kpiContainer}>
                 <KPI title={t("dashboard.totalTasks")} value={totalTasks} />

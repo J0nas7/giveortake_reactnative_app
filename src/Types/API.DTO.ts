@@ -21,7 +21,7 @@ export interface NotificationContent {
 }
 
 export type MainStackParamList = {
-    GoTFrontView: undefined; // No params
+    Home: undefined; // No params
     NotificationsInstructionsView: undefined; // No params
     Organisation: { id: string }; // Requires an id parameter
     Team: { id: string }; // Requires an id parameter
@@ -31,8 +31,8 @@ export type MainStackParamList = {
     
     Dashboard: { id: string }; // Requires an id parameter
     Backlog: { id: string }; // Requires an id parameter
-    KanbanBoard: { id: string }; // Requires an id parameter
-    TimeTracks: { id: string }; // Requires an id parameter
+    Kanban: { id: string }; // Requires an id parameter
+    Time: { id: string }; // Requires an id parameter
 
     SignIn: undefined; // No params
 };

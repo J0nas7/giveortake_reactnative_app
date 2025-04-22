@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React, { useCallback, useEffect } from "react"
 import {
     View,
     Text,
@@ -7,36 +7,47 @@ import {
     StyleSheet,
     Platform
 } from "react-native"
-import { NavigationProp, useNavigation } from "@react-navigation/native"
+import { NavigationProp, useFocusEffect, useNavigation } from "@react-navigation/native"
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome"
 
 import { useTypedSelector, selectAuthUser } from "@/src/Redux"
 import { useOrganisationsContext } from "@/src/Contexts"
 import { faBuilding, faUser } from "@fortawesome/free-regular-svg-icons"
 import { MainStackParamList } from "../Types"
+import useMainViewJumbotron from "../Hooks/useMainViewJumbotron"
 
 export const StartpageView = () => {
+    // Hooks
     const navigation = useNavigation<NavigationProp<MainStackParamList>>();
-    const authUser = useTypedSelector(selectAuthUser)
     const { organisationsById, readOrganisationsByUserId } = useOrganisationsContext()
+    const { handleScroll, handleFocusEffect } = useMainViewJumbotron({
+        title: `Give Or Take`,
+        faIcon: undefined,
+        visibility: 100,
+    })
 
+    // State
+    const authUser = useTypedSelector(selectAuthUser)
+
+    // Effects
     useEffect(() => {
         if (authUser?.User_ID) readOrganisationsByUserId(authUser.User_ID)
     }, [authUser])
 
+    useFocusEffect(
+        useCallback(() => {
+            handleFocusEffect()
+        }, [])
+    )
+
     return (
         <ScrollView style={styles.container}>
-            {/* Profile Link */}
-            <TouchableOpacity onPress={() => navigation.navigate("Profile" as never)}>
-                <Text style={styles.link}>&laquo; Go to Profile Settings</Text>
-            </TouchableOpacity>
-
             {/* Welcome Section */}
             <View style={styles.headerBox}>
-                <View style={styles.headerRow}>
+                <TouchableOpacity style={styles.headerRow} onPress={() => navigation.navigate("Profile" as never)}>
                     <FontAwesomeIcon icon={faUser} size={20} color="#1ab11f" />
                     <Text style={styles.headerText}>Hej {authUser?.User_FirstName}</Text>
-                </View>
+                </TouchableOpacity>
 
                 <TouchableOpacity
                     style={styles.createButton}

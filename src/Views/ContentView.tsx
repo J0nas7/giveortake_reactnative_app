@@ -4,7 +4,7 @@ import SplashScreen from 'react-native-splash-screen'
 import { getFocusedRouteNameFromRoute, NavigationContainer, useNavigation, useNavigationState } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator, Alert } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator, Alert, Linking } from 'react-native'
 
 // Internal
 import { useNotifications } from '@/src/Hooks'
@@ -20,6 +20,7 @@ import {
     TimeTracksView
 } from '@/src/Views'
 import {
+    selectAuthUserTaskTimeTrack,
     selectIsLoggedIn,
     selectIsNotificationsDetermined,
     selectIsNotificationsSkipped,
@@ -34,6 +35,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import DashboardView from './DashboardView'
 import { TaskTimeTrackPlayer } from '../Components/TaskTimeTrackPlayer'
 import { current } from '@reduxjs/toolkit'
+import { useTaskTimeTrackContext } from '../Contexts'
 
 type MenuStackProps = { name: keyof MainStackParamList; component: React.FC<{}> }
 
@@ -81,13 +83,41 @@ const DeviceIsLoggedIn = () => {
         const MenuStackNavigator: React.FC<MenuStackProps> = ({ name, component }) => {
             const MainStack = createStackNavigator<MainStackParamList>()
 
-            const ScreenWithJumbotron: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-                <>
-                    <HeadlineJumbotron />
-                    {children}
-                    <TaskTimeTrackPlayer />
-                </>
-            );
+            const ScreenWithJumbotron: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+                const { handleTaskTimeTrack } = useTaskTimeTrackContext();
+                const taskTimeTrack = useTypedSelector(selectAuthUserTaskTimeTrack);
+
+                useEffect(() => {
+                    if (!taskTimeTrack) return;
+
+                    const handleUrl = (event: { url: string }) => {
+                        console.log('handleURL received', event.url)
+                        if (event.url === 'giveortake://endLiveActivity') {
+                            handleTaskTimeTrack('Stop', taskTimeTrack.task!)
+                        }
+                    };
+
+                    const subscription = Linking.addEventListener('url', handleUrl);
+
+                    // Check if app opened via link
+                    Linking.getInitialURL().then((url) => {
+                        console.log('getInitialURL received', url)
+                        if (url === 'giveortake://endLiveActivity') {
+                            handleTaskTimeTrack('Stop', taskTimeTrack.task!)
+                        }
+                    });
+
+                    return () => subscription.remove()
+                }, [taskTimeTrack]);
+
+                return (
+                    <>
+                        <HeadlineJumbotron />
+                        {children}
+                        <TaskTimeTrackPlayer />
+                    </>
+                )
+            };
 
             const withJumbotron = (Component: React.FC): React.FC => {
                 return (props: any) => (
@@ -109,13 +139,13 @@ const DeviceIsLoggedIn = () => {
                         // if (subname === "Task") {
                         //     initialParams = { id: '', projectKey: '', taskKey: '' }
                         // }
-                        
+
                         return (
                             <MainStack.Screen
                                 key={subname}
                                 name={subname}
                                 component={withJumbotron(component)}
-                                // initialParams={initialParams}
+                            // initialParams={initialParams}
                             />
                         )
                     })}

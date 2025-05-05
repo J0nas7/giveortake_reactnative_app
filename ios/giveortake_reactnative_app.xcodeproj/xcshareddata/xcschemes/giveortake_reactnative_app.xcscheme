@@ -38,6 +38,17 @@
                ReferencedContainer = "container:giveortake_reactnative_app.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "417FB67E2DC2992000FE0A82"
+               BuildableName = "TimeTrackerSharedTests.xctest"
+               BlueprintName = "TimeTrackerSharedTests"
+               ReferencedContainer = "container:giveortake_reactnative_app.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

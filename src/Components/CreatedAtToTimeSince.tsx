@@ -45,7 +45,15 @@ export const SecondsToTimeDisplay = ({ totalSeconds }: { totalSeconds: number })
         setFormattedTime(formattedTime);
     }, [totalSeconds])
 
-    return <>{formattedTime}</>
+    return formattedTime
+}
+
+export function CalculateSecondsToTimeDisplay(totalSeconds: number): string {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
 export const TimeSpentDisplay = ({ startTime }: { startTime: string }) => {
@@ -65,5 +73,7 @@ export const TimeSpentDisplay = ({ startTime }: { startTime: string }) => {
         return () => clearInterval(interval);
     }, [startTime]);
 
-    return <SecondsToTimeDisplay totalSeconds={diffInSeconds} />
+    const secondsToTimeDisplay = CalculateSecondsToTimeDisplay(diffInSeconds)
+
+    return <>{secondsToTimeDisplay}</>
 };

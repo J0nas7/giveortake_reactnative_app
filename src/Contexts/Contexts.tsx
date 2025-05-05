@@ -4,6 +4,7 @@
 import React, { createContext, useContext, useState } from "react"
 
 // Internal
+import { startLiveActivity, endLiveActivity } from '@/src/Native/LiveActivityModule';
 import { useResourceContext } from "@/src/Hooks"
 import {
     User,
@@ -631,6 +632,12 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
             if (action === "Play") { // Start time tracking
                 theNewTimeTrack.Time_Tracking_Start_Time = new Date().toISOString(); // Get the current timestamp in ISO format
 
+                // End any existing Live Activity on iOS
+                endLiveActivity()
+                
+                // Launches Live Activity on iOS
+                startLiveActivity(theNewTimeTrack)
+
                 // Add the new time track (this will insert it into the database)
                 await addTaskTimeTrack(theNewTimeTrack.Task_ID, theNewTimeTrack)
             } else if (action === "Stop" && taskTimeTrack) { // Stop time tracking
@@ -645,6 +652,9 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
                     Time_Tracking_End_Time: currentTime.toISOString(),
                     Time_Tracking_Duration: duration
                 }
+
+                // End the Live Activity on iOS
+                endLiveActivity()
 
                 // Update the time tracking record in the database
                 await (task.Task_ID && saveTaskTimeTrackChanges(updatedTimeTrack, task.Task_ID))

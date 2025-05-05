@@ -28,5 +28,18 @@ target 'giveortake_reactnative_app' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # Append -ld_classic to OTHER_LDFLAGS
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['OTHER_LDFLAGS'] ||= ['$(inherited)']
+        config.build_settings['OTHER_LDFLAGS'] << '-ld_classic'
+      end
+    end
   end
+end
+
+target 'TimeTrackerLiveActivityExtension' do
+  use_frameworks! :linkage => :static
+  inherit! :search_paths
 end

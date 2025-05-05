@@ -1,14 +1,17 @@
+// External
 import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faStop } from '@fortawesome/free-solid-svg-icons';
+import { Picker } from '@react-native-picker/picker';
 
+// Internal
 import { useTypedSelector, selectAuthUserTaskTimeTrack, useAppDispatch, useAuthActions } from '@/src/Redux';
 import { useTasksContext, useTaskTimeTrackContext } from '@/src/Contexts';
 import { MainStackParamList, TaskTimeTrack } from '@/src/Types';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faStop } from '@fortawesome/free-solid-svg-icons';
-import { TimeSpentDisplay } from './CreatedAtToTimeSince';
-import { Picker } from '@react-native-picker/picker';
+import { TimeSpentDisplay, CalculateSecondsToTimeDisplay } from './CreatedAtToTimeSince';
+import { updateLiveActivity } from '@/src/Native/LiveActivityModule';
 
 export const TaskTimeTrackPlayer: React.FC = () => {
     const navigation = useNavigation<NavigationProp<MainStackParamList>>();
@@ -25,6 +28,25 @@ export const TaskTimeTrackPlayer: React.FC = () => {
 
         if (taskTimeTrack) getLatestUniqueTaskTimeTracksByProject(taskTimeTrack.Project_ID);
     }, [taskTimeTrack]);
+
+    useEffect(() => {
+        const taskName = taskTimeTrack?.task?.Task_Title || 'Untitled Task';
+
+        const iOSLiveActivity = setInterval(() => {
+            if (!taskTimeTrack) return;
+
+            const startDate = new Date(taskTimeTrack.Time_Tracking_Start_Time);
+            const currentDate = new Date();
+            const diffInMilliseconds = currentDate.getTime() - startDate.getTime();
+            const diffInSeconds = Math.floor(diffInMilliseconds / 1000);
+
+            const timeSpendOutput = CalculateSecondsToTimeDisplay(diffInSeconds)
+            updateLiveActivity(taskName, timeSpendOutput)
+        }, 5000);
+
+        // Cleanup interval on component unmount
+        return () => clearInterval(iOSLiveActivity);
+    }, [taskTimeTrack])
 
     if (!taskTimeTrack) return null;
 

@@ -3,16 +3,55 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		2CD0727CAA3C305377328FB2 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
+		41BFD2F52DC79A3900B7D78F /* TimeTrackingModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41BFD2F32DC79A3900B7D78F /* TimeTrackingModule.swift */; };
+		41BFD2FB2DC79EF300B7D78F /* TimeTrackingModuleHeader.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41BFD2FA2DC79EF300B7D78F /* TimeTrackingModuleHeader.mm */; };
+		41BFD31D2DC7A57A00B7D78F /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41561B972DC24EB7006EB5D8 /* WidgetKit.framework */; };
+		41BFD31E2DC7A57A00B7D78F /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41561B992DC24EB7006EB5D8 /* SwiftUI.framework */; };
+		41BFD32D2DC7A57B00B7D78F /* TimeTrackingPlayerExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 41BFD31C2DC7A57A00B7D78F /* TimeTrackingPlayerExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		4DA0EA831054B4D5D6B0A0B7 /* Pods_giveortake_reactnative_app.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 094B8A52573D82A6E68C78CF /* Pods_giveortake_reactnative_app.framework */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		41BFD32B2DC7A57B00B7D78F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 41BFD31B2DC7A57A00B7D78F;
+			remoteInfo = TimeTrackingPlayerExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		41561BAC2DC24EB8006EB5D8 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				41BFD32D2DC7A57B00B7D78F /* TimeTrackingPlayerExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		417FB68D2DC2992000FE0A82 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		094B8A52573D82A6E68C78CF /* Pods_giveortake_reactnative_app.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_giveortake_reactnative_app.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -21,11 +60,49 @@
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = giveortake_reactnative_app/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = giveortake_reactnative_app/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-giveortake_reactnative_app.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-giveortake_reactnative_app.debug.xcconfig"; path = "Target Support Files/Pods-giveortake_reactnative_app/Pods-giveortake_reactnative_app.debug.xcconfig"; sourceTree = "<group>"; };
+		41561B972DC24EB7006EB5D8 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		41561B992DC24EB7006EB5D8 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		41B04DC62DC281DC00121AEF /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
+		41B087022DC279930073AEA9 /* AppIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppIntent.swift; sourceTree = "<group>"; };
+		41B087032DC279930073AEA9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		41B087042DC279930073AEA9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		41B087052DC279930073AEA9 /* TimeTrackerLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeTrackerLiveActivity.swift; sourceTree = "<group>"; };
+		41B087062DC279930073AEA9 /* TimeTrackerLiveActivityBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeTrackerLiveActivityBundle.swift; sourceTree = "<group>"; };
+		41B087072DC279930073AEA9 /* TimeTrackerLiveActivityControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeTrackerLiveActivityControl.swift; sourceTree = "<group>"; };
+		41B087082DC279930073AEA9 /* TimeTrackerLiveActivityLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeTrackerLiveActivityLiveActivity.swift; sourceTree = "<group>"; };
+		41BFD2F32DC79A3900B7D78F /* TimeTrackingModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TimeTrackingModule.swift; path = giveortake_reactnative_app/TimeTrackingModule.swift; sourceTree = "<group>"; };
+		41BFD2F62DC79A9600B7D78F /* giveortake_reactnative_app-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "giveortake_reactnative_app-Bridging-Header.h"; sourceTree = "<group>"; };
+		41BFD2FA2DC79EF300B7D78F /* TimeTrackingModuleHeader.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = TimeTrackingModuleHeader.mm; sourceTree = "<group>"; };
+		41BFD31C2DC7A57A00B7D78F /* TimeTrackingPlayerExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TimeTrackingPlayerExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		4927F6A3EC2F52DCD0CF37AB /* Pods-TimeTrackerLiveActivityExtension.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TimeTrackerLiveActivityExtension.debug.xcconfig"; path = "Target Support Files/Pods-TimeTrackerLiveActivityExtension/Pods-TimeTrackerLiveActivityExtension.debug.xcconfig"; sourceTree = "<group>"; };
+		4EC3445CA8A33363FFA30632 /* Pods-TimeTrackerLiveActivityExtension.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TimeTrackerLiveActivityExtension.release.xcconfig"; path = "Target Support Files/Pods-TimeTrackerLiveActivityExtension/Pods-TimeTrackerLiveActivityExtension.release.xcconfig"; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-giveortake_reactnative_app.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-giveortake_reactnative_app.release.xcconfig"; path = "Target Support Files/Pods-giveortake_reactnative_app/Pods-giveortake_reactnative_app.release.xcconfig"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = giveortake_reactnative_app/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = giveortake_reactnative_app/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		8D8B96C9C6D78995C0FC8034 /* Pods_TimeTrackerLiveActivityExtension.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TimeTrackerLiveActivityExtension.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		41BFD32E2DC7A57B00B7D78F /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 41BFD31B2DC7A57A00B7D78F /* TimeTrackingPlayerExtension */;
+		};
+		41BFD3332DC7A68500B7D78F /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				TimeTrackingPlayerLiveActivity.swift,
+			);
+			target = 13B07F861A680F5B00A75B9A /* giveortake_reactnative_app */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		41BFD31F2DC7A57A00B7D78F /* TimeTrackingPlayer */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (41BFD3332DC7A68500B7D78F /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 41BFD32E2DC7A57B00B7D78F /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = TimeTrackingPlayer; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		13B07F8C1A680F5B00A75B9A /* Frameworks */ = {
@@ -33,6 +110,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				4DA0EA831054B4D5D6B0A0B7 /* Pods_giveortake_reactnative_app.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		41BFD3192DC7A57A00B7D78F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				41BFD31E2DC7A57A00B7D78F /* SwiftUI.framework in Frameworks */,
+				41BFD31D2DC7A57A00B7D78F /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -44,6 +130,8 @@
 			children = (
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
+				41BFD2F32DC79A3900B7D78F /* TimeTrackingModule.swift */,
+				41BFD2FA2DC79EF300B7D78F /* TimeTrackingModuleHeader.mm */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
@@ -54,10 +142,29 @@
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				41B04DC62DC281DC00121AEF /* libc++.tbd */,
+				41B087092DC279930073AEA9 /* TimeTrackerLiveActivity */,
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				094B8A52573D82A6E68C78CF /* Pods_giveortake_reactnative_app.framework */,
+				41561B972DC24EB7006EB5D8 /* WidgetKit.framework */,
+				41561B992DC24EB7006EB5D8 /* SwiftUI.framework */,
+				8D8B96C9C6D78995C0FC8034 /* Pods_TimeTrackerLiveActivityExtension.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		41B087092DC279930073AEA9 /* TimeTrackerLiveActivity */ = {
+			isa = PBXGroup;
+			children = (
+				41B087022DC279930073AEA9 /* AppIntent.swift */,
+				41B087032DC279930073AEA9 /* Assets.xcassets */,
+				41B087042DC279930073AEA9 /* Info.plist */,
+				41B087052DC279930073AEA9 /* TimeTrackerLiveActivity.swift */,
+				41B087062DC279930073AEA9 /* TimeTrackerLiveActivityBundle.swift */,
+				41B087072DC279930073AEA9 /* TimeTrackerLiveActivityControl.swift */,
+				41B087082DC279930073AEA9 /* TimeTrackerLiveActivityLiveActivity.swift */,
+			);
+			path = TimeTrackerLiveActivity;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -72,9 +179,11 @@
 			children = (
 				13B07FAE1A68108700A75B9A /* giveortake_reactnative_app */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
+				41BFD31F2DC7A57A00B7D78F /* TimeTrackingPlayer */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
+				41BFD2F62DC79A9600B7D78F /* giveortake_reactnative_app-Bridging-Header.h */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -85,6 +194,7 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* giveortake_reactnative_app.app */,
+				41BFD31C2DC7A57A00B7D78F /* TimeTrackingPlayerExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -94,6 +204,8 @@
 			children = (
 				3B4392A12AC88292D35C810B /* Pods-giveortake_reactnative_app.debug.xcconfig */,
 				5709B34CF0A7D63546082F79 /* Pods-giveortake_reactnative_app.release.xcconfig */,
+				4927F6A3EC2F52DCD0CF37AB /* Pods-TimeTrackerLiveActivityExtension.debug.xcconfig */,
+				4EC3445CA8A33363FFA30632 /* Pods-TimeTrackerLiveActivityExtension.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -106,22 +218,47 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "giveortake_reactnative_app" */;
 			buildPhases = (
 				C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */,
+				417FB68D2DC2992000FE0A82 /* Embed Frameworks */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
-				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
+				41561BAC2DC24EB8006EB5D8 /* Embed Foundation Extensions */,
 				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
+				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
 				6A98D4A47048333AE84B2EAA /* [CP-User] [RNFB] Core Configuration */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				41BFD32C2DC7A57B00B7D78F /* PBXTargetDependency */,
 			);
 			name = giveortake_reactnative_app;
 			productName = giveortake_reactnative_app;
 			productReference = 13B07F961A680F5B00A75B9A /* giveortake_reactnative_app.app */;
 			productType = "com.apple.product-type.application";
+		};
+		41BFD31B2DC7A57A00B7D78F /* TimeTrackingPlayerExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 41BFD32F2DC7A57B00B7D78F /* Build configuration list for PBXNativeTarget "TimeTrackingPlayerExtension" */;
+			buildPhases = (
+				41BFD3182DC7A57A00B7D78F /* Sources */,
+				41BFD3192DC7A57A00B7D78F /* Frameworks */,
+				41BFD31A2DC7A57A00B7D78F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				41BFD31F2DC7A57A00B7D78F /* TimeTrackingPlayer */,
+			);
+			name = TimeTrackingPlayerExtension;
+			packageProductDependencies = (
+			);
+			productName = TimeTrackingPlayerExtension;
+			productReference = 41BFD31C2DC7A57A00B7D78F /* TimeTrackingPlayerExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -129,10 +266,14 @@
 		83CBB9F71A601CBA00E9B192 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastSwiftUpdateCheck = 1620;
 				LastUpgradeCheck = 1210;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
-						LastSwiftMigration = 1120;
+						LastSwiftMigration = 1620;
+					};
+					41BFD31B2DC7A57A00B7D78F = {
+						CreatedOnToolsVersion = 16.2;
 					};
 				};
 			};
@@ -150,6 +291,7 @@
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* giveortake_reactnative_app */,
+				41BFD31B2DC7A57A00B7D78F /* TimeTrackingPlayerExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -162,6 +304,13 @@
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				2CD0727CAA3C305377328FB2 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		41BFD31A2DC7A57A00B7D78F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -260,11 +409,28 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				41BFD2FB2DC79EF300B7D78F /* TimeTrackingModuleHeader.mm in Sources */,
+				41BFD2F52DC79A3900B7D78F /* TimeTrackingModule.swift in Sources */,
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		41BFD3182DC7A57A00B7D78F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		41BFD32C2DC7A57B00B7D78F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 41BFD31B2DC7A57A00B7D78F /* TimeTrackingPlayerExtension */;
+			targetProxy = 41BFD32B2DC7A57B00B7D78F /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
@@ -277,7 +443,7 @@
 				DEVELOPMENT_TEAM = 332D3XUJ48;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = giveortake_reactnative_app/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -291,6 +457,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = "J0nas7.example.giveortake-reactnative-app";
 				PRODUCT_NAME = giveortake_reactnative_app;
+				SWIFT_OBJC_BRIDGING_HEADER = "giveortake_reactnative_app-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -306,7 +473,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 332D3XUJ48;
 				INFOPLIST_FILE = giveortake_reactnative_app/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -320,8 +487,94 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = "J0nas7.example.giveortake-reactnative-app";
 				PRODUCT_NAME = giveortake_reactnative_app;
+				SWIFT_OBJC_BRIDGING_HEADER = "giveortake_reactnative_app-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+		41BFD3302DC7A57B00B7D78F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 332D3XUJ48;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TimeTrackingPlayer/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TimeTrackingPlayer;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "J0nas7.example.giveortake-reactnative-app.TimeTrackingPlayer";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		41BFD3312DC7A57B00B7D78F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 332D3XUJ48;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TimeTrackingPlayer/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TimeTrackingPlayer;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "J0nas7.example.giveortake-reactnative-app.TimeTrackingPlayer";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -405,10 +658,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -488,10 +738,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
@@ -507,6 +754,15 @@
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
 				13B07F951A680F5B00A75B9A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		41BFD32F2DC7A57B00B7D78F /* Build configuration list for PBXNativeTarget "TimeTrackingPlayerExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				41BFD3302DC7A57B00B7D78F /* Debug */,
+				41BFD3312DC7A57B00B7D78F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

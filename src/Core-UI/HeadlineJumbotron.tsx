@@ -4,7 +4,7 @@ import { useFocusEffect, useNavigation, useNavigationState } from "@react-naviga
 import { StackNavigationProp } from "@react-navigation/stack"
 import { Alert, SafeAreaView, Text, TouchableOpacity, View } from "react-native"
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome"
-import { faArrowLeft, faBuilding, faClock, faGauge, faLightbulb, faList, faUsers, faWindowRestore } from "@fortawesome/free-solid-svg-icons"
+import { faArrowLeft, faBuilding, faClock, faGauge, faLightbulb, faList, faUser, faUsers, faWindowRestore } from "@fortawesome/free-solid-svg-icons"
 
 // Internal
 import { selectMainViewJumbotron, useTypedSelector } from "../Redux"
@@ -128,6 +128,7 @@ const ParentButton: React.FC<{ currentRoute: string | null }> = ({ currentRoute 
         Backlog: faLightbulb,
         Kanban: faLightbulb,
         Time: faLightbulb,
+        Home: faUser,
     }
 
     const parentRoute: Record<string, any> = {
@@ -137,6 +138,7 @@ const ParentButton: React.FC<{ currentRoute: string | null }> = ({ currentRoute 
         Backlog: "Project",
         Kanban: "Project",
         Time: "Project",
+        Home: "Profile",
     }
 
     const parentParems: Record<string, any> = {
@@ -146,9 +148,10 @@ const ParentButton: React.FC<{ currentRoute: string | null }> = ({ currentRoute 
         Backlog: { id: ((projectById && projectById?.Project_ID) ?? "").toString() },
         Kanban: { id: ((projectById && projectById?.Project_ID) ?? "").toString() },
         Time: { id: ((projectById && projectById?.Project_ID) ?? "").toString() },
+        Home: {  },
     }
 
-    if (!projectById && !teamById) return null
+    if (currentRoute !== "Home" && !projectById && !teamById) return null
 
     return (
         <TouchableOpacity

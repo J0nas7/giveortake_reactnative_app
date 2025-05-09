@@ -11,4 +11,5 @@ export * from './BacklogView'
 export * from './KanbanBoardView'
 export * from './TimeTracksView'
 
+export * from './ProfileView'
 export * from './SignInView'

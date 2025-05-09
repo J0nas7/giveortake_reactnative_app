@@ -38,8 +38,3 @@ target 'giveortake_reactnative_app' do
     end
   end
 end
-
-target 'TimeTrackerLiveActivityExtension' do
-  use_frameworks! :linkage => :static
-  inherit! :search_paths
-end

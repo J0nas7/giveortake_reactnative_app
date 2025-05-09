@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useState } from "react"
+import React, { FormEvent, useEffect, useRef, useState } from "react"
 import {
     View,
     Text,
@@ -11,10 +11,13 @@ import {
 } from "react-native"
 import { useTranslation } from "react-i18next"
 import { NavigationProp, useNavigation } from "@react-navigation/native"
+import { Camera, CameraDevice, useCameraDevices, useCodeScanner } from 'react-native-vision-camera';
 
 // Internal
 import { useAuth } from "@/src/Hooks"
 import { MainStackParamList } from "../Types"
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import { faQrcode } from "@fortawesome/free-solid-svg-icons";
 
 export const SignInView = () => {
     const { handleLoginSubmit } = useAuth()
@@ -29,6 +32,19 @@ export const SignInView = () => {
     )
     const [showPassword, setShowPassword] = useState<boolean>(false)
     const [loginPending, setLoginPending] = useState<boolean>(false)
+
+    const cameraRef = useRef<Camera>(null);
+    const devices = useCameraDevices();
+    const [device, setDevice] = useState<CameraDevice | undefined>(undefined)
+    const codeScanner = useCodeScanner({
+        codeTypes: ['qr'],
+        onCodeScanned: (codes) => {
+            if (codes[0]) {
+                console.log("Scanned value", codes[0])
+                setDevice(undefined)
+            }
+        }
+    })
 
     // Methods
     const doLogin = () => {
@@ -45,6 +61,22 @@ export const SignInView = () => {
             .finally(() => {
                 setLoginPending(false)
             })
+    }
+
+    const doScanQR = () => {
+        setDevice(devices.find((d) => d.position === "back"))
+    }
+
+    if (device) {
+        return (
+            <Camera
+                ref={cameraRef}
+                style={styles.preview}
+                device={device}
+                isActive={true}
+                codeScanner={codeScanner}
+            />
+        )
     }
 
     return (
@@ -82,6 +114,10 @@ export const SignInView = () => {
                 <Text style={styles.buttonText}>{t('guest:forms:buttons:Login')}</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity style={styles.button} onPress={doScanQR}>
+                <FontAwesomeIcon icon={faQrcode} size={20} />
+            </TouchableOpacity>
+
             <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword' as never)}>
                 <Text style={styles.link}>{t('guest:links:Did-you-forget-your-password')}</Text>
             </TouchableOpacity>
@@ -94,6 +130,11 @@ export const SignInView = () => {
 }
 
 const styles = StyleSheet.create({
+    preview: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+    },
     container: {
         padding: 20,
         flex: 1,

@@ -34,6 +34,7 @@ export type MainStackParamList = {
     Kanban: { id: string }; // Requires an id parameter
     Time: { id: string }; // Requires an id parameter
 
+    Profile: undefined; // No params
     SignIn: undefined; // No params
 };
 

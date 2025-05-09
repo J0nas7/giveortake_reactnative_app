@@ -24,6 +24,8 @@ export const StartpageView = () => {
         title: `Give Or Take`,
         faIcon: undefined,
         visibility: 100,
+        rightIcon: faUser,
+        rightIconActionRoute: "Profile",
     })
 
     // State

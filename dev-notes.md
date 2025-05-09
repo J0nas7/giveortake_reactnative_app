@@ -16,7 +16,10 @@ npm install:
     react-native-gesture-handler react-native-safe-area-context react-native-screens
 
     react-native-chart-kit
-
+    react-native-qrcode-svg
+    react-native-vision-camera
+    react-native-worklets-core react-native-reanimated
+    
     --save-dev:
         babel-plugin-module-resolver
         @types/react-native-push-notification
@@ -28,6 +31,7 @@ Team:
 
 ## iOS repo-update:
 pod install --repo-update
+(objectVersion = 60)
 
 ## Android Studio couldn't find node?
 ## Should be run from a terminal window.

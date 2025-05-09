@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 70;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -84,14 +84,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		41BFD32E2DC7A57B00B7D78F /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		41BFD32E2DC7A57B00B7D78F /* Exceptions for "TimeTrackingPlayer" folder in "TimeTrackingPlayerExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
 			target = 41BFD31B2DC7A57A00B7D78F /* TimeTrackingPlayerExtension */;
 		};
-		41BFD3332DC7A68500B7D78F /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		41BFD3332DC7A68500B7D78F /* Exceptions for "TimeTrackingPlayer" folder in "giveortake_reactnative_app" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				TimeTrackingPlayerLiveActivity.swift,
@@ -101,7 +101,19 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		41BFD31F2DC7A57A00B7D78F /* TimeTrackingPlayer */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (41BFD3332DC7A68500B7D78F /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 41BFD32E2DC7A57B00B7D78F /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = TimeTrackingPlayer; sourceTree = "<group>"; };
+		41BFD31F2DC7A57A00B7D78F /* TimeTrackingPlayer */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				41BFD3332DC7A68500B7D78F /* Exceptions for "TimeTrackingPlayer" folder in "giveortake_reactnative_app" target */,
+				41BFD32E2DC7A57B00B7D78F /* Exceptions for "TimeTrackingPlayer" folder in "TimeTrackingPlayerExtension" target */,
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = TimeTrackingPlayer;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -254,8 +266,6 @@
 				41BFD31F2DC7A57A00B7D78F /* TimeTrackingPlayer */,
 			);
 			name = TimeTrackingPlayerExtension;
-			packageProductDependencies = (
-			);
 			productName = TimeTrackingPlayerExtension;
 			productReference = 41BFD31C2DC7A57A00B7D78F /* TimeTrackingPlayerExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -658,7 +668,10 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -738,7 +751,10 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;

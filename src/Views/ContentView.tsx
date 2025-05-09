@@ -14,6 +14,7 @@ import {
     OrganisationDetailsView,
     ProjectDetailsView,
     SignInView,
+    ProfileView,
     StartpageView,
     TaskDetailsView,
     TeamDetailsView,
@@ -58,7 +59,8 @@ const DeviceIsLoggedIn = () => {
             { name: "Organisation", component: OrganisationDetailsView },
             { name: "Team", component: TeamDetailsView },
             { name: "Project", component: ProjectDetailsView },
-            { name: "Task", component: TaskDetailsView }
+            { name: "Task", component: TaskDetailsView },
+            { name: "Profile", component: ProfileView }
         ];
 
         const routesInBottomNav: { name: keyof MainStackParamList; component: React.FC }[] = [

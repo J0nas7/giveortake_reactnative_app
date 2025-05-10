@@ -17,6 +17,8 @@ import {
 import { StackNavigationProp } from "@react-navigation/stack"
 import { MainStackParamList } from "@/src/Types"
 import { Alert } from "react-native"
+import { env, paths } from "../env"
+import axios from "axios"
 
 export const useAuth = () => {
     const { httpPostWithData } = useAxios()
@@ -96,6 +98,38 @@ export const useAuth = () => {
         return false
     }
 
+    const handleLoginByQR = async (scannedToken: string): Promise<boolean> => {
+        try {
+            let axiosUrl = `${env.url.API_URL + paths.API_ROUTE + "auth/clone-token"}`
+            const response = await axios.post(
+                axiosUrl,
+                {}, // No body needed in this case
+                {
+                    headers: {
+                        Authorization: `Bearer ${scannedToken}`,
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+
+            const data = response.data;
+
+            if (data.success) {
+                const newAccessToken = data.data.accessToken;
+                await AsyncStorage.setItem('accessToken', newAccessToken);
+                console.log("Token clone success:", data);
+
+                return processResult("login", data)
+            } else {
+                console.warn('Token clone failed', data.error || data.message);
+            }
+        } catch (error: any) {
+            console.error('Clone token request failed:', error.response?.data || error.message);
+        }
+        return false
+    }
+
     const handleLogoutSubmit = async () => {
         // Clear user data
         await AsyncStorage.removeItem("accessToken")
@@ -125,6 +159,7 @@ export const useAuth = () => {
     return {
         saveLoginSuccess,
         handleLoginSubmit,
+        handleLoginByQR,
         handleLogoutSubmit,
         errorMsg,
         status,

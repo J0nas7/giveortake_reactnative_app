@@ -1,6 +1,6 @@
 // External
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, TextInput, Image, Button, ViewStyle, Clipboard, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, TextInput, Image, Button, ViewStyle, Clipboard, Alert, Linking } from 'react-native';
 import { NavigationProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowUpFromBracket, faLightbulb, faPaperPlane, faPencil, faPlay, faStop, faTrashCan, faXmark } from '@fortawesome/free-solid-svg-icons';
@@ -12,6 +12,7 @@ import { MainStackParamList, Task, TaskComment, TaskMediaFile, TaskTimeTrack, Us
 import { CreatedAtToTimeSince, SecondsToTimeDisplay, TimeSpentDisplay } from '../Components/CreatedAtToTimeSince';
 import { selectAuthUser, selectAuthUserTaskTimeTrack, useTypedSelector } from '../Redux';
 import useMainViewJumbotron from '../Hooks/useMainViewJumbotron';
+import { env } from '../env';
 
 export const TaskDetailsView = () => {
     // Hooks
@@ -408,6 +409,8 @@ interface MediaFilesAreaViewProps {
 }
 
 const MediaFilesAreaView: React.FC<MediaFilesAreaViewProps> = ({ task, setToggleAddFile, handleDelete }) => {
+    const navigation = useNavigation<NavigationProp<MainStackParamList>>();
+
     return (
         <View style={mediaFilesAreaStyles.container}>
             <View style={mediaFilesAreaStyles.header}>
@@ -425,17 +428,26 @@ const MediaFilesAreaView: React.FC<MediaFilesAreaViewProps> = ({ task, setToggle
                         <View key={index} style={mediaFilesAreaStyles.mediaItem}>
                             <Text style={mediaFilesAreaStyles.fileName}>{fileName}</Text>
 
-                            {media.Media_File_Type === 'jpeg' ? (
-                                <Image
-                                    source={{ uri: `http://localhost:8000/storage/${media.Media_File_Path}` }}
-                                    style={mediaFilesAreaStyles.mediaImage}
-                                    resizeMode="cover"
-                                />
-                            ) : (
-                                <View style={mediaFilesAreaStyles.pdfBox}>
-                                    <Text style={mediaFilesAreaStyles.pdfLabel}>PDF</Text>
-                                </View>
-                            )}
+                            <TouchableOpacity
+                                // onPress={() => Linking.openURL(`${env.url.API_URL}/storage/${media.Media_File_Path}`)}
+                                onPress={() => navigation.navigate('Media', {
+                                    projectKey: task.project?.Project_Key ?? "",
+                                    taskKey: (task.Task_Key ?? "").toString(),
+                                    mediaID: (media.Media_ID ?? "").toString()
+                                })}
+                            >
+                                {(media.Media_File_Type === "jpeg" || media.Media_File_Type === "jpg") ? (
+                                    <Image
+                                        source={{ uri: `${env.url.API_URL}/storage/${media.Media_File_Path}` }}
+                                        style={mediaFilesAreaStyles.mediaImage}
+                                        resizeMode="cover"
+                                    />
+                                ) : (
+                                    <View style={mediaFilesAreaStyles.pdfBox}>
+                                        <Text style={mediaFilesAreaStyles.pdfLabel}>PDF</Text>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
 
                             <View style={mediaFilesAreaStyles.meta}>
                                 <View>

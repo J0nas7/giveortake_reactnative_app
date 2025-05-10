@@ -19,6 +19,7 @@ npm install:
     react-native-qrcode-svg
     react-native-vision-camera
     react-native-worklets-core react-native-reanimated
+    react-native-pdf react-native-blob-util react-native-webview
     
     --save-dev:
         babel-plugin-module-resolver

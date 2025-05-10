@@ -7,20 +7,24 @@ import {
     Keyboard,
     StyleSheet,
     Platform,
-    Alert
+    Alert,
+    ActivityIndicator
 } from "react-native"
 import { useTranslation } from "react-i18next"
 import { NavigationProp, useNavigation } from "@react-navigation/native"
-import { Camera, CameraDevice, useCameraDevices, useCodeScanner } from 'react-native-vision-camera';
+import { Camera, CameraDevice, Code, useCameraDevices, useCodeScanner } from 'react-native-vision-camera';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Internal
 import { useAuth } from "@/src/Hooks"
 import { MainStackParamList } from "../Types"
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import { faQrcode } from "@fortawesome/free-solid-svg-icons";
+import axios from "axios";
+import { env, paths } from "../env";
 
 export const SignInView = () => {
-    const { handleLoginSubmit } = useAuth()
+    const { handleLoginSubmit, handleLoginByQR } = useAuth()
     const navigation = useNavigation<NavigationProp<MainStackParamList>>();
 
     const { t } = useTranslation(['guest'])
@@ -39,14 +43,32 @@ export const SignInView = () => {
     const codeScanner = useCodeScanner({
         codeTypes: ['qr'],
         onCodeScanned: (codes) => {
-            if (codes[0]) {
-                console.log("Scanned value", codes[0])
-                setDevice(undefined)
+            if (codes.length > 0) {
+                onCodeScanned(codes);
             }
         }
     })
 
     // Methods
+    const onCodeScanned = async (codes: Code[]) => {
+        if (loginPending) return
+        setLoginPending(true)
+        const scannedToken = codes[0]?.value;
+        if (!scannedToken) return;
+        setDevice(undefined) // Stop scanning
+
+        handleLoginByQR(scannedToken)
+            .then((loginResult) => {
+                if (loginResult) {
+                    // Handle successful login
+                    // You can use navigation to route after login
+                }
+            })
+            .finally(() => {
+                setLoginPending(false)
+            })
+    };
+
     const doLogin = () => {
         if (loginPending) return
         setLoginPending(true)
@@ -63,9 +85,7 @@ export const SignInView = () => {
             })
     }
 
-    const doScanQR = () => {
-        setDevice(devices.find((d) => d.position === "back"))
-    }
+    const doScanQR = () => setDevice(devices.find((d) => d.position === "back"))
 
     if (device) {
         return (
@@ -110,13 +130,21 @@ export const SignInView = () => {
                 </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.button} onPress={doLogin} disabled={loginPending}>
-                <Text style={styles.buttonText}>{t('guest:forms:buttons:Login')}</Text>
-            </TouchableOpacity>
+            <View style={{ width: "100%", display: "flex", alignItems: "center" }}>
+                {loginPending ? (
+                    <ActivityIndicator size="small" color="#000" />
+                ) : (
+                    <View style={{ width: "100%" }}>
+                        <TouchableOpacity style={styles.button} onPress={doLogin} disabled={loginPending}>
+                            <Text style={styles.buttonText}>{t('guest:forms:buttons:Login')}</Text>
+                        </TouchableOpacity>
 
-            <TouchableOpacity style={styles.button} onPress={doScanQR}>
-                <FontAwesomeIcon icon={faQrcode} size={20} />
-            </TouchableOpacity>
+                        <TouchableOpacity style={styles.button} onPress={doScanQR}>
+                            <FontAwesomeIcon icon={faQrcode} size={20} />
+                        </TouchableOpacity>
+                    </View>
+                )}
+            </View>
 
             <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword' as never)}>
                 <Text style={styles.link}>{t('guest:links:Did-you-forget-your-password')}</Text>

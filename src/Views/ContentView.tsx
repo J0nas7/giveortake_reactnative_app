@@ -18,7 +18,9 @@ import {
     StartpageView,
     TaskDetailsView,
     TeamDetailsView,
-    TimeTracksView
+    TimeTracksView,
+    MediaFileView,
+    DownloadedMediaFilesView
 } from '@/src/Views'
 import {
     selectAuthUserTaskTimeTrack,
@@ -60,6 +62,8 @@ const DeviceIsLoggedIn = () => {
             { name: "Team", component: TeamDetailsView },
             { name: "Project", component: ProjectDetailsView },
             { name: "Task", component: TaskDetailsView },
+            { name: "Media", component: MediaFileView },
+            { name: "Downloaded", component: DownloadedMediaFilesView },
             { name: "Profile", component: ProfileView }
         ];
 

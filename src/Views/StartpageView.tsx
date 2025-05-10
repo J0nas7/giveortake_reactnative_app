@@ -5,7 +5,8 @@ import {
     TouchableOpacity,
     ScrollView,
     StyleSheet,
-    Platform
+    Platform,
+    Button
 } from "react-native"
 import { NavigationProp, useFocusEffect, useNavigation } from "@react-navigation/native"
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome"
@@ -46,17 +47,22 @@ export const StartpageView = () => {
         <ScrollView style={styles.container}>
             {/* Welcome Section */}
             <View style={styles.headerBox}>
-                <TouchableOpacity style={styles.headerRow} onPress={() => navigation.navigate("Profile" as never)}>
-                    <FontAwesomeIcon icon={faUser} size={20} color="#1ab11f" />
-                    <Text style={styles.headerText}>Hej {authUser?.User_FirstName}</Text>
-                </TouchableOpacity>
+                <View>
+                    <TouchableOpacity style={styles.headerRow} onPress={() => navigation.navigate("Profile" as never)}>
+                        <FontAwesomeIcon icon={faUser} size={20} color="#1ab11f" />
+                        <Text style={styles.headerText}>Hej {authUser?.User_FirstName}</Text>
+                    </TouchableOpacity>
 
-                <TouchableOpacity
-                    style={styles.createButton}
-                    onPress={() => navigation.navigate("CreateOrganisation" as never)}
-                >
-                    <FontAwesomeIcon icon={faBuilding} size={16} color="#1ab11f" />
-                    <Text style={styles.createButtonText}>Create Organisation</Text>
+                    <TouchableOpacity
+                        style={styles.createButton}
+                        onPress={() => navigation.navigate("CreateOrganisation" as never)}
+                    >
+                        <FontAwesomeIcon icon={faBuilding} size={16} color="#1ab11f" />
+                        <Text style={styles.createButtonText}>Create Organisation</Text>
+                    </TouchableOpacity>
+                </View>
+                <TouchableOpacity onPress={() => navigation.navigate("Downloaded")}>
+                    <Text style={styles.createButtonText}>Downloads</Text>
                 </TouchableOpacity>
             </View>
 
@@ -130,6 +136,10 @@ const styles = StyleSheet.create({
         marginBottom: 20
     },
     headerBox: {
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
         marginBottom: 20,
         padding: 15,
         borderRadius: 10,

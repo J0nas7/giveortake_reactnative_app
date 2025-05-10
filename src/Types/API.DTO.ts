@@ -28,12 +28,14 @@ export type MainStackParamList = {
     CreateTeam: { id: string }; // Requires an id parameter
     Project: { id: string }; // Requires an id parameter
     Task: { projectKey: string; taskKey: string }; // Requires projectKey and taskKey parameters
+    Media: { projectKey: string; taskKey: string, mediaID: string }; // Requires projectKey and taskKey parameters
     
     Dashboard: { id: string }; // Requires an id parameter
     Backlog: { id: string }; // Requires an id parameter
     Kanban: { id: string }; // Requires an id parameter
     Time: { id: string }; // Requires an id parameter
 
+    Downloaded: undefined; // No params
     Profile: undefined; // No params
     SignIn: undefined; // No params
 };

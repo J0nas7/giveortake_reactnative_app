@@ -1,10 +1,10 @@
 // External
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import SplashScreen from 'react-native-splash-screen'
 import { getFocusedRouteNameFromRoute, NavigationContainer, useNavigation, useNavigationState } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator, Alert, Linking } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator, Alert, Linking, AppStateStatus, AppState } from 'react-native'
 
 // Internal
 import { useNotifications } from '@/src/Hooks'
@@ -280,8 +280,10 @@ export const ContentView: React.FC = () => {
     const dispatch = useAppDispatch()
     const { fetchIsLoggedInStatus } = useAuthActions()
 
-    // Redux
+    // State and Constants
     const isLoggedIn = useTypedSelector(selectIsLoggedIn)
+    const [showLogoScreen, setShowLogoScreen] = useState<boolean>(false)
+    const appState = useRef(AppState.currentState)
 
     useEffect(() => {
         const init = async () => await dispatch(fetchIsLoggedInStatus())
@@ -291,6 +293,33 @@ export const ContentView: React.FC = () => {
     useEffect(() => {
         if (isLoggedIn !== undefined) SplashScreen.hide()
     }, [isLoggedIn])
+
+    useEffect(() => {
+        const handleAppStateChange = (nextAppState: AppStateStatus) => {
+            if (isLoggedIn === undefined) return
+
+            if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+                // Handle the case when the app comes to the foreground
+                setShowLogoScreen(false)
+            } else if (appState.current === 'active' && nextAppState.match(/inactive|background/)) {
+                // Handle the case when the app goes to the background
+                setShowLogoScreen(true)
+            }
+            appState.current = nextAppState
+        }
+
+        const subscription = AppState.addEventListener('change', handleAppStateChange)
+
+        return () => subscription.remove()
+    }, [isLoggedIn])
+
+    if (showLogoScreen) {
+        return (
+            <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <Text style={{ fontSize: 40, fontWeight: 'bold' }}>Give or Take</Text>
+            </SafeAreaView>
+        )
+    }
 
     return (
         <NavigationContainer>

@@ -1,25 +1,23 @@
 // External
+import { NavigationProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    View,
-    Text,
-    TextInput,
+    Alert,
     Button,
+    Dimensions,
     ScrollView,
     StyleSheet,
-    Alert,
-    TouchableOpacity,
+    Text,
+    TextInput,
+    View
 } from 'react-native';
-import { useRoute, useNavigation, NavigationProp, useFocusEffect } from '@react-navigation/native';
-import { Dimensions } from 'react-native';
 
 // Internal
 import { useTeamsContext } from '@/src/Contexts';
-import { MainStackParamList, Team, TeamFields, User } from '@/src/Types';
-import { useTypedSelector, selectAuthUser } from '@/src/Redux';
-import { ReadOnlyRow } from '../Components/ReadOnlyRow';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { selectAuthUser, useTypedSelector } from '@/src/Redux';
+import { MainStackParamList, Team, TeamFields } from '@/src/Types';
 import { faBuilding, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { ReadOnlyRow } from '../Components/ReadOnlyRow';
 import useMainViewJumbotron from '../Hooks/useMainViewJumbotron';
 
 const screenWidth = Dimensions.get('window').width;
@@ -81,10 +79,10 @@ export const TeamDetailsView: React.FC = () => {
     const handleDeleteTeam = async () => {
         if (!renderTeam || !renderTeam.Team_ID) return;
 
-        const removed = await removeTeam(renderTeam.Team_ID, renderTeam.Organisation_ID);
-        if (removed) {
-            navigation.navigate("Organisation", { id: renderTeam.Organisation_ID.toString() });
-        }
+        const removed = await removeTeam(renderTeam.Team_ID, renderTeam.Organisation_ID, undefined);
+        // if (removed) {
+        //     navigation.navigate("Organisation", { id: renderTeam.Organisation_ID.toString() });
+        // }
     };
 
     if (!renderTeam) {

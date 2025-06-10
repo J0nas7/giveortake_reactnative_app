@@ -1,13 +1,13 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, TextInput, ScrollView, Button, TouchableOpacity } from "react-native";
-import { NavigationProp, useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import { faClock, faGauge, faLightbulb, faList, faUsers, faWindowRestore } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import { faGauge, faList, faWindowRestore, faClock, faLightbulb, faUsers } from "@fortawesome/free-solid-svg-icons";
+import { NavigationProp, useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import React, { useCallback, useEffect, useState } from "react";
+import { Button, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 // Internal
 import { useProjectsContext } from "@/src/Contexts";
-import { MainStackParamList, Project, ProjectFields } from "@/src/Types";
 import { selectAuthUser, useTypedSelector } from "@/src/Redux";
+import { MainStackParamList, Project, ProjectFields } from "@/src/Types";
 import { ReadOnlyRow } from "../Components/ReadOnlyRow";
 import useMainViewJumbotron from "../Hooks/useMainViewJumbotron";
 
@@ -64,10 +64,9 @@ export const ProjectDetailsView: React.FC = () => {
 
     const handleDeleteProject = async () => {
         if (renderProject?.Project_ID) {
-            const removed = await removeProject(renderProject.Project_ID, renderProject.Team_ID);
-            if (removed) {
-                navigation.navigate("Team", { id: (renderProject.Team_ID ?? "").toString() });
-            }
+            const removed = await removeProject(renderProject.Project_ID, renderProject.Team_ID, undefined);
+
+            navigation.navigate("Team", { id: (renderProject.Team_ID ?? "").toString() });
         }
     };
 

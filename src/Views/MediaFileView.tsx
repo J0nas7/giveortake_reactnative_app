@@ -1,14 +1,14 @@
 // External
-import React, { useEffect, useState } from 'react';
-import { View, Text, Image, ActivityIndicator, Dimensions, StyleSheet, Alert, Button } from 'react-native';
-import Pdf from 'react-native-pdf';
-import RNBlobUtil from 'react-native-blob-util';
 import { useRoute } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Button, Dimensions, Image, StyleSheet, Text, View } from 'react-native';
+import RNBlobUtil from 'react-native-blob-util';
+import Pdf from 'react-native-pdf';
 
 // Internal
-import { TaskMediaFile } from '../Types';
 import { useTasksContext } from '../Contexts';
 import { env } from '../env';
+import { TaskMediaFile } from '../Types';
 
 export const MediaFileView = () => {
     // Hooks
@@ -59,7 +59,7 @@ export const MediaFileView = () => {
             Media_ID: media.Media_ID,
             Media_File_Name: fileName,
             Task_Title: taskByKeys?.Task_Title,
-            Project_Key: taskByKeys?.project?.Project_Key,
+            Project_Key: taskByKeys?.backlog?.project?.Project_Key,
             Task_Key: taskByKeys?.Task_Key,
             Downloaded_At: new Date().toISOString(),
         };
@@ -73,12 +73,12 @@ export const MediaFileView = () => {
         if (!media) return false
 
         const fileExtension = media.Media_File_Type === 'pdf' ? 'pdf' :
-                media.Media_File_Type.includes('jpeg') ? 'jpeg' :
-                    media.Media_File_Type.includes('jpg') ? 'jpg' :
-                        media.Media_File_Type.split('/').pop(); // fallback
+            media.Media_File_Type.includes('jpeg') ? 'jpeg' :
+                media.Media_File_Type.includes('jpg') ? 'jpg' :
+                    media.Media_File_Type.split('/').pop(); // fallback
 
         const filePath = `${RNBlobUtil.fs.dirs.DocumentDir}/${mediaID}.${fileExtension}`;
-    
+
         const exists = await RNBlobUtil.fs.exists(filePath);
         return exists; // true or false
     };

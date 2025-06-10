@@ -1,37 +1,32 @@
 // External
-import React, { useCallback, useEffect, useState } from 'react';
-import {
-    View,
-    Text,
-    FlatList,
-    TouchableOpacity,
-    TextInput,
-    StyleSheet,
-    Button,
-} from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import { NavigationProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { faTrashCan } from '@fortawesome/free-regular-svg-icons';
+import {
+    FlatList,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from 'react-native';
 
 // Internal
-import { useProjectsContext, useTasksContext } from '@/src/Contexts';
-import { useTypedSelector, selectAuthUser } from '@/src/Redux';
-import { MainStackParamList, Task } from '../Types';
-import useMainViewJumbotron from '../Hooks/useMainViewJumbotron';
+import { useBacklogsContext, useTasksContext } from '@/src/Contexts';
+import { selectAuthUser, useTypedSelector } from '@/src/Redux';
 import { faLightbulb, faList } from '@fortawesome/free-solid-svg-icons';
+import useMainViewJumbotron from '../Hooks/useMainViewJumbotron';
+import { Backlog, MainStackParamList, Status, Task } from '../Types';
 
 export const BacklogView = () => {
     // Hooks
     const { t } = useTranslation(['backlog']);
     const navigation = useNavigation<NavigationProp<MainStackParamList>>();
     const route = useRoute();
-    const { id: projectId } = route.params as { id: string };
-    const { projectById, readProjectById } = useProjectsContext();
+    const { id: backlogId } = route.params as { id: string };
+    const { backlogById, readBacklogById } = useBacklogsContext();
     const {
         tasksById,
-        readTasksByProjectId,
+        readTasksByBacklogId,
         newTask,
         handleChangeNewTask,
         addTask,
@@ -42,24 +37,24 @@ export const BacklogView = () => {
         faIcon: faList,
         visibility: 100,
         rightIcon: faLightbulb,
-        rightIconActionRoute: "Project",
-        rightIconActionParams: { id: ((projectById && projectById?.Project_ID) ?? "").toString() },
+        rightIconActionRoute: "Backlog",
+        rightIconActionParams: { id: ((backlogById && backlogById.Backlog_ID) ?? "").toString() },
     })
 
     // State
     const authUser = useTypedSelector(selectAuthUser);
-    const [renderProject, setRenderProject] = useState<any>();
+    const [renderBacklog, setRenderBacklog] = useState<Backlog | undefined>(undefined);
     const [renderTasks, setRenderTasks] = useState<Task[]>([]);
 
     // Effects
     useEffect(() => {
-        readProjectById(parseInt(projectId));
-        readTasksByProjectId(parseInt(projectId));
-    }, [projectId]);
+        readBacklogById(parseInt(backlogId));
+        readTasksByBacklogId(parseInt(backlogId));
+    }, [backlogId]);
 
     useEffect(() => {
-        setRenderProject(projectById);
-    }, [projectById]);
+        setRenderBacklog(backlogById);
+    }, [backlogById]);
 
     useEffect(() => {
         setRenderTasks(tasksById);
@@ -73,17 +68,22 @@ export const BacklogView = () => {
 
     // Methods
     const handleCreateTask = async () => {
-        const newTaskData = {
-            Project_ID: parseInt(projectId),
-            Team_ID: renderProject?.team?.Team_ID || 0,
+        if (!renderBacklog) return
+
+        const newTaskData: Task = {
+            Backlog_ID: parseInt(backlogId),
+            Team_ID: renderBacklog?.project?.team?.Team_ID ? renderBacklog?.project?.team?.Team_ID : 0,
             Task_Title: newTask?.Task_Title || '',
-            Task_Status: newTask?.Task_Status || 'To Do',
-            Assigned_User_ID: newTask?.Assigned_User_ID,
+            Status_ID: newTask?.Status_ID || renderBacklog.statuses && renderBacklog.statuses?.
+                // Status_Order low to high:
+                sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))[0]
+                ?.Status_ID || 0,
+            Assigned_User_ID: newTask?.Assigned_User_ID
         };
-        await addTask(parseInt(projectId), newTaskData);
-        await readTasksByProjectId(parseInt(projectId), true);
+        await addTask(parseInt(backlogId), newTaskData);
+        await readTasksByBacklogId(parseInt(backlogId), true);
     };
-    
+
     return (
         <View style={styles.container}>
             <FlatList
@@ -93,12 +93,14 @@ export const BacklogView = () => {
                     <TouchableOpacity
                         style={styles.taskCard}
                         onPress={() => navigation.navigate('Task', {
-                            projectKey: item.project?.Project_Key ?? "",
+                            projectKey: item.backlog?.project?.Project_Key ?? "",
                             taskKey: (item.Task_Key ?? "").toString(),
                         })}
                     >
                         <Text style={styles.taskTitle}>{item.Task_Title}</Text>
-                        <Text style={styles.taskStatus}>{item.Task_Status}</Text>
+                        <Text style={styles.taskStatus}>
+                            {renderBacklog?.statuses?.find(status => status.Status_ID === item.Status_ID)?.Status_Name}
+                        </Text>
                     </TouchableOpacity>
                 )}
                 contentContainerStyle={styles.listContainer}

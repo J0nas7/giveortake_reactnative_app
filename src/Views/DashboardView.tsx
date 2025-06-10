@@ -1,47 +1,47 @@
 // External
-import React, { useCallback, useEffect, useMemo, useState } from "react"
-import { View, Text, ScrollView, StyleSheet, Dimensions } from "react-native"
 import { useFocusEffect, useRoute } from "@react-navigation/native"
-import { PieChart, BarChart } from "react-native-chart-kit"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native"
+import { BarChart, PieChart } from "react-native-chart-kit"
 
 // Internal
-import { useProjectsContext, useTasksContext } from "@/src/Contexts"
-import { Project, Task } from "@/src/Types"
-import useMainViewJumbotron from "../Hooks/useMainViewJumbotron"
+import { useBacklogsContext, useTasksContext } from "@/src/Contexts"
+import { Backlog, Status, Task } from "@/src/Types"
 import { faGauge, faLightbulb } from "@fortawesome/free-solid-svg-icons"
+import useMainViewJumbotron from "../Hooks/useMainViewJumbotron"
 
 const screenWidth = Dimensions.get("window").width
 
 const DashboardView = () => {
     // Hooks
     const route = useRoute()
-    const { projectId } = route.params as { projectId: string }
+    const { backlogId } = route.params as { backlogId: string }
     const { t } = useTranslation(["dashboard"])
-    const { tasksById, readTasksByProjectId } = useTasksContext()
-    const { projectById, readProjectById } = useProjectsContext()
+    const { tasksById, readTasksByBacklogId } = useTasksContext()
+    const { backlogById, readBacklogById } = useBacklogsContext()
     const { handleScroll, handleFocusEffect } = useMainViewJumbotron({
         title: `Dashboard`,
         faIcon: faGauge,
         visibility: 100,
         rightIcon: faLightbulb,
-        rightIconActionRoute: "Project",
-        rightIconActionParams: { id: ((projectById && projectById?.Project_ID) ?? "").toString() },
+        rightIconActionRoute: "Backlog",
+        rightIconActionParams: { id: ((backlogById && backlogById.Backlog_ID) ?? "").toString() },
     })
 
     // State
-    const [renderProject, setRenderProject] = useState<Project | undefined>()
+    const [renderBacklog, setRenderBacklog] = useState<Backlog | undefined>()
     const [renderTasks, setRenderTasks] = useState<Task[] | undefined>()
 
     // Effects
     useEffect(() => {
-        readTasksByProjectId(parseInt(projectId))
-        readProjectById(parseInt(projectId))
-    }, [projectId])
+        readTasksByBacklogId(parseInt(backlogId))
+        readBacklogById(parseInt(backlogId))
+    }, [backlogId])
 
     useEffect(() => {
-        if (projectById) setRenderProject(projectById)
-    }, [projectById])
+        if (backlogById) setRenderBacklog(backlogById)
+    }, [backlogById])
 
     useEffect(() => {
         if (tasksById.length && !renderTasks) {
@@ -58,62 +58,48 @@ const DashboardView = () => {
     // Dashboard-related calculations
     const safeTasks = Array.isArray(renderTasks) ? renderTasks : []
 
-    const taskStatuses = useMemo(() => {
-        return safeTasks.reduce((acc, task) => {
-            if (!acc[task.Task_Status]) acc[task.Task_Status] = []
-            acc[task.Task_Status].push(task)
-            return acc
-        }, {} as Record<Task["Task_Status"], Task[]>)
-    }, [safeTasks])
+    const taskStatuses = {
+        todo: safeTasks.filter(task => task.status?.Status_Is_Default),
+        inProgress: safeTasks.filter(
+            task =>
+                !task.status?.Status_Is_Default &&
+                !task.status?.Status_Is_Closed
+        ),
+        done: safeTasks.filter(task => task.status?.Status_Is_Closed),
+    }
 
+    // KPI Calculations
     const totalTasks = safeTasks.length
-    const completedTasks = taskStatuses["Done"]?.length || 0
-    const inProgressTasks = taskStatuses["In Progress"]?.length || 0
-    const reviewTasks = taskStatuses["Waiting for Review"]?.length || 0
-    const todoTasks = taskStatuses["To Do"]?.length || 0
+    const todoTasks = taskStatuses.todo.length
+    const inProgressTasks = taskStatuses.inProgress.length
+    const completedTasks = taskStatuses.done.length
 
     const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
 
+    // Overdue Tasks Calculation
     const overdueTasks = useMemo(() => {
         const today = new Date().toISOString().split("T")[0]
         return safeTasks.filter(task =>
             task.Task_Due_Date &&
             typeof task.Task_Due_Date === "string" &&
             task.Task_Due_Date < today &&
-            task.Task_Status !== "Done"
+            task.status?.Status_Is_Closed !== true
         ).length
     }, [safeTasks])
 
-    const chartData = [
-        {
-            name: t("dashboard.statusLabels.toDo"),
-            population: todoTasks,
-            color: "#FF6384",
-            legendFontColor: "#7F7F7F",
-            legendFontSize: 14
-        },
-        {
-            name: t("dashboard.statusLabels.inProgress"),
-            population: inProgressTasks,
-            color: "#36A2EB",
-            legendFontColor: "#7F7F7F",
-            legendFontSize: 14
-        },
-        {
-            name: t("dashboard.statusLabels.waitingForReview"),
-            population: reviewTasks,
-            color: "#FFCE56",
-            legendFontColor: "#7F7F7F",
-            legendFontSize: 14
-        },
-        {
-            name: t("dashboard.statusLabels.done"),
-            population: completedTasks,
-            color: "#4BC0C0",
-            legendFontColor: "#7F7F7F",
-            legendFontSize: 14
-        }
-    ]
+    const chartData = useMemo(() => {
+        if (!backlogById || !Array.isArray(backlogById.statuses)) return [];
+        const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
+        return backlogById.statuses.map((status: Status, idx: number) => ({
+            name: status.Status_Name,
+            population: backlogById.tasks
+                ? backlogById.tasks.filter((task: Task) => task.Status_ID === status.Status_ID).length
+                : 0,
+            color: colors[idx % colors.length],
+            legendFontColor: "#444",
+            legendFontSize: 14,
+        }));
+    }, [backlogById]);
 
     const barChartData = {
         labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
@@ -134,7 +120,7 @@ const DashboardView = () => {
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.title}>{renderProject?.Project_Name}</Text>
+            <Text style={styles.title}>{renderBacklog?.Backlog_Name}</Text>
 
             <View style={styles.kpiContainer}>
                 <KPI title={t("dashboard.totalTasks")} value={totalTasks} />

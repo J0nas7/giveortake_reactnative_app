@@ -1,25 +1,25 @@
 // External
-import React, { useCallback, useEffect, useState } from 'react';
-import {
-    View,
-    Text,
-    TextInput,
-    ScrollView,
-    TouchableOpacity,
-    StyleSheet,
-    Alert,
-} from 'react-native';
-import { useRoute, useNavigation, NavigationProp, useFocusEffect } from '@react-navigation/native';
-import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import { faBuilding } from '@fortawesome/free-regular-svg-icons';
 import { faUsers } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import { NavigationProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
 // Internal
 import { useOrganisationsContext } from '@/src/Contexts';
-import { useTypedSelector, selectAuthUser } from '@/src/Redux';
-import { MainStackParamList, Organisation } from '../Types';
+import { selectAuthUser, useTypedSelector } from '@/src/Redux';
 import { CreatedAtToTimeSince } from '../Components/CreatedAtToTimeSince';
 import useMainViewJumbotron from '../Hooks/useMainViewJumbotron';
+import { MainStackParamList, Organisation } from '../Types';
 
 export const OrganisationDetailsView = () => {
     // Hooks
@@ -69,12 +69,12 @@ export const OrganisationDetailsView = () => {
 
     const handleDeleteOrganisation = async () => {
         if (!organisation || !organisation.Organisation_ID) return
-        
-        const confirmed = await removeOrganisation(organisation.Organisation_ID, organisation.User_ID);
-        if (confirmed) {
-            Alert.alert('Organisation deleted');
-            navigation.navigate('Home');
-        }
+
+        const confirmed = await removeOrganisation(organisation.Organisation_ID, organisation.User_ID, undefined);
+        // if (confirmed) {
+        //     Alert.alert('Organisation deleted');
+        //     navigation.navigate('Home');
+        // }
     };
 
     if (!organisation) return <Text style={styles.loading}>Loading...</Text>;

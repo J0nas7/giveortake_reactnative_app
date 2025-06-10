@@ -1,28 +1,24 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { NavigationProp, useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import React, { useCallback, useEffect, useState } from "react";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 // import DraggableFlatList from "react-native-draggable-flatlist";
-import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 import { faLightbulb, faTrash, faWindowRestore } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
 
-import { useProjectsContext, useTasksContext } from "@/src/Contexts";
-import { Task, Project, MainStackParamList } from "@/src/Types";
+import { useBacklogsContext, useTasksContext } from "@/src/Contexts";
+import { Backlog, MainStackParamList, Status, Task } from "@/src/Types";
 import { FlatList } from "react-native-gesture-handler";
 import useMainViewJumbotron from "../Hooks/useMainViewJumbotron";
-
-const STATUSES = ["To Do", "In Progress", "Waiting for Review", "Done"] as const;
-
-type Status = typeof STATUSES[number];
 
 export const KanbanBoardView: React.FC = () => {
     // Hooks
     const navigation = useNavigation<NavigationProp<MainStackParamList>>();
     const route = useRoute<any>();
-    const { id: projectId } = route.params as { id: string };
-    const { projectById, readProjectById } = useProjectsContext();
+    const { id: backlogId } = route.params as { id: string };
+    const { backlogById, readBacklogById } = useBacklogsContext();
     const {
         tasksById,
-        readTasksByProjectId,
+        readTasksByBacklogId,
         saveTaskChanges,
         removeTask,
         setTaskDetail,
@@ -32,28 +28,33 @@ export const KanbanBoardView: React.FC = () => {
         faIcon: faWindowRestore,
         visibility: 100,
         rightIcon: faLightbulb,
-        rightIconActionRoute: "Project",
-        rightIconActionParams: { id: ((projectById && projectById?.Project_ID) ?? "").toString() },
+        rightIconActionRoute: "Backlog",
+        rightIconActionParams: { id: ((backlogById && backlogById?.Backlog_ID) ?? "").toString() },
     })
 
     // State
-    const [project, setProject] = useState<Project | undefined>();
+    const [backlog, setBacklog] = useState<Backlog | undefined>();
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [kanbanColumns, setKanbanColumns] = useState<Status[] | undefined>(undefined)
 
     // Effects
     useEffect(() => {
-        readProjectById(parseInt(projectId));
-        readTasksByProjectId(parseInt(projectId));
-    }, [projectId]);
+        readBacklogById(parseInt(backlogId));
+        readTasksByBacklogId(parseInt(backlogId));
+    }, [backlogId]);
 
     useEffect(() => {
-        if (projectById) setProject(projectById);
-    }, [projectById]);
+        if (backlogId) {
+            setBacklog(backlogById)
+
+            if (backlogById) setKanbanColumns(backlogById.statuses)
+        }
+    }, [backlogById]);
 
     useEffect(() => {
         setTasks(tasksById);
     }, [tasksById])
-    
+
     useFocusEffect(
         useCallback(() => {
             if (typeof handleFocusEffect === "function") handleFocusEffect()
@@ -63,13 +64,18 @@ export const KanbanBoardView: React.FC = () => {
     // Methods
     const handleArchive = async (task: Task) => {
         if (!task.Task_ID) return
-        await removeTask(task.Task_ID, task.Project_ID);
-        await readTasksByProjectId(task.Project_ID, true);
+        await removeTask(task.Task_ID, task.Backlog_ID, undefined);
+        await readTasksByBacklogId(task.Backlog_ID, true);
     };
 
-    const handleMoveTask = async (task: Task, newStatus: Status) => {
-        await saveTaskChanges({ ...task, Task_Status: newStatus }, task.Project_ID);
-        await readTasksByProjectId(task.Project_ID, true);
+    // Moves a task to a new status and refreshes the task list.
+    const handleMoveTask = async (task: Task, newStatus: number) => {
+        await saveTaskChanges(
+            { ...task, Status_ID: newStatus },
+            task.Backlog_ID
+        )
+
+        await readTasksByBacklogId(parseInt(backlogId), true)
     };
 
     const renderTask = (task: Task, status: Status) => (
@@ -88,32 +94,36 @@ export const KanbanBoardView: React.FC = () => {
     return (
         <ScrollView style={styles.container}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {STATUSES.map((status) => (
-                    <View key={status} style={styles.column}>
-                        <Text style={styles.columnTitle}>{status}</Text>
-                        <FlatList
-                            data={tasks.filter((t) => t.Task_Status === status)}
-                            keyExtractor={(item) => (item.Task_ID ?? "").toString()}
-                            renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    style={styles.taskCard}
-                                    onPress={() => navigation.navigate('Task', {
-                                        projectKey: item.project?.Project_Key ?? "",
-                                        taskKey: (item.Task_Key ?? "").toString(),
-                                    })}
-                                >
-                                    <Text style={styles.taskTitle}>{item.Task_Title}</Text>
-                                    {/* <TouchableOpacity onPress={() => handleArchive(item)}>
+                {kanbanColumns?.
+                    // Status_Order low to high:
+                    sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))
+                    .map(status => (
+                        <View key={status.Status_ID} style={styles.column}>
+                            <Text style={styles.columnTitle}>{status.Status_Name}</Text>
+                            <FlatList
+                                data={tasks.filter((t) => t.Status_ID === status.Status_ID)}
+                                keyExtractor={(item) => (item.Task_ID ?? "").toString()}
+                                renderItem={({ item }) => (
+                                    <TouchableOpacity
+                                        style={styles.taskCard}
+                                        onPress={() => navigation.navigate('Task', {
+                                            projectKey: item.backlog?.project?.Project_Key ?? "",
+                                            taskKey: (item.Task_Key ?? "").toString(),
+                                        })}
+                                    >
+                                        <Text style={styles.taskTitle}>{item.Task_Title}</Text>
+                                        {/* <TouchableOpacity onPress={() => handleArchive(item)}>
                                         <FontAwesomeIcon icon={faTrash} size={16} color="#FF3B30" />
                                     </TouchableOpacity> */}
-                                </TouchableOpacity>
-                            )}
+                                    </TouchableOpacity>
+                                )}
                             /* onDragEnd={({ data }) => {
                                  data.forEach((task) => handleMoveTask(task, status));
                             }}*/
-                        />
-                    </View>
-                ))}
+                            />
+                        </View>
+                    ))
+                }
             </ScrollView>
         </ScrollView>
     );

@@ -4,8 +4,8 @@
 import React, { createContext, useContext } from "react";
 
 // Internal
-import { useAxios } from "@/hooks";
-import { Backlog, BacklogFields, BacklogStates } from "@/types";
+import { useAxios } from "@/src/Hooks";
+import { Backlog, BacklogFields, BacklogStates } from "@/src/Types";
 import { useResourceContext } from "./TypeContext";
 
 // Context for Backlogs

@@ -1,9 +1,8 @@
 // External
-import React, { createContext, useContext, useState, useEffect } from "react"
+import { useState } from "react"
 
 // Internal
-import { useTypeAPI } from "@/hooks"
-import { selectIsLoggedIn, useTypedSelector } from "@/redux"
+import { useTypeAPI } from "@/src/Hooks"
 
 // Generic context and provider to handle different resources like teams, tasks, organisations, etc.
 export const useResourceContext = <T extends { [key: string]: any }, IDKey extends keyof T>(
@@ -18,7 +17,7 @@ export const useResourceContext = <T extends { [key: string]: any }, IDKey exten
     const [newItem, setNewItem] = useState<T | undefined>(undefined)
     const [itemDetail, setItemDetail] = useState<T | undefined>(undefined)
 
-    const readItemsById = async (parentId: number, refresh?: boolean|undefined, reply?: boolean) => {
+    const readItemsById = async (parentId: number, refresh?: boolean | undefined, reply?: boolean) => {
         if (refresh) setItemsById([])
 
         const data = await fetchItemsByParent(parentId) // Fetch all items by parentId
@@ -88,7 +87,7 @@ export const useResourceContext = <T extends { [key: string]: any }, IDKey exten
     }
 
     const removeItem = async (itemId: number, parentId: number, redirect: string | undefined) => {
-        const success = await deleteItem(itemId, redirect)
+        const success = await deleteItem(itemId)
 
         const data = await fetchItemsByParent(parentId) // Refresh items after deletion
         if (data) setItemsById(data)

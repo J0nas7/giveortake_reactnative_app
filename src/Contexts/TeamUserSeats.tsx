@@ -1,12 +1,11 @@
 "use client"
 
 // External
-import { usePathname } from "next/navigation";
 import React, { createContext, useContext, useState } from "react";
 
 // Internal
-import { useAxios, useTypeAPI } from "@/hooks";
-import { Role, TeamUserSeat, TeamUserSeatFields } from "@/types";
+import { useAxios, useTypeAPI } from "@/src/Hooks";
+import { Role, TeamUserSeat, TeamUserSeatFields } from "@/src/Types";
 import { useResourceContext } from "./";
 
 // Context for Team User Seats
@@ -22,7 +21,7 @@ export type TeamUserSeatsContextType = {
     removeTeamUserSeat: (itemId: number, parentId: number, redirect: string | undefined) => Promise<void>
     rolesAndPermissionsByTeamId: Role[] | undefined
     readRolesAndPermissionsByTeamId: (teamId: number) => Promise<boolean>
-    removeRolesAndPermissionsByRoleId: (itemId: number, parentId: number) => Promise<void>
+    removeRolesAndPermissionsByRoleId: (itemId: number, parentId: number) => Promise<boolean>
     addRole: (parentId: number, object?: Role | undefined) => Promise<void>
     saveTeamRoleChanges: (itemChanges: Role, parentId: number) => Promise<boolean>
 };
@@ -49,7 +48,6 @@ export const TeamUserSeatsProvider: React.FC<{ children: React.ReactNode }> = ({
     )
 
     const { httpGetRequest } = useAxios()
-    const pathname = usePathname()
 
     const { postItem: postRole, updateItem: updateRole, deleteItem: deleteRole } = useTypeAPI<Role, "Role_ID">("team-roles", "Role_ID", "teams")
 
@@ -71,7 +69,7 @@ export const TeamUserSeatsProvider: React.FC<{ children: React.ReactNode }> = ({
         }
     }
 
-    const removeRolesAndPermissionsByRoleId = async (itemId: number, parentId: number) => await deleteRole(itemId, pathname)
+    const removeRolesAndPermissionsByRoleId = async (itemId: number, parentId: number) => await deleteRole(itemId)
 
     const addRole = async (parentId: number, object?: Role | undefined) => {
         console.log("new role", object)

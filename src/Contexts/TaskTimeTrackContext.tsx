@@ -4,9 +4,16 @@
 import React, { createContext, useContext, useState } from "react"
 
 // Internal
-import { useAxios } from "@/hooks"
-import { selectAuthUser, selectAuthUserTaskTimeTrack, setAuthUserTaskTimeTrack, useAppDispatch, useAuthActions, useTypedSelector } from "@/redux"
-import { Task, TaskTimeTrack } from "@/types"
+import { useAxios } from "@/src/Hooks"
+import {
+    selectAuthUser,
+    selectAuthUserTaskTimeTrack,
+    setAuthUserTaskTimeTrack,
+    useAppDispatch,
+    useAuthActions,
+    useTypedSelector
+} from "@/src/Redux"
+import { Task, TaskTimeTrack } from "@/src/Types"
 import { useResourceContext, useTasksContext } from "./"
 
 // TaskTimeTrack Context Type

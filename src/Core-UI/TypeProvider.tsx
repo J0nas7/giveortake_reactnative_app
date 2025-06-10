@@ -2,21 +2,27 @@
 import React from 'react';
 
 // Internal
-import { 
-    UsersProvider, TeamsProvider, ProjectsProvider, 
-    OrganisationsProvider, TeamUserSeatsProvider,
-    TasksProvider, TaskTimeTracksProvider, TaskCommentsProvider, TaskMediaFilesProvider
-} from "@/src/Contexts"
+import {
+    BacklogsProvider,
+    OrganisationsProvider,
+    ProjectsProvider,
+    TaskCommentsProvider, TaskMediaFilesProvider,
+    TasksProvider, TaskTimeTracksProvider,
+    TeamsProvider,
+    TeamUserSeatsProvider,
+    UsersProvider
+} from "@/src/Contexts";
 
 const providers = [
+    BacklogsProvider,
+    OrganisationsProvider,
+    ProjectsProvider,
     UsersProvider,
     TeamsProvider,
     TasksProvider,
     TaskTimeTracksProvider,
     TaskCommentsProvider,
     TaskMediaFilesProvider,
-    ProjectsProvider,
-    OrganisationsProvider,
     TeamUserSeatsProvider
 ]
 

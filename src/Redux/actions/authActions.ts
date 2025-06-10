@@ -1,6 +1,6 @@
+import { useAxios, useStorage } from '@/src/Hooks';
 import { Dispatch } from 'redux';
 import { setAuthUser, setAuthUserOrganisation, setAuthUserSeat, setAuthUserTaskTimeTrack, setIsLoggedIn } from '../slices/authSlice';
-import { useStorage, useAxios } from '@/src/Hooks';
 
 export const useAuthActions = () => {
     const { httpGetRequest } = useAxios();
@@ -8,7 +8,7 @@ export const useAuthActions = () => {
 
     /**
      * @returns {Function} An asynchronous function to be dispatched, which updates the logged-in status.
-     * 
+     *
      * @remarks
      * - Makes a GET request to the `auth/me` endpoint.
      * - If the server indicates the user is logged in:
@@ -20,7 +20,7 @@ export const useAuthActions = () => {
     const fetchIsLoggedInStatus = () => async (dispatch: Dispatch) => {
         try {
             const data = await httpGetRequest("auth/me")
-            
+
             if (
                 data &&
                 data.userData &&
@@ -33,7 +33,7 @@ export const useAuthActions = () => {
                 if (Array.isArray(data.userSeats) && data.userSeats.length) {
                     dispatch(setAuthUserSeat({ "data": data.userSeats[0] }))
                 }
-                
+
                 dispatch(setAuthUserOrganisation({ "data": data.userOrganisation }))
                 dispatch(setAuthUserTaskTimeTrack(data.userActiveTimeTrack))
             } else {

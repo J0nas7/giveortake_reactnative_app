@@ -4,7 +4,7 @@
 import React, { createContext, useContext } from "react"
 
 // Internal
-import { TaskComment, TaskCommentFields } from "@/types"
+import { TaskComment, TaskCommentFields } from "@/src/Types"
 import { useResourceContext } from "./TypeContext"
 
 // TaskComments Context

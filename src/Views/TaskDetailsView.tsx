@@ -1,17 +1,16 @@
 // External
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, TextInput, Image, Button, ViewStyle, Clipboard, Alert, Linking } from 'react-native';
-import { NavigationProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import { faArrowUpFromBracket, faLightbulb, faPaperPlane, faPencil, faPlay, faStop, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faArrowUpFromBracket, faLightbulb, faPaperPlane, faPencil, faPlay, faStop, faTrashCan, faXmark } from '@fortawesome/free-solid-svg-icons';
-import { Picker } from '@react-native-picker/picker';
+import { NavigationProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, Clipboard, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, ViewStyle } from 'react-native';
 
 // Internal
 import { useTaskCommentsContext, useTaskMediaFilesContext, useTasksContext, useTaskTimeTrackContext } from '@/src/Contexts';
 import { MainStackParamList, Task, TaskComment, TaskMediaFile, TaskTimeTrack, User } from '@/src/Types';
 import { CreatedAtToTimeSince, SecondsToTimeDisplay, TimeSpentDisplay } from '../Components/CreatedAtToTimeSince';
-import { selectAuthUser, selectAuthUserTaskTimeTrack, useTypedSelector } from '../Redux';
 import useMainViewJumbotron from '../Hooks/useMainViewJumbotron';
+import { selectAuthUser, selectAuthUserTaskTimeTrack, useTypedSelector } from '../Redux';
 import { env } from '../env';
 
 export const TaskDetailsView = () => {
@@ -25,8 +24,8 @@ export const TaskDetailsView = () => {
         faIcon: undefined,
         visibility: 100,
         rightIcon: faLightbulb,
-        rightIconActionRoute: "Project",
-        rightIconActionParams: { id: (taskByKeys?.Project_ID ?? "").toString() }
+        rightIconActionRoute: "Backlog",
+        rightIconActionParams: { id: (taskByKeys?.Backlog_ID ?? "").toString() }
     })
 
     // State
@@ -119,7 +118,7 @@ const cardStyles = StyleSheet.create({
 });
 
 const TitleArea: React.FC<{ task: Task }> = ({ task }) => {
-    const { readTasksByProjectId, readTaskByKeys, saveTaskChanges } = useTasksContext();
+    const { readTasksByBacklogId, readTaskByKeys, saveTaskChanges } = useTasksContext();
     const inputRef = useRef<TextInput>(null);
 
     const [isEditing, setIsEditing] = useState(false);
@@ -134,12 +133,12 @@ const TitleArea: React.FC<{ task: Task }> = ({ task }) => {
     const handleBlur = async () => {
         setIsEditing(false);
 
-        await saveTaskChanges({ ...task, Task_Title: title }, task.Project_ID);
+        await saveTaskChanges({ ...task, Task_Title: title }, task.Backlog_ID);
 
         if (task) {
-            if (task.Project_ID) readTasksByProjectId(task.Project_ID, true);
-            if (task.project?.Project_Key && task.Task_Key)
-                readTaskByKeys(task.project.Project_Key, task.Task_Key.toString());
+            if (task.Backlog_ID) readTasksByBacklogId(task.Backlog_ID, true);
+            if (task.backlog?.project?.Project_Key && task.Task_Key)
+                readTaskByKeys(task.backlog.project.Project_Key, task.Task_Key.toString());
         }
     };
 
@@ -225,7 +224,7 @@ const titleAreaStyles = StyleSheet.create({
 });
 
 const DescriptionArea: React.FC<{ task: Task }> = ({ task }) => {
-    const { readTaskByKeys, readTasksByProjectId, saveTaskChanges } = useTasksContext();
+    const { readTaskByKeys, readTasksByBacklogId, saveTaskChanges } = useTasksContext();
     const [isEditing, setIsEditing] = useState(false);
     const [description, setDescription] = useState(task.Task_Description || '');
 
@@ -233,13 +232,13 @@ const DescriptionArea: React.FC<{ task: Task }> = ({ task }) => {
         setIsEditing(false);
         saveTaskChanges(
             { ...task, Task_Description: description },
-            task.Project_ID
+            task.Backlog_ID
         );
 
         if (task) {
-            if (task.Project_ID) readTasksByProjectId(task.Project_ID, true);
-            if (task.project?.Project_Key && task.Task_Key)
-                readTaskByKeys(task.project.Project_Key, task.Task_Key.toString());
+            if (task.Backlog_ID) readTasksByBacklogId(task.Backlog_ID, true);
+            if (task.backlog?.project?.Project_Key && task.Task_Key)
+                readTaskByKeys(task.backlog.project.Project_Key, task.Task_Key.toString());
         }
     };
 
@@ -372,16 +371,16 @@ const descriptionAreaStyles = StyleSheet.create({
 const MediaFilesArea: React.FC<{ task: Task }> = ({ task }) => {
     const [toggleAddFile, setToggleAddFile] = useState(false);
     const { removeTaskMediaFile } = useTaskMediaFilesContext();
-    const { readTasksByProjectId, readTaskByKeys } = useTasksContext();
+    const { readTasksByBacklogId, readTaskByKeys } = useTasksContext();
 
     const handleDelete = async (media: TaskMediaFile) => {
         if (!task.Task_ID || !media.Media_ID) return;
 
-        await removeTaskMediaFile(media.Media_ID, media.Task_ID);
+        await removeTaskMediaFile(media.Media_ID, media.Task_ID, undefined);
 
-        if (task.Project_ID) await readTasksByProjectId(task.Project_ID, true);
-        if (task.Task_Key && task.project?.Project_Key)
-            await readTaskByKeys(task.project.Project_Key, task.Task_Key.toString());
+        if (task.Backlog_ID) await readTasksByBacklogId(task.Backlog_ID, true);
+        if (task.Task_Key && task.backlog?.project?.Project_Key)
+            await readTaskByKeys(task.backlog.project.Project_Key, task.Task_Key.toString());
 
         setToggleAddFile(false);
     };
@@ -431,7 +430,7 @@ const MediaFilesAreaView: React.FC<MediaFilesAreaViewProps> = ({ task, setToggle
                             <TouchableOpacity
                                 // onPress={() => Linking.openURL(`${env.url.API_URL}/storage/${media.Media_File_Path}`)}
                                 onPress={() => navigation.navigate('Media', {
-                                    projectKey: task.project?.Project_Key ?? "",
+                                    projectKey: task.backlog?.project?.Project_Key ?? "",
                                     taskKey: (task.Task_Key ?? "").toString(),
                                     mediaID: (media.Media_ID ?? "").toString()
                                 })}
@@ -538,7 +537,7 @@ const mediaFilesAreaStyles = StyleSheet.create({
 
 const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
     const { addTaskComment, saveTaskCommentChanges, removeTaskComment } = useTaskCommentsContext();
-    const { readTasksByProjectId, readTaskByKeys } = useTasksContext();
+    const { readTasksByBacklogId, readTaskByKeys } = useTasksContext();
     const authUser = useTypedSelector(selectAuthUser);
 
     const [createComment, setCreateComment] = useState<string>("");
@@ -560,9 +559,9 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
         setCreateComment("");
         setIsCreateCommentVisible(false);
 
-        if (task.Project_ID) readTasksByProjectId(task.Project_ID, true);
-        if (task.project?.Project_Key && task.Task_Key)
-            await readTaskByKeys(task.project.Project_Key, task.Task_Key.toString());
+        if (task.Backlog_ID) readTasksByBacklogId(task.Backlog_ID, true);
+        if (task.backlog?.project?.Project_Key && task.Task_Key)
+            await readTaskByKeys(task.backlog.project.Project_Key, task.Task_Key.toString());
     };
 
     const handleCommentCancel = () => {
@@ -583,9 +582,9 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
         setEditComment("");
         setIsEditCommentVisible(undefined);
 
-        if (task.Project_ID) readTasksByProjectId(task.Project_ID, true);
-        if (task.project?.Project_Key && task.Task_Key)
-            await readTaskByKeys(task.project.Project_Key, task.Task_Key.toString());
+        if (task.Backlog_ID) readTasksByBacklogId(task.Backlog_ID, true);
+        if (task.backlog?.project?.Project_Key && task.Task_Key)
+            await readTaskByKeys(task.backlog.project.Project_Key, task.Task_Key.toString());
     };
 
     const handleEditCommentCancel = () => {
@@ -596,16 +595,16 @@ const CommentsArea: React.FC<{ task: Task }> = ({ task }) => {
     const handleDeleteComment = async (comment: TaskComment) => {
         if (!task.Task_ID || !comment.Comment_ID) return;
 
-        await removeTaskComment(comment.Comment_ID, task.Task_ID);
+        await removeTaskComment(comment.Comment_ID, task.Task_ID, undefined);
 
         if (isEditCommentVisible?.Comment_ID === comment.Comment_ID) {
             setEditComment("");
             setIsEditCommentVisible(undefined);
         }
 
-        if (task.Project_ID) await readTasksByProjectId(task.Project_ID, true);
-        if (task.project?.Project_Key && task.Task_Key)
-            await readTaskByKeys(task.project.Project_Key, task.Task_Key.toString());
+        if (task.Backlog_ID) await readTasksByBacklogId(task.Backlog_ID, true);
+        if (task.backlog?.project?.Project_Key && task.Task_Key)
+            await readTaskByKeys(task.backlog.project.Project_Key, task.Task_Key.toString());
     };
 
     return (
@@ -842,17 +841,17 @@ const commentsAreaStyles = StyleSheet.create({
 
 const CtaButtons: React.FC<{ task: Task }> = ({ task }) => {
     const navigation = useNavigation<NavigationProp<MainStackParamList>>();
-    const { removeTask, readTasksByProjectId } = useTasksContext();
+    const { removeTask, readTasksByBacklogId } = useTasksContext();
 
     const archiveTask = async (task: Task) => {
         if (!task.Task_ID) return;
 
-        const removed = await removeTask(task.Task_ID, task.Project_ID);
-        if (!removed) return;
+        const removed = await removeTask(task.Task_ID, task.Backlog_ID, undefined);
+        // if (!removed) return;
 
-        await readTasksByProjectId(task.Project_ID, true);
+        await readTasksByBacklogId(task.Backlog_ID, true);
 
-        navigation.navigate('Project', { id: (task.Project_ID).toString() });
+        navigation.navigate('Project', { id: (task.Backlog_ID).toString() });
     };
 
     const shareTask = async () => {
@@ -933,7 +932,7 @@ const TaskInfoArea: React.FC<{ task: Task }> = ({ task }) => {
     const route = useRoute<any>();
     const { projectId, taskId } = route.params;
 
-    const { readTasksByProjectId, readTaskByKeys, taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext();
+    const { readTasksByBacklogId, readTaskByKeys, taskDetail, setTaskDetail, saveTaskChanges } = useTasksContext();
     const { taskTimeTracksById, readTaskTimeTracksByTaskId, handleTaskTimeTrack } = useTaskTimeTrackContext();
 
     const [taskTimeSpent, setTaskTimeSpent] = useState<number>(0);
@@ -952,8 +951,8 @@ const TaskInfoArea: React.FC<{ task: Task }> = ({ task }) => {
     }, [taskTimeTracksById]);
 
     // Handle status change
-    const handleStatusChange = (newStatus: Task["Task_Status"]) => {
-        handleTaskChanges("Task_Status", newStatus);
+    const handleStatusChange = (newStatus: Task["Status_ID"]) => {
+        handleTaskChanges("Status_ID", newStatus.toString());
     };
 
     const handleAssigneeChange = (newAssigneeID: Task["Assigned_User_ID"]) => {
@@ -961,11 +960,11 @@ const TaskInfoArea: React.FC<{ task: Task }> = ({ task }) => {
     }
 
     const handleTaskChanges = async (field: keyof Task, value: string) => {
-        await saveTaskChanges({ ...task, [field]: value }, task.Project_ID);
+        await saveTaskChanges({ ...task, [field]: value }, task.Backlog_ID);
 
-        if (task.Project_ID) readTasksByProjectId(task.Project_ID, true);
-        if (task.Task_Key && task.project?.Project_Key)
-            await readTaskByKeys(task.project.Project_Key, task.Task_Key.toString());
+        if (task.Backlog_ID) readTasksByBacklogId(task.Backlog_ID, true);
+        if (task.Task_Key && task.backlog?.project?.Project_Key)
+            await readTaskByKeys(task.backlog.project.Project_Key, task.Task_Key.toString());
 
         if (taskDetail) {
             setTaskDetail({ ...taskDetail, [field]: value });
@@ -995,7 +994,7 @@ interface TaskInfoViewProps {
     taskTimeTracksById: TaskTimeTrack[]
     setTaskDetail: React.Dispatch<React.SetStateAction<Task | undefined>>
     saveTaskChanges: (taskChanges: Task, parentId: number) => void
-    handleStatusChange: (newStatus: Task["Task_Status"]) => void
+    handleStatusChange: (newStatus: Task["Status_ID"]) => void
     handleAssigneeChange: (newAssigneeID: Task["Assigned_User_ID"]) => void
     handleTaskChanges: (field: keyof Task, value: string) => void
     handleTaskTimeTrack: (action: "Play" | "Stop", task: Task) => Promise<Task | undefined>
@@ -1016,7 +1015,7 @@ const TaskInfoView: React.FC<TaskInfoViewProps> = ({
             <Text style={taskDetailsAreaStyles.heading}>Task Details</Text>
 
             <Text style={taskDetailsAreaStyles.label}>Status:</Text>
-            <Text>{task.Task_Status}</Text>
+            <Text>{task.status?.Status_Name}</Text>
             {/* <Picker
                 selectedValue={task.Task_Status}
                 onValueChange={(itemValue) => handleTaskChanges("Task_Status", itemValue)}
@@ -1029,7 +1028,7 @@ const TaskInfoView: React.FC<TaskInfoViewProps> = ({
 
             <Text style={taskDetailsAreaStyles.label}>Assigned To:</Text>
             {(() => {
-                const assignedUser = task.project?.team?.user_seats?.find(userSeat => userSeat.user?.User_ID === task.Assigned_User_ID);
+                const assignedUser = task.backlog?.project?.team?.user_seats?.find(userSeat => userSeat.user?.User_ID === task.Assigned_User_ID);
                 if (assignedUser) {
                     return (
                         <Text>{`${assignedUser.user?.User_FirstName} ${assignedUser.user?.User_Surname}`}</Text>
@@ -1052,7 +1051,7 @@ const TaskInfoView: React.FC<TaskInfoViewProps> = ({
                 ))}
             </Picker> */}
 
-            <Text><Text style={taskDetailsAreaStyles.label}>Team:</Text> {task.project?.team?.Team_Name}</Text>
+            <Text><Text style={taskDetailsAreaStyles.label}>Team:</Text> {task.backlog?.project?.team?.Team_Name}</Text>
             <Text><Text style={taskDetailsAreaStyles.label}>Created At:</Text> {task.Task_CreatedAt && <CreatedAtToTimeSince dateCreatedAt={task.Task_CreatedAt} />}</Text>
             <Text><Text style={taskDetailsAreaStyles.label}>Due Date:</Text> {task.Task_Due_Date ? new Date(task.Task_Due_Date).toLocaleString() : "N/A"}</Text>
 

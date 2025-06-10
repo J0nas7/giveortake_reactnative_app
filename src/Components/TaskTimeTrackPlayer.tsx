@@ -1,17 +1,17 @@
 // External
-import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faStop } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { Picker } from '@react-native-picker/picker';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
+import React, { useEffect } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 // Internal
-import { useTypedSelector, selectAuthUserTaskTimeTrack, useAppDispatch, useAuthActions } from '@/src/Redux';
 import { useTasksContext, useTaskTimeTrackContext } from '@/src/Contexts';
-import { MainStackParamList, TaskTimeTrack } from '@/src/Types';
-import { TimeSpentDisplay, CalculateSecondsToTimeDisplay } from './CreatedAtToTimeSince';
 import { updateLiveActivity } from '@/src/Native/LiveActivityModule';
+import { selectAuthUserTaskTimeTrack, useAppDispatch, useAuthActions, useTypedSelector } from '@/src/Redux';
+import { MainStackParamList, TaskTimeTrack } from '@/src/Types';
+import { CalculateSecondsToTimeDisplay, TimeSpentDisplay } from './CreatedAtToTimeSince';
 
 export const TaskTimeTrackPlayer: React.FC = () => {
     const navigation = useNavigation<NavigationProp<MainStackParamList>>();
@@ -26,7 +26,7 @@ export const TaskTimeTrackPlayer: React.FC = () => {
     useEffect(() => {
         if (!taskTimeTrack) dispatch(fetchIsLoggedInStatus());
 
-        if (taskTimeTrack) getLatestUniqueTaskTimeTracksByProject(taskTimeTrack.Project_ID);
+        if (taskTimeTrack) getLatestUniqueTaskTimeTracksByProject(taskTimeTrack.Backlog_ID);
     }, [taskTimeTrack]);
 
     useEffect(() => {
@@ -51,7 +51,7 @@ export const TaskTimeTrackPlayer: React.FC = () => {
     if (!taskTimeTrack) return null;
 
     const handleNavigateToTask = () => {
-        const projectKey = taskTimeTrack.task?.project?.Project_Key;
+        const projectKey = taskTimeTrack.task?.backlog?.project?.Project_Key;
         const taskKey = taskTimeTrack.task?.Task_Key;
 
         if (projectKey && taskKey) {

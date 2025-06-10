@@ -1,15 +1,15 @@
 // External
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { View, Text, Button, StyleSheet, ScrollView, TouchableOpacity, FlatList, Dimensions, DimensionValue } from "react-native";
-import { useRoute, useNavigation, useFocusEffect } from "@react-navigation/native";
-import { useTranslation } from "react-i18next";
+import { faClock, faLightbulb } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import { faClock, faLightbulb, faSliders } from "@fortawesome/free-solid-svg-icons";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Dimensions, DimensionValue, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { PieChart } from 'react-native-chart-kit';
 
 // Internal
-import { Project, TaskTimeTrack, TeamUserSeat } from "@/src/Types";
 import { useProjectsContext, useTaskTimeTrackContext, useTeamUserSeatsContext } from "@/src/Contexts";
+import { Project, Task, TaskTimeTrack, TeamUserSeat } from "@/src/Types";
 import { SecondsToTimeDisplay } from "../Components/CreatedAtToTimeSince";
 import useMainViewJumbotron from "../Hooks/useMainViewJumbotron";
 
@@ -56,6 +56,10 @@ export const TimeTracksView = () => {
 
     const [sortedByDuration, setSortedByDuration] = useState<TaskTimeTrack[]>([]);
     const [sortedByLatest, setSortedByLatest] = useState<TaskTimeTrack[]>([]);
+
+    // Extract all tasks from the project's backlogs
+    const allProjectTasks = renderProject && renderProject?.backlogs
+        ?.flatMap((backlog) => backlog.tasks || []) || [];
 
     // Methods
     const getPreviousWeekStartAndEnd = () => {
@@ -105,12 +109,13 @@ export const TimeTracksView = () => {
             // If taskIds exist in the URL, use them
             const taskIdsFromURL = urlTaskIds ? urlTaskIds.split(",") : []
             setSelectedTaskIds(taskIdsFromURL)
-        } else if (renderProject?.tasks?.length) {
+        } else if (allProjectTasks.length) {
             // If no taskIds in URL, select all tasks by default
-            const allTaskIds = renderProject.tasks
-                .map((task) => task.Task_ID?.toString())
-                .filter((taskId) => taskId !== undefined) // Remove undefined values
-            setSelectedTaskIds(allTaskIds)
+            const allTaskIds = allProjectTasks
+                .map((task: Task) => task.Task_ID?.toString())
+                .filter((taskId): taskId is string => taskId !== undefined) // Remove undefined values
+
+            setSelectedTaskIds(allTaskIds);
         }
     }, [urlTaskIds, renderProject]);
 
@@ -384,7 +389,7 @@ export const TimeTracksPeriodSum: React.FC<TimeTracksSubComponentsProps> = ({ ti
                                     style={timeTracksPeriodSumStyles.trackItem}
                                 >
                                     <Text style={timeTracksPeriodSumStyles.taskRef}>
-                                        ({item.task?.project?.Project_Key}-{item.task?.Task_Key})
+                                        ({item.task?.backlog?.project?.Project_Key}-{item.task?.Task_Key})
                                     </Text>
                                     <TouchableOpacity
                                         // onPress={() => navigation.navigate("TaskDetail", { ... })}
@@ -706,7 +711,7 @@ export const LatestTimeLogs: React.FC<LatestTimeLogsProps> = ({ sortedByLatest }
                                     {track.user?.User_FirstName} {track.user?.User_Surname}{' '}
                                     {t('timetrack.latestTimeLogs.logged')}:{' '}
                                     <Text style={latestTimeLogsStyles.taskReference}>
-                                        ({track.task?.project?.Project_Key}-{track.task?.Task_Key})
+                                        ({track.task?.backlog?.project?.Project_Key}-{track.task?.Task_Key})
                                     </Text>{' '}
                                     {track.task?.Task_Title}
                                 </Text>

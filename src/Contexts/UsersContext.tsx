@@ -4,7 +4,7 @@
 import React, { createContext, useContext } from "react";
 
 // Internal
-import { User, UserFields } from "@/types";
+import { User, UserFields } from "@/src/Types";
 import { useResourceContext } from "./";
 
 // Context for Users

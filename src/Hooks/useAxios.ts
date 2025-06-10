@@ -47,6 +47,7 @@ export const useAxios = () => {
         let config: AxiosRequestConfig = {
             withCredentials: true,
             headers: headers,
+            timeout: 10000, // Set a timeout of 10 seconds
         }
 
         // Check if postContent contains a file (e.g., image file) and use FormData if it does
@@ -70,8 +71,8 @@ export const useAxios = () => {
 
                     // Convert actual types to JSON string, so the backend can properly interpret them
                     if (
-                        typeof value === "boolean" 
-                        || value === null 
+                        typeof value === "boolean"
+                        || value === null
                         // || Array.isArray(value)
                     ) value = JSON.stringify(value)
 
@@ -221,7 +222,7 @@ export const useAxios = () => {
         }
         return send
     }
-    
+
     return {
         httpPostWithData,
         httpPutWithData,

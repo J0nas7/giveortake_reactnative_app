@@ -1,27 +1,13 @@
 // External
-import React, { useEffect, useRef, useState } from 'react'
-import SplashScreen from 'react-native-splash-screen'
-import { getFocusedRouteNameFromRoute, NavigationContainer, useNavigation, useNavigationState } from '@react-navigation/native'
-import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator, Alert, Linking, AppStateStatus, AppState } from 'react-native'
+import { NavigationContainer, useNavigation, useNavigationState } from '@react-navigation/native'
+import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
+import React, { useEffect, useRef, useState } from 'react'
+import { ActivityIndicator, AppState, AppStateStatus, Linking, SafeAreaView, StyleSheet, Text, View } from 'react-native'
+import SplashScreen from 'react-native-splash-screen'
 
 // Internal
 import { useNotifications } from '@/src/Hooks'
-import {
-    BacklogView,
-    KanbanBoardView,
-    OrganisationDetailsView,
-    ProjectDetailsView,
-    SignInView,
-    ProfileView,
-    StartpageView,
-    TaskDetailsView,
-    TeamDetailsView,
-    TimeTracksView,
-    MediaFileView,
-    DownloadedMediaFilesView
-} from '@/src/Views'
 import {
     selectAuthUserTaskTimeTrack,
     selectIsLoggedIn,
@@ -32,13 +18,26 @@ import {
     useTypedSelector
 } from '@/src/Redux'
 import { GuestStackParamList, MainStackParamList } from '@/src/Types'
-import { HeadlineJumbotron } from '../Core-UI/HeadlineJumbotron'
+import {
+    BacklogView,
+    DownloadedMediaFilesView,
+    KanbanBoardView,
+    MediaFileView,
+    OrganisationDetailsView,
+    ProfileView,
+    ProjectDetailsView,
+    SignInView,
+    StartpageView,
+    TaskDetailsView,
+    TeamDetailsView,
+    TimeTracksView
+} from '@/src/Views'
 import { faBuilding, faClock, faGauge, faHouseChimney, faLightbulb, faList, faUsers, faWindowRestore } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
-import DashboardView from './DashboardView'
 import { TaskTimeTrackPlayer } from '../Components/TaskTimeTrackPlayer'
-import { current } from '@reduxjs/toolkit'
 import { useTaskTimeTrackContext } from '../Contexts'
+import { HeadlineJumbotron } from '../Core-UI/HeadlineJumbotron'
+import DashboardView from './DashboardView'
 
 type MenuStackProps = { name: keyof MainStackParamList; component: React.FC<{}> }
 
@@ -333,6 +332,7 @@ export const ContentView: React.FC = () => {
                 <SafeAreaView style={styles.container}>
                     <View style={cardStyles.cardContainer}>
                         <ActivityIndicator size="large" color="#000" />
+                        <Text>Lorem ipsum</Text>
                     </View>
                 </SafeAreaView>
             )}

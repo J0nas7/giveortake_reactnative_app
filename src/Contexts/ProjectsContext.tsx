@@ -4,7 +4,7 @@
 import React, { createContext, useContext } from "react"
 
 // Internal
-import { Project, ProjectFields, ProjectStates } from "@/types"
+import { Project, ProjectFields, ProjectStates } from "@/src/Types"
 import { useResourceContext } from "./TypeContext"
 
 // Context for Projects

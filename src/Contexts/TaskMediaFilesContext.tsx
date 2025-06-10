@@ -4,7 +4,7 @@
 import React, { createContext, useContext } from "react"
 
 // Internal
-import { TaskMediaFile, TaskMediaFileFields } from "@/types"
+import { TaskMediaFile, TaskMediaFileFields } from "@/src/Types"
 import { useResourceContext } from "./TypeContext"
 
 // TaskMediaFiles Context

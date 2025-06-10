@@ -1,21 +1,21 @@
+// External
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome"
+import { NavigationProp, useFocusEffect, useNavigation } from "@react-navigation/native"
 import React, { useCallback, useEffect } from "react"
 import {
-    View,
-    Text,
-    TouchableOpacity,
     ScrollView,
     StyleSheet,
-    Platform,
-    Button
+    Text,
+    TouchableOpacity,
+    View
 } from "react-native"
-import { NavigationProp, useFocusEffect, useNavigation } from "@react-navigation/native"
-import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome"
 
-import { useTypedSelector, selectAuthUser } from "@/src/Redux"
+// Internal
 import { useOrganisationsContext } from "@/src/Contexts"
+import { selectAuthUser, useTypedSelector } from "@/src/Redux"
 import { faBuilding, faUser } from "@fortawesome/free-regular-svg-icons"
-import { MainStackParamList } from "../Types"
 import useMainViewJumbotron from "../Hooks/useMainViewJumbotron"
+import { MainStackParamList } from "../Types"
 
 export const StartpageView = () => {
     // Hooks
@@ -99,7 +99,7 @@ export const StartpageView = () => {
                                                     <TouchableOpacity
                                                         key={project.Project_ID}
                                                         style={styles.projectCard}
-                                                        onPress={() => navigation.navigate("Project", { id: (project.Project_ID ?? "").toString() })}
+                                                        onPress={() => navigation.navigate("Backlogs", { id: (project.Project_ID ?? "").toString() })}
                                                     >
                                                         <Text style={styles.projectTitle}>{project.Project_Name}</Text>
                                                         <Text style={styles.textSmall}>{project.Project_Description || 'No description available'}</Text>

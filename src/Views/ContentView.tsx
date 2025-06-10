@@ -19,7 +19,7 @@ import {
 } from '@/src/Redux'
 import { GuestStackParamList, MainStackParamList } from '@/src/Types'
 import {
-    BacklogView,
+    BacklogPage,
     DownloadedMediaFilesView,
     KanbanBoardView,
     MediaFileView,
@@ -32,6 +32,7 @@ import {
     TeamDetailsView,
     TimeTracksView
 } from '@/src/Views'
+import { BacklogsPage } from '@/src/Views/BacklogsView'
 import { faBuilding, faClock, faGauge, faHouseChimney, faLightbulb, faList, faUsers, faWindowRestore } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { TaskTimeTrackPlayer } from '../Components/TaskTimeTrackPlayer'
@@ -60,6 +61,7 @@ const DeviceIsLoggedIn = () => {
             { name: "Organisation", component: OrganisationDetailsView },
             { name: "Team", component: TeamDetailsView },
             { name: "Project", component: ProjectDetailsView },
+            { name: "Backlog", component: BacklogPage },
             { name: "Task", component: TaskDetailsView },
             { name: "Media", component: MediaFileView },
             { name: "Downloaded", component: DownloadedMediaFilesView },
@@ -69,7 +71,7 @@ const DeviceIsLoggedIn = () => {
         const routesInBottomNav: { name: keyof MainStackParamList; component: React.FC }[] = [
             { name: "Home", component: StartpageView },
             { name: "Dashboard", component: DashboardView },
-            { name: "Backlog", component: BacklogView },
+            { name: "Backlogs", component: BacklogsPage },
             { name: "Kanban", component: KanbanBoardView },
             { name: "Time", component: TimeTracksView },
         ];

@@ -1,11 +1,10 @@
 // External
-import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
-import { Alert, GestureResponderEvent } from 'react-native';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 // Internal
-import { RootState } from '@/src/Redux'
-import { MainStackParamList, Organisation, TaskTimeTrack, TeamUserSeat, User } from '@/src/Types'
+import { RootState } from '@/src/Redux';
+import { MainStackParamList, Organisation, TaskTimeTrack, TeamUserSeat, User } from '@/src/Types';
 
 export type MainViewJumbotronType = {
     faIcon?: IconDefinition;
@@ -23,6 +22,7 @@ export interface AuthState {
     adminLoggedIn: string,
     authUser: User | undefined,
     authUserSeat: TeamUserSeat | undefined,
+    authUserSeatPermissions: string[] | undefined,
     authUserOrganisation: Organisation | undefined,
     authUserTaskTimeTrack: TaskTimeTrack | undefined,
     accessToken: string,
@@ -37,6 +37,7 @@ const initialState = {
     adminLoggedIn: '',
     authUser: undefined,
     authUserSeat: undefined,
+    authUserSeatPermissions: undefined,
     authUserOrganisation: undefined,
     authUserTaskTimeTrack: undefined,
     accessToken: '',
@@ -58,6 +59,9 @@ export const authSlice = createSlice({
         },
         setAuthUserSeat: (state: AuthState, action: PayloadAction<any>) => {
             state.authUserSeat = action.payload
+        },
+        setAuthUserSeatPermissions: (state: AuthState, action: PayloadAction<any>) => {
+            state.authUserSeatPermissions = action.payload
         },
         setAuthUserOrganisation: (state: AuthState, action: PayloadAction<any>) => {
             state.authUserOrganisation = action.payload
@@ -95,6 +99,7 @@ export const {
     setIsLoggedIn,
     setAuthUser,
     setAuthUserSeat,
+    setAuthUserSeatPermissions,
     setAuthUserOrganisation,
     setAuthUserTaskTimeTrack,
     setAccessToken,
@@ -109,6 +114,7 @@ export default authSlice.reducer
 export const selectIsLoggedIn = (state: RootState) => state.auth.isLoggedIn
 export const selectAuthUser = (state: RootState) => state.auth.authUser
 export const selectAuthUserSeat = (state: RootState) => state.auth.authUserSeat
+export const selectAuthUserSeatPermissions = (state: RootState) => state.auth?.authUserSeatPermissions ?? []; // Return empty array if undefined
 export const selectAuthUserOrganisation = (state: RootState) => state.auth.authUserOrganisation
 export const selectAuthUserTaskTimeTrack = (state: RootState) => state.auth.authUserTaskTimeTrack
 export const selectAccessToken = (state: RootState) => state.auth.accessToken

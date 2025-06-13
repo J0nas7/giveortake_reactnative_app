@@ -30,7 +30,7 @@ export const BacklogWithSiblingsContainer: React.FC<BacklogWithSiblingsContainer
     const { readBacklogById } = useBacklogsContext();
     const { readTasksByBacklogId, addTask } = useTasksContext();
 
-    const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined);
+    const [localBacklog, setLocalBacklog] = useState<BacklogStates>(undefined);
     const [renderTasks, setRenderTasks] = useState<Task[]>([]);
     const [localNewTask, setLocalNewTask] = useState<Partial<Task>>({});
     const [selectAll, setSelectAll] = useState(false);
@@ -39,9 +39,9 @@ export const BacklogWithSiblingsContainer: React.FC<BacklogWithSiblingsContainer
     useEffect(() => {
         const loadBacklog = async () => {
             if (!backlogId) return;
-            const backlog = await readBacklogById(backlogId);
-            setRenderBacklog(backlog);
-            const tasks = await readTasksByBacklogId(backlogId);
+            const backlog = await readBacklogById(backlogId, true);
+            setLocalBacklog(backlog);
+            const tasks = await readTasksByBacklogId(backlogId, undefined, true);
             setRenderTasks(tasks);
         };
 
@@ -49,15 +49,15 @@ export const BacklogWithSiblingsContainer: React.FC<BacklogWithSiblingsContainer
     }, [backlogId]);
 
     const handleCreateTask = async () => {
-        if (!renderBacklog || !renderBacklog.Backlog_ID) return;
+        if (!localBacklog || !localBacklog.Backlog_ID) return;
 
-        await addTask(renderBacklog.Backlog_ID, {
+        await addTask(localBacklog.Backlog_ID, {
             ...localNewTask,
-            Backlog_ID: renderBacklog.Backlog_ID,
-            Team_ID: renderBacklog.project?.team?.Team_ID || 0,
+            Backlog_ID: localBacklog.Backlog_ID,
+            Team_ID: localBacklog.project?.team?.Team_ID || 0,
         } as Task);
 
-        const tasks = await readTasksByBacklogId(renderBacklog.Backlog_ID);
+        const tasks = await readTasksByBacklogId(localBacklog.Backlog_ID, undefined, true);
         setRenderTasks(tasks);
         setLocalNewTask({});
     };
@@ -75,9 +75,9 @@ export const BacklogWithSiblingsContainer: React.FC<BacklogWithSiblingsContainer
 
     return (
         <>
-            {renderBacklog && (
+            {localBacklog && (
                 <View style={styles.container}>
-                    <Text style={styles.header}>{renderBacklog?.Backlog_Name}</Text>
+                    <Text style={styles.header}>{localBacklog?.Backlog_Name}</Text>
 
                     <View style={styles.actions}>
                         <TextInput

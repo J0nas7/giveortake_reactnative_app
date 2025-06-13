@@ -1,15 +1,13 @@
 // External
-import { useCallback, useEffect, useState } from "react"
-import { useFocusEffect, useNavigation, useNavigationState } from "@react-navigation/native"
-import { StackNavigationProp } from "@react-navigation/stack"
-import { Alert, SafeAreaView, Text, TouchableOpacity, View } from "react-native"
-import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome"
 import { faArrowLeft, faBuilding, faClock, faGauge, faLightbulb, faList, faUser, faUsers, faWindowRestore } from "@fortawesome/free-solid-svg-icons"
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome"
+import { useNavigation, useNavigationState } from "@react-navigation/native"
+import { StackNavigationProp } from "@react-navigation/stack"
+import { SafeAreaView, Text, TouchableOpacity, View } from "react-native"
 
 // Internal
-import { selectMainViewJumbotron, useTypedSelector } from "../Redux"
-import { MainStackParamList } from "../Types"
 import { useProjectsContext, useTeamsContext } from "../Contexts"
+import { MainStackParamList } from "../Types"
 
 export const HeadlineJumbotron: React.FC = () => {
     // const mainViewJumbotron = useTypedSelector(selectMainViewJumbotron)
@@ -124,6 +122,7 @@ const ParentButton: React.FC<{ currentRoute: string | null }> = ({ currentRoute 
     const faParentIcons: Record<string, any> = {
         Team: faBuilding,
         Project: faUsers,
+        Backlogs: faLightbulb,
         Dashboard: faLightbulb,
         Backlog: faLightbulb,
         Kanban: faLightbulb,
@@ -134,6 +133,7 @@ const ParentButton: React.FC<{ currentRoute: string | null }> = ({ currentRoute 
     const parentRoute: Record<string, any> = {
         Team: "Organisation",
         Project: "Team",
+        Backlogs: "Project",
         Dashboard: "Project",
         Backlog: "Project",
         Kanban: "Project",
@@ -144,30 +144,33 @@ const ParentButton: React.FC<{ currentRoute: string | null }> = ({ currentRoute 
     const parentParems: Record<string, any> = {
         Team: { id: ((teamById && teamById.Organisation_ID) ?? "").toString() },
         Project: { id: ((projectById && projectById?.team?.Team_ID) ?? "").toString() },
+        Backlogs: { id: ((projectById && projectById?.Project_ID) ?? "").toString() },
         Dashboard: { id: ((projectById && projectById?.Project_ID) ?? "").toString() },
         Backlog: { id: ((projectById && projectById?.Project_ID) ?? "").toString() },
         Kanban: { id: ((projectById && projectById?.Project_ID) ?? "").toString() },
         Time: { id: ((projectById && projectById?.Project_ID) ?? "").toString() },
-        Home: {  },
+        Home: {},
     }
 
     if (currentRoute !== "Home" && !projectById && !teamById) return null
 
     return (
-        <TouchableOpacity
-            style={{ padding: 4 }}
-            onPress={() => {
-                if (currentRoute) {
-                    navigation.navigate(
-                        parentRoute[currentRoute] as keyof MainStackParamList,
-                        parentParems[currentRoute]
-                    );
-                }
-            }}
-        >
+        <>
             {currentRoute && faParentIcons[currentRoute] && (
-                <FontAwesomeIcon icon={faParentIcons[currentRoute]} color={'white'} size={20} />
+                <TouchableOpacity
+                    style={{ padding: 4 }}
+                    onPress={() => {
+                        if (currentRoute) {
+                            navigation.navigate(
+                                parentRoute[currentRoute] as keyof MainStackParamList,
+                                parentParems[currentRoute]
+                            );
+                        }
+                    }}
+                >
+                    <FontAwesomeIcon icon={faParentIcons[currentRoute]} color={'white'} size={20} />
+                </TouchableOpacity>
             )}
-        </TouchableOpacity>
+        </>
     )
 }

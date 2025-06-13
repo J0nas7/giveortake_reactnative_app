@@ -28,18 +28,26 @@ export const BacklogPage = () => {
     const route = useRoute<any>();
     const navigation = useNavigation();
     const { t } = useTranslation(['backlog'])
-    const { backlogById, readBacklogById } = useBacklogsContext()
-    const { tasksById, readTasksByBacklogId, setTaskDetail, handleChangeNewTask, addTask, removeTask } = useTasksContext()
+    const {
+        backlogById: renderBacklog,
+        readBacklogById
+    } = useBacklogsContext()
+    const {
+        tasksById: renderTasks,
+        readTasksByBacklogId,
+        setTaskDetail,
+        handleChangeNewTask,
+        addTask,
+        removeTask
+    } = useTasksContext()
     const { canAccessBacklog, canManageBacklog } = useRoleAccess(
-        backlogById ? backlogById.project?.team?.organisation?.User_ID : undefined,
+        renderBacklog ? renderBacklog.project?.team?.organisation?.User_ID : undefined,
         "backlog",
-        backlogById ? backlogById.Backlog_ID : 0
+        renderBacklog ? renderBacklog.Backlog_ID : 0
     )
 
     // ---- State ----
     const { id: backlogId } = route.params as { id: string };
-    const [renderBacklog, setRenderBacklog] = useState<BacklogStates>(undefined)
-    const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined)
     const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
     const [selectedStatusIds, setSelectedStatusIds] = useState<string[]>([])
     const [selectAll, setSelectAll] = useState(false); // To track the "Select All" checkbox
@@ -47,6 +55,14 @@ export const BacklogPage = () => {
     const [newTask, setNewTask] = useState<any>({});
     const [sortKey, setSortKey] = useState<string>('Task_ID');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+    // ---- Effects ----
+    useEffect(() => {
+        if (backlogId) {
+            readBacklogById(parseInt(backlogId));
+            readTasksByBacklogId(parseInt(backlogId));
+        }
+    }, [backlogId]);
 
     // ---- Methods ----
     // Handles the 'Enter' key press event to trigger task creation.
@@ -94,14 +110,6 @@ export const BacklogPage = () => {
 
         await readTasksByBacklogId(parseInt(backlogId), true)
     };
-
-    // ---- Effects ----
-    useEffect(() => {
-        if (backlogId) {
-            readBacklogById(parseInt(backlogId));
-            readTasksByBacklogId(parseInt(backlogId));
-        }
-    }, [backlogId]);
 
     // ---- Special: Sorting ----
     const currentSort = "Task_ID";

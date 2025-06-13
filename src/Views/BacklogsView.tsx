@@ -1,7 +1,7 @@
 // External
 import { faLightbulb, faList } from '@fortawesome/free-solid-svg-icons'
 import { NavigationProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
 
@@ -17,18 +17,22 @@ import { MainStackParamList, ProjectStates, User } from '@/src/Types'
 export const BacklogsPage = () => {
     // Hooks
     const route = useRoute();
+    const {
+        projectById: renderProject,
+        readProjectById
+    } = useProjectsContext()
     const { handleScroll, handleFocusEffect } = useMainViewJumbotron({
         title: `Project Backlogs`,
         faIcon: faList,
         visibility: 100,
         rightIcon: faLightbulb,
-        rightIconActionRoute: `Project`
+        rightIconActionRoute: "Project",
+        rightIconActionParams: { id: ((renderProject && renderProject.Project_ID) ?? "").toString() },
     })
-    const { projectById, readProjectById } = useProjectsContext()
     const { canAccessProject } = useRoleAccess(
-        projectById ? projectById.team?.organisation?.User_ID : undefined,
+        renderProject ? renderProject.team?.organisation?.User_ID : undefined,
         "project",
-        projectById ? projectById.Project_ID : 0
+        renderProject ? renderProject.Project_ID : 0
     )
     const navigation = useNavigation<NavigationProp<MainStackParamList>>()
 
@@ -36,7 +40,6 @@ export const BacklogsPage = () => {
     const { id: projectId } = route.params as { id: string };  // Get id as projectId from route params
     const authUser = useTypedSelector(selectAuthUser)
     const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
-    const [renderProject, setRenderProject] = useState<ProjectStates>(undefined)
     // Calculate the number of accessible backlogs for the authenticated user
     const accessibleBacklogsCount = renderProject && renderProject.backlogs?.filter(
         (backlog) =>
@@ -53,7 +56,6 @@ export const BacklogsPage = () => {
 
     // Effects
     useEffect(() => { readProjectById(parseInt(projectId)) }, [projectId])
-    useEffect(() => { if (projectId) setRenderProject(projectById) }, [projectById])
 
     useFocusEffect(
         useCallback(() => {

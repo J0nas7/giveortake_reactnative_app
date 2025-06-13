@@ -1,53 +1,55 @@
 // External
 import { useFocusEffect, useRoute } from "@react-navigation/native"
-import React, { useCallback, useEffect, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native"
 import { BarChart, PieChart } from "react-native-chart-kit"
 
 // Internal
 import { useBacklogsContext, useTasksContext } from "@/src/Contexts"
-import { Backlog, Status, Task } from "@/src/Types"
+import { LoadingState } from '@/src/Core-UI/LoadingState'
+import useRoleAccess from '@/src/Hooks/useRoleAccess'
+import { Status, Task } from "@/src/Types"
 import { faGauge, faLightbulb } from "@fortawesome/free-solid-svg-icons"
 import useMainViewJumbotron from "../Hooks/useMainViewJumbotron"
 
 const screenWidth = Dimensions.get("window").width
 
 const DashboardView = () => {
-    // Hooks
+    // ---- Hooks ----
     const route = useRoute()
     const { backlogId } = route.params as { backlogId: string }
     const { t } = useTranslation(["dashboard"])
-    const { tasksById, readTasksByBacklogId } = useTasksContext()
-    const { backlogById, readBacklogById } = useBacklogsContext()
-    const { handleScroll, handleFocusEffect } = useMainViewJumbotron({
+    const {
+        tasksById: renderTasks,
+        readTasksByBacklogId
+    } = useTasksContext()
+    const {
+        backlogById: renderBacklog,
+        readBacklogById
+    } = useBacklogsContext()
+    const { canAccessBacklog } = useRoleAccess(
+        renderBacklog ? renderBacklog.project?.team?.organisation?.User_ID : undefined,
+        "backlog",
+        renderBacklog ? renderBacklog.Backlog_ID : 0
+    )
+    const {
+        handleScroll,
+        handleFocusEffect
+    } = useMainViewJumbotron({
         title: `Dashboard`,
         faIcon: faGauge,
         visibility: 100,
         rightIcon: faLightbulb,
         rightIconActionRoute: "Backlog",
-        rightIconActionParams: { id: ((backlogById && backlogById.Backlog_ID) ?? "").toString() },
+        rightIconActionParams: { id: ((renderBacklog && renderBacklog.Backlog_ID) ?? "").toString() },
     })
 
-    // State
-    const [renderBacklog, setRenderBacklog] = useState<Backlog | undefined>()
-    const [renderTasks, setRenderTasks] = useState<Task[] | undefined>()
-
-    // Effects
+    // ---- Effects ----
     useEffect(() => {
         readTasksByBacklogId(parseInt(backlogId))
         readBacklogById(parseInt(backlogId))
     }, [backlogId])
-
-    useEffect(() => {
-        if (backlogById) setRenderBacklog(backlogById)
-    }, [backlogById])
-
-    useEffect(() => {
-        if (tasksById.length && !renderTasks) {
-            setRenderTasks(tasksById)
-        }
-    }, [tasksById])
 
     useFocusEffect(
         useCallback(() => {
@@ -55,7 +57,7 @@ const DashboardView = () => {
         }, [])
     )
 
-    // Dashboard-related calculations
+    // ---- Dashboard-related Calculations ----
     const safeTasks = Array.isArray(renderTasks) ? renderTasks : []
 
     const taskStatuses = {
@@ -88,18 +90,18 @@ const DashboardView = () => {
     }, [safeTasks])
 
     const chartData = useMemo(() => {
-        if (!backlogById || !Array.isArray(backlogById.statuses)) return [];
+        if (!renderBacklog || !Array.isArray(renderBacklog.statuses)) return [];
         const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
-        return backlogById.statuses.map((status: Status, idx: number) => ({
+        return renderBacklog.statuses.map((status: Status, idx: number) => ({
             name: status.Status_Name,
-            population: backlogById.tasks
-                ? backlogById.tasks.filter((task: Task) => task.Status_ID === status.Status_ID).length
+            population: renderBacklog.tasks
+                ? renderBacklog.tasks.filter((task: Task) => task.Status_ID === status.Status_ID).length
                 : 0,
             color: colors[idx % colors.length],
             legendFontColor: "#444",
             legendFontSize: 14,
         }));
-    }, [backlogById]);
+    }, [renderBacklog]);
 
     const barChartData = {
         labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
@@ -120,43 +122,53 @@ const DashboardView = () => {
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.title}>{renderBacklog?.Backlog_Name}</Text>
+            <LoadingState
+                singular="Project"
+                renderItem={renderBacklog}
+                permitted={canAccessBacklog}
+            >
+                {renderBacklog && (
+                    <>
+                        <Text style={styles.title}>{renderBacklog.Backlog_Name}</Text>
 
-            <View style={styles.kpiContainer}>
-                <KPI title={t("dashboard.totalTasks")} value={totalTasks} />
-                <KPI title={t("dashboard.completedTasks")} value={`${completedTasks} (${completionRate}%)`} />
-                <KPI title={t("dashboard.overdueTasks")} value={overdueTasks} />
-                <KPI title={t("dashboard.tasksInProgress")} value={inProgressTasks} />
-            </View>
+                        <View style={styles.kpiContainer}>
+                            <KPI title={t("dashboard.totalTasks")} value={totalTasks} />
+                            <KPI title={t("dashboard.completedTasks")} value={`${completedTasks} (${completionRate}%)`} />
+                            <KPI title={t("dashboard.overdueTasks")} value={overdueTasks} />
+                            <KPI title={t("dashboard.tasksInProgress")} value={inProgressTasks} />
+                        </View>
 
-            <Text style={styles.sectionTitle}>{t("dashboard.progress")}</Text>
-            <ProgressBar completed={completionRate} />
+                        <Text style={styles.sectionTitle}>{t("dashboard.progress")}</Text>
+                        <ProgressBar completed={completionRate} />
 
-            <Text style={styles.sectionTitle}>{t("dashboard.analytics")}</Text>
-            <PieChart
-                data={chartData}
-                width={screenWidth - 32}
-                height={220}
-                chartConfig={chartConfig}
-                accessor="population"
-                backgroundColor="transparent"
-                paddingLeft="15"
-                absolute
-            />
+                        <Text style={styles.sectionTitle}>{t("dashboard.analytics")}</Text>
+                        <PieChart
+                            data={chartData}
+                            width={screenWidth - 32}
+                            height={220}
+                            chartConfig={chartConfig}
+                            accessor="population"
+                            backgroundColor="transparent"
+                            paddingLeft="15"
+                            absolute
+                        />
 
-            <Text style={styles.sectionTitle}>{t("dashboard.taskCompletionOverTime")}</Text>
-            <BarChart
-                data={barChartData}
-                width={screenWidth - 32}
-                height={250}
-                chartConfig={chartConfig}
-                fromZero
-                showBarTops
-                withInnerLines
-                yAxisLabel=""
-                yAxisSuffix=""
-                style={styles.chart}
-            />
+                        <Text style={styles.sectionTitle}>{t("dashboard.taskCompletionOverTime")}</Text>
+                        <BarChart
+                            data={barChartData}
+                            width={screenWidth - 32}
+                            height={250}
+                            chartConfig={chartConfig}
+                            fromZero
+                            showBarTops
+                            withInnerLines
+                            yAxisLabel=""
+                            yAxisSuffix=""
+                            style={styles.chart}
+                        />
+                    </>
+                )}
+            </LoadingState>
         </ScrollView>
     )
 }

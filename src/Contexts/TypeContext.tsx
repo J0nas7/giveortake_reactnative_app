@@ -39,12 +39,14 @@ export const useResourceContext = <T extends { [key: string]: any }, IDKey exten
                 return false
             } else {
                 setItemById(false)
+                return false
             }
         } else {
             if (reply) {
                 return data
             } else {
                 setItemById(data)
+                return true
             }
         }
     }

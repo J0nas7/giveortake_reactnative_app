@@ -179,7 +179,7 @@ const DeviceIsLoggedIn = () => {
                                 iconName = faLightbulb
                             } else if (route.name === 'Dashboard') {
                                 iconName = faGauge
-                            } else if (route.name === 'Backlog') {
+                            } else if (route.name === 'Backlog' || route.name === 'Backlogs') {
                                 iconName = faList
                             } else if (route.name === 'Kanban') {
                                 iconName = faWindowRestore

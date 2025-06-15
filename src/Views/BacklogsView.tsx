@@ -128,8 +128,10 @@ export const BacklogsView: React.FC<BacklogsViewProps> = ({
     <View style={{ flex: 1, position: 'relative' }}>
         {renderProject && (
             <TaskBulkActionMenu
+                renderProject={renderProject}
                 selectedTaskIds={selectedTaskIds}
                 setSelectedTaskIds={setSelectedTaskIds}
+                backlogsViewRefresh={backlogsViewRefresh}
             />
         )}
         <ScrollView

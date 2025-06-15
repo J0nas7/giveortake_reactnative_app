@@ -44,10 +44,9 @@ export const KanbanBoardView: React.FC = () => {
     }, [backlogId]);
 
     useEffect(() => {
-        if (backlogId) {
+        if (backlogId && backlogById) {
             setBacklog(backlogById)
-
-            if (backlogById) setKanbanColumns(backlogById.statuses)
+            setKanbanColumns(backlogById.statuses)
         }
     }, [backlogById]);
 
@@ -93,6 +92,8 @@ export const KanbanBoardView: React.FC = () => {
 
     return (
         <ScrollView style={styles.container}>
+            {backlogById && <Text style={styles.title}>{backlogId} - {backlogById.Backlog_Name}</Text>}
+
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {kanbanColumns?.
                     // Status_Order low to high:
@@ -135,9 +136,9 @@ const styles = StyleSheet.create({
         backgroundColor: "#F9FAFB",
     },
     title: {
-        fontSize: 20,
-        fontWeight: "bold",
-        marginBottom: 12,
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 16
     },
     column: {
         width: 300,

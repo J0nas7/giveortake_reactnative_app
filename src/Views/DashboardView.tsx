@@ -1,266 +1,244 @@
-// External
-import { useFocusEffect, useRoute } from "@react-navigation/native"
-import React, { useCallback, useEffect, useMemo } from "react"
-import { useTranslation } from "react-i18next"
-import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native"
-import { BarChart, PieChart } from "react-native-chart-kit"
+import { useBacklogsContext, useTasksContext } from '@/src/Contexts';
+import { LoadingState } from '@/src/Core-UI/LoadingState';
+import useRoleAccess from '@/src/Hooks/useRoleAccess';
+import { MainStackParamList, Task } from '@/src/Types';
+import { NavigationProp, useNavigation, useRoute } from '@react-navigation/native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { BarChart, PieChart } from 'react-native-chart-kit';
 
-// Internal
-import { useBacklogsContext, useTasksContext } from "@/src/Contexts"
-import { LoadingState } from '@/src/Core-UI/LoadingState'
-import useRoleAccess from '@/src/Hooks/useRoleAccess'
-import { Status, Task } from "@/src/Types"
-import { faGauge, faLightbulb } from "@fortawesome/free-solid-svg-icons"
-import useMainViewJumbotron from "../Hooks/useMainViewJumbotron"
+const screenWidth = Dimensions.get('window').width;
 
-const screenWidth = Dimensions.get("window").width
+const DashboardContainer: React.FC = () => {
+    const { t } = useTranslation(['dashboard']);
+    const { tasksById, readTasksByBacklogId } = useTasksContext();
+    const { backlogById: renderBacklog, readBacklogById } = useBacklogsContext();
+    const route = useRoute<any>();
+    const navigation = useNavigation<NavigationProp<MainStackParamList>>();
 
-const DashboardView = () => {
-    // ---- Hooks ----
-    const route = useRoute()
-    const { backlogId } = route.params as { backlogId: string }
-    const { t } = useTranslation(["dashboard"])
-    const {
-        tasksById: renderTasks,
-        readTasksByBacklogId
-    } = useTasksContext()
-    const {
-        backlogById: renderBacklog,
-        readBacklogById
-    } = useBacklogsContext()
-    const { canAccessBacklog } = useRoleAccess(
+    const { id: backlogId } = route.params as { id: string };
+
+    const { canAccessBacklog, canManageBacklog } = useRoleAccess(
         renderBacklog ? renderBacklog.project?.team?.organisation?.User_ID : undefined,
-        "backlog",
-        renderBacklog ? renderBacklog.Backlog_ID : 0
-    )
-    const {
-        handleScroll,
-        handleFocusEffect
-    } = useMainViewJumbotron({
-        title: `Dashboard`,
-        faIcon: faGauge,
-        visibility: 100,
-        rightIcon: faLightbulb,
-        rightIconActionRoute: "Backlog",
-        rightIconActionParams: { id: ((renderBacklog && renderBacklog.Backlog_ID) ?? "").toString() },
-    })
+        'backlog',
+        parseInt(backlogId)
+    );
 
-    // ---- Effects ----
+    const [renderTasks, setRenderTasks] = useState<Task[] | undefined>(undefined);
+
     useEffect(() => {
-        readTasksByBacklogId(parseInt(backlogId))
-        readBacklogById(parseInt(backlogId))
-    }, [backlogId])
+        readTasksByBacklogId(parseInt(backlogId));
+        readBacklogById(parseInt(backlogId));
+    }, [backlogId]);
 
-    useFocusEffect(
-        useCallback(() => {
-            handleFocusEffect()
-        }, [])
-    )
+    useEffect(() => {
+        if (tasksById.length === 0 && renderTasks) {
+            setRenderTasks(undefined);
+        }
+        if (tasksById.length) {
+            setRenderTasks(tasksById);
+        }
+    }, [tasksById]);
 
-    // ---- Dashboard-related Calculations ----
-    const safeTasks = Array.isArray(renderTasks) ? renderTasks : []
+    const safeTasks = Array.isArray(renderTasks) ? renderTasks : [];
 
-    const taskStatuses = {
+    const taskStatuses = useMemo(() => ({
         todo: safeTasks.filter(task => task.status?.Status_Is_Default),
-        inProgress: safeTasks.filter(
-            task =>
-                !task.status?.Status_Is_Default &&
-                !task.status?.Status_Is_Closed
+        inProgress: safeTasks.filter(task =>
+            !task.status?.Status_Is_Default && !task.status?.Status_Is_Closed
         ),
         done: safeTasks.filter(task => task.status?.Status_Is_Closed),
-    }
+    }), [safeTasks]);
 
-    // KPI Calculations
-    const totalTasks = safeTasks.length
-    const todoTasks = taskStatuses.todo.length
-    const inProgressTasks = taskStatuses.inProgress.length
-    const completedTasks = taskStatuses.done.length
+    const totalTasks = safeTasks.length;
+    const todoTasks = taskStatuses.todo.length;
+    const inProgressTasks = taskStatuses.inProgress.length;
+    const completedTasks = taskStatuses.done.length;
+    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-    const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
-
-    // Overdue Tasks Calculation
     const overdueTasks = useMemo(() => {
-        const today = new Date().toISOString().split("T")[0]
-        return safeTasks.filter(task =>
-            task.Task_Due_Date &&
-            typeof task.Task_Due_Date === "string" &&
-            task.Task_Due_Date < today &&
-            task.status?.Status_Is_Closed !== true
-        ).length
-    }, [safeTasks])
+        const today = new Date().toISOString().split('T')[0];
+        return safeTasks.filter(
+            task =>
+                task.Task_Due_Date &&
+                typeof task.Task_Due_Date === 'string' &&
+                task.Task_Due_Date < today &&
+                task.status?.Status_Is_Closed !== true
+        ).length;
+    }, [safeTasks]);
 
-    const chartData = useMemo(() => {
-        if (!renderBacklog || !Array.isArray(renderBacklog.statuses)) return [];
-        const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
-        return renderBacklog.statuses.map((status: Status, idx: number) => ({
+    const pieData = useMemo(() => {
+        if (!renderBacklog) return [];
+
+        const statuses = renderBacklog?.statuses || [];
+        return statuses.map((status, index) => ({
             name: status.Status_Name,
-            population: renderBacklog.tasks
-                ? renderBacklog.tasks.filter((task: Task) => task.Status_ID === status.Status_ID).length
-                : 0,
-            color: colors[idx % colors.length],
-            legendFontColor: "#444",
+            count: renderBacklog?.tasks?.filter(t => t.Status_ID === status.Status_ID).length || 0,
+            color: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'][index % 4],
+            legendFontColor: '#333',
             legendFontSize: 14,
         }));
     }, [renderBacklog]);
 
     const barChartData = {
-        labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
+        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
         datasets: [
             {
                 data: [12, 19, 3, 5],
-                color: () => "#36A2EB",
-                strokeWidth: 2
+                color: () => '#36A2EB',
             },
             {
                 data: [7, 11, 5, 8],
-                color: () => "#FFCE56",
-                strokeWidth: 2
-            }
+                color: () => '#FFCE56',
+            },
         ],
-        legend: [t("dashboard.completedTasks"), t("dashboard.pendingTasks")]
-    }
+        legend: [t('dashboard.completedTasks'), t('dashboard.pendingTasks')],
+    };
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
+        <ScrollView style={styles.container}>
             <LoadingState
-                singular="Project"
+                singular="Backlog"
                 renderItem={renderBacklog}
                 permitted={canAccessBacklog}
             >
                 {renderBacklog && (
                     <>
-                        <Text style={styles.title}>{renderBacklog.Backlog_Name}</Text>
+                        <Text style={styles.title}>{t('dashboard.title')}</Text>
+                        <Text style={styles.subtitle}>{renderBacklog.Backlog_Name}</Text>
 
-                        <View style={styles.kpiContainer}>
-                            <KPI title={t("dashboard.totalTasks")} value={totalTasks} />
-                            <KPI title={t("dashboard.completedTasks")} value={`${completedTasks} (${completionRate}%)`} />
-                            <KPI title={t("dashboard.overdueTasks")} value={overdueTasks} />
-                            <KPI title={t("dashboard.tasksInProgress")} value={inProgressTasks} />
+                        {/* KPIs */}
+                        <View style={styles.kpiRow}>
+                            <KPI label={t('dashboard.totalTasks')} value={totalTasks} />
+                            <KPI label={t('dashboard.completedTasks')} value={`${completedTasks} (${completionRate}%)`} />
+                        </View>
+                        <View style={styles.kpiRow}>
+                            <KPI label={t('dashboard.overdueTasks')} value={overdueTasks} />
+                            <KPI label={t('dashboard.tasksInProgress')} value={inProgressTasks} />
                         </View>
 
-                        <Text style={styles.sectionTitle}>{t("dashboard.progress")}</Text>
-                        <ProgressBar completed={completionRate} />
+                        {/* Progress Bar */}
+                        <Text style={styles.sectionTitle}>{t('dashboard.progress')}</Text>
+                        <View style={styles.progressBar}>
+                            <View style={[styles.progressFill, { width: `${completionRate}%` }]}>
+                                <Text style={styles.progressText}>{completionRate}%</Text>
+                            </View>
+                        </View>
 
-                        <Text style={styles.sectionTitle}>{t("dashboard.analytics")}</Text>
+                        {/* Pie Chart */}
+                        <Text style={styles.sectionTitle}>{t('dashboard.analytics')}</Text>
                         <PieChart
-                            data={chartData}
+                            data={pieData}
                             width={screenWidth - 32}
                             height={220}
                             chartConfig={chartConfig}
-                            accessor="population"
+                            accessor="count"
                             backgroundColor="transparent"
-                            paddingLeft="15"
+                            paddingLeft="16"
                             absolute
                         />
 
-                        <Text style={styles.sectionTitle}>{t("dashboard.taskCompletionOverTime")}</Text>
+                        {/* Bar Chart */}
+                        <Text style={styles.sectionTitle}>{t('dashboard.taskCompletionOverTime')}</Text>
                         <BarChart
                             data={barChartData}
                             width={screenWidth - 32}
-                            height={250}
+                            height={260}
                             chartConfig={chartConfig}
                             fromZero
+                            withInnerLines={false}
                             showBarTops
-                            withInnerLines
                             yAxisLabel=""
                             yAxisSuffix=""
-                            style={styles.chart}
                         />
                     </>
                 )}
             </LoadingState>
         </ScrollView>
-    )
-}
+    );
+};
 
-const KPI = ({ title, value }: { title: string; value: string | number }) => (
-    <View style={styles.kpiBox}>
-        <Text style={styles.kpiTitle}>{title}</Text>
+const KPI = ({ label, value }: { label: string; value: string | number }) => (
+    <View style={styles.kpiCard}>
+        <Text style={styles.kpiLabel}>{label}</Text>
         <Text style={styles.kpiValue}>{value}</Text>
     </View>
-)
-
-const ProgressBar = ({ completed }: { completed: number }) => (
-    <View style={styles.progressBarContainer}>
-        <View style={[styles.progressBarFill, { width: `${completed}%` }]}>
-            <Text style={styles.progressText}>{completed}%</Text>
-        </View>
-    </View>
-)
+);
 
 const chartConfig = {
-    backgroundColor: "#fff",
-    backgroundGradientFrom: "#fff",
-    backgroundGradientTo: "#fff",
-    decimalPlaces: 0,
-    color: (opacity = 1) => `rgba(54, 162, 235, ${opacity})`,
-    labelColor: () => "#444",
-    style: {
-        borderRadius: 16
-    }
-}
+    backgroundGradientFrom: '#fff',
+    backgroundGradientTo: '#fff',
+    color: (opacity = 1) => `rgba(51, 51, 51, ${opacity})`,
+    labelColor: () => '#333',
+    barPercentage: 0.6,
+    propsForBackgroundLines: {
+        strokeWidth: 0,
+    },
+};
 
 const styles = StyleSheet.create({
     container: {
         padding: 16,
-        backgroundColor: "#F9FAFB"
+        backgroundColor: '#fff',
     },
     title: {
-        fontSize: 20,
-        fontWeight: "700",
-        marginBottom: 16
+        fontSize: 22,
+        fontWeight: 'bold',
+        marginBottom: 4,
+    },
+    subtitle: {
+        fontSize: 16,
+        marginBottom: 16,
     },
     sectionTitle: {
         fontSize: 18,
-        fontWeight: "600",
+        fontWeight: 'bold',
         marginTop: 24,
-        marginBottom: 12
+        marginBottom: 12,
     },
-    kpiContainer: {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        justifyContent: "space-between"
+    kpiRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
     },
-    kpiBox: {
-        width: "48%",
-        backgroundColor: "#fff",
+    kpiCard: {
+        flex: 1,
         padding: 12,
-        marginVertical: 6,
+        backgroundColor: '#F4F6F8',
+        margin: 4,
         borderRadius: 8,
-        elevation: 1
+        alignItems: 'center',
     },
-    kpiTitle: {
+    kpiLabel: {
         fontSize: 14,
-        fontWeight: "500",
-        color: "#555"
+        color: '#555',
     },
     kpiValue: {
-        fontSize: 18,
-        fontWeight: "700",
-        marginTop: 4
+        fontSize: 20,
+        fontWeight: '600',
     },
-    progressBarContainer: {
+    progressBar: {
         height: 24,
-        width: "100%",
-        backgroundColor: "#EEE",
+        backgroundColor: '#E0E0E0',
         borderRadius: 12,
-        overflow: "hidden",
-        marginBottom: 16
+        overflow: 'hidden',
+        marginBottom: 16,
     },
-    progressBarFill: {
-        height: "100%",
-        backgroundColor: "#36A2EB",
-        justifyContent: "center",
-        alignItems: "center"
+    progressFill: {
+        backgroundColor: '#36A2EB',
+        height: '100%',
+        justifyContent: 'center',
+        paddingLeft: 8,
     },
     progressText: {
-        color: "#FFF",
-        fontWeight: "bold"
+        color: 'white',
+        fontWeight: 'bold',
     },
-    chart: {
-        borderRadius: 12,
-        marginVertical: 8
-    }
-})
+    errorText: {
+        color: 'red',
+        fontSize: 16,
+        textAlign: 'center',
+    },
+});
 
-export default DashboardView
+export default DashboardContainer;

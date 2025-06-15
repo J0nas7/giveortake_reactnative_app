@@ -32,6 +32,7 @@ export type MainStackParamList = {
 
     Dashboard: { id: string }; // Requires an id parameter
     Backlog: { id: string }; // Requires an id parameter
+    CreateBacklog: { id: string }; // Requires an id parameter
     Kanban: { id: string }; // Requires an id parameter
     Time: { id: string }; // Requires an id parameter
 

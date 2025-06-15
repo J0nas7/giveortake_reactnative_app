@@ -7,6 +7,7 @@ import { ActivityIndicator, AppState, AppStateStatus, Linking, SafeAreaView, Sty
 import SplashScreen from 'react-native-splash-screen'
 
 // Internal
+import { SnackBar } from '@/src/Components/SnackBar'
 import { useNotifications } from '@/src/Hooks'
 import {
     selectAuthUserTaskTimeTrack,
@@ -20,6 +21,7 @@ import {
 import { GuestStackParamList, MainStackParamList } from '@/src/Types'
 import {
     BacklogPage,
+    CreateBacklog,
     DownloadedMediaFilesView,
     KanbanBoardView,
     MediaFileView,
@@ -61,6 +63,7 @@ const DeviceIsLoggedIn = () => {
             { name: "Organisation", component: OrganisationDetailsView },
             { name: "Team", component: TeamDetailsView },
             { name: "Project", component: ProjectDetailsView },
+            { name: "CreateBacklog", component: CreateBacklog },
             { name: "Backlog", component: BacklogPage },
             { name: "Task", component: TaskDetailsView },
             { name: "Media", component: MediaFileView },
@@ -122,6 +125,7 @@ const DeviceIsLoggedIn = () => {
                         <HeadlineJumbotron />
                         {children}
                         <TaskTimeTrackPlayer />
+                        <SnackBar />
                     </>
                 )
             };

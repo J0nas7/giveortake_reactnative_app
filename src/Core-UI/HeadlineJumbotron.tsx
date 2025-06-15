@@ -27,6 +27,7 @@ export const HeadlineJumbotron: React.FC = () => {
         Project: faLightbulb,
         Dashboard: faGauge,
         Backlog: faList,
+        Backlogs: faList,
         Kanban: faWindowRestore,
         Time: faClock,
     }

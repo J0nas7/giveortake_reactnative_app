@@ -9,7 +9,13 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 // Internal
 import { useTasksContext, useTaskTimeTrackContext } from '@/src/Contexts';
 import { updateLiveActivity } from '@/src/Native/LiveActivityModule';
-import { selectAuthUserTaskTimeTrack, useAppDispatch, useAuthActions, useTypedSelector } from '@/src/Redux';
+import {
+    selectAuthUserTaskTimeTrack,
+    selectSnackMessage,
+    useAppDispatch,
+    useAuthActions,
+    useTypedSelector
+} from '@/src/Redux';
 import { MainStackParamList, TaskTimeTrack } from '@/src/Types';
 import { CalculateSecondsToTimeDisplay, TimeSpentDisplay } from './CreatedAtToTimeSince';
 
@@ -22,6 +28,7 @@ export const TaskTimeTrackPlayer: React.FC = () => {
     const dispatch = useAppDispatch();
 
     const taskTimeTrack = useTypedSelector(selectAuthUserTaskTimeTrack);
+    const snackMessage = useTypedSelector(selectSnackMessage)
 
     useEffect(() => {
         if (!taskTimeTrack) dispatch(fetchIsLoggedInStatus());
@@ -48,7 +55,7 @@ export const TaskTimeTrackPlayer: React.FC = () => {
         return () => clearInterval(iOSLiveActivity);
     }, [taskTimeTrack])
 
-    if (!taskTimeTrack) return null;
+    if (!taskTimeTrack || snackMessage) return null
 
     const handleNavigateToTask = () => {
         const projectKey = taskTimeTrack.task?.backlog?.project?.Project_Key;

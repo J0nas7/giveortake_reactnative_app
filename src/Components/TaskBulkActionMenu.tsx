@@ -202,18 +202,23 @@ export const BulkEdit: React.FC<BulkEditProps> = ({
     const handleBulkUpdate = async () => {
         if (!selectedTaskIds.length) return
 
-        const updatedTasks = selectedTaskIds.map((taskId) => ({
+        const updatedTasks: any[] = selectedTaskIds.map((taskId) => ({
             Task_ID: taskId,
-            Backlog_ID: newBacklog,
-            Task_Status: newStatus,
-            Task_Due_Date: newDueDate?.toISOString().split('T')[0], // Format: YYYY-MM-DD
-            Assigned_User_ID: newUserId,
+            Backlog_ID: newBacklog || null,
+            Status_ID: newStatus || null,
+            Task_Due_Date: newDueDate ? newDueDate.toISOString().split('T')[0] : null, // Format: YYYY-MM-DD
+            Assigned_User_ID: newUserId || null,
         }))
+
+        console.log("tasks/bulk-update", updatedTasks)
 
         const result = await httpPostWithData("tasks/bulk-update", { tasks: updatedTasks })
 
+        console.log("Bulk update result:", result)
+
         if (result.updated_tasks) {
             await readProjectById(renderProject.Project_ID ?? 0)
+            setTaskBulkEditing(false)
             setSelectedTaskIds([])
             backlogsViewRefresh()
         }
@@ -292,11 +297,11 @@ export const BulkEditView: React.FC<BulkEditViewProps> = ({
                 <Text style={bulkEditStyles.label}>Assignee</Text>
                 <TouchableOpacity
                     style={bulkEditStyles.bulkEditItemToggler}
-                    onPress={() => handleTogglerVisibility("ASSIGNEE")}
+                    onPress={() => handleTogglerVisibility("Assignee")}
                 >
                     {(() => {
-                        const selectedUser = renderProject.team?.user_seats?.find(seat => seat.User_ID === newUserId)?.user
-                        return <Text>{selectedUser?.User_FirstName}{" "}{selectedUser?.User_Surname}</Text>
+                        const selectedUser = renderProject.team?.user_seats?.find(seat => seat.user?.User_ID === newUserId)?.user
+                        return <Text>{selectedUser ? `${selectedUser.User_FirstName} ${selectedUser.User_Surname}` : "Select Assignee"}</Text>
                     })()}
                     <FontAwesomeIcon icon={faChevronRight} />
                 </TouchableOpacity>
@@ -306,41 +311,44 @@ export const BulkEditView: React.FC<BulkEditViewProps> = ({
                 <Text style={bulkEditStyles.label}>Due Date</Text>
                 <TouchableOpacity
                     style={bulkEditStyles.bulkEditItemToggler}
-                    onPress={() => handleTogglerVisibility("DUE_DATE")}
+                    onPress={() => handleTogglerVisibility("Due Date")}
                 >
                     <Text>{newDueDate ? newDueDate.toDateString() : "Select Date"}</Text>
                     <FontAwesomeIcon icon={faChevronRight} />
                 </TouchableOpacity>
             </View>
 
-            {newBacklog > 0 && (
-                <View style={bulkEditStyles.bulkEditItem}>
-                    <Text style={bulkEditStyles.label}>Status</Text>
-                    <TouchableOpacity
-                        style={bulkEditStyles.bulkEditItemToggler}
-                        onPress={() => handleTogglerVisibility("STATUS")}
-                    >
-                        {(() => {
-                            const selectedStatus = renderProject.backlogs?.
-                                find(backlog => backlog.Backlog_ID === newBacklog)?.
-                                statuses?.
-                                find(status => status.Status_ID === parseInt(newStatus))
-                            return <Text>{selectedStatus?.Status_Name}</Text>
-                        })()}
-                        <FontAwesomeIcon icon={faChevronRight} />
-                    </TouchableOpacity>
-                </View>
-            )}
+            <View
+                style={[
+                    bulkEditStyles.bulkEditItem,
+                    { opacity: newBacklog > 0 ? 1 : 0.5 }
+                ]}
+            >
+                <Text style={bulkEditStyles.label}>Status</Text>
+                <TouchableOpacity
+                    style={bulkEditStyles.bulkEditItemToggler}
+                    onPress={() => handleTogglerVisibility("Status")}
+                >
+                    {(() => {
+                        const selectedStatus = renderProject.backlogs?.
+                            find(backlog => backlog.Backlog_ID === newBacklog)?.
+                            statuses?.
+                            find(status => status.Status_ID === parseInt(newStatus))
+                        return <Text>{selectedStatus ? selectedStatus.Status_Name : "Select Status"}</Text>
+                    })()}
+                    <FontAwesomeIcon icon={faChevronRight} />
+                </TouchableOpacity>
+            </View>
 
             <View style={bulkEditStyles.bulkEditItem}>
                 <Text style={bulkEditStyles.label}>Backlog</Text>
                 <TouchableOpacity
                     style={bulkEditStyles.bulkEditItemToggler}
-                    onPress={() => handleTogglerVisibility("BACKLOG")}
+                    onPress={() => handleTogglerVisibility("Backlog")}
                 >
                     {(() => {
                         const selectedBacklog = renderProject.backlogs?.find(backlog => backlog.Backlog_ID === newBacklog)
-                        return <Text>{selectedBacklog?.Backlog_Name}</Text>
+                        return <Text>{selectedBacklog ? selectedBacklog.Backlog_Name : "Select Backlog"}</Text>
                     })()}
                     <FontAwesomeIcon icon={faChevronRight} />
                 </TouchableOpacity>
@@ -350,84 +358,121 @@ export const BulkEditView: React.FC<BulkEditViewProps> = ({
                 <Button title="Confirm" onPress={handleBulkUpdate} color="#007bff" />
             </View>
         </ScrollView>
-        {togglerIsVisible && (
-            <Animated.View style={[
-                styles.container,
-                { zIndex: 1100, transform: [{ translateY: slideAnim }] }
-            ]}>
-                <View style={styles.header}>
-                    <Text style={styles.title}>Select {togglerIsVisible}</Text>
-                    <TouchableOpacity onPress={() => handleTogglerVisibility(false)}>
-                        <FontAwesomeIcon icon={faXmark} size={20} />
-                    </TouchableOpacity>
-                </View>
-                <View>
-                    {togglerIsVisible === "ASSIGNEE" ? (
-                        <Picker
-                            selectedValue={newUserId}
-                            onValueChange={(value) => setNewUserId(value)}
-                            style={bulkEditStyles.picker}
-                        >
-                            <Picker.Item label="Assignee" value={undefined} />
-                            {renderProject.team?.user_seats?.map(userSeat => {
-                                const user = userSeat.user
-                                return (
-                                    <Picker.Item
-                                        key={user?.User_ID}
-                                        label={`${user?.User_FirstName} ${user?.User_Surname}`}
-                                        value={user?.User_ID}
-                                    />
-                                )
-                            })}
-                        </Picker>
-                    ) : togglerIsVisible === "BACKLOG" ? (
-                        <Picker
-                            selectedValue={newBacklog}
-                            onValueChange={(value) => {
-                                setNewBacklog(value)
-                                setNewStatus("0") // Reset status when changing backlog
-                            }}
-                            style={bulkEditStyles.picker}
-                        >
-                            <Picker.Item label="Backlog" value="" />
-                            {renderProject.backlogs?.map(backlog => (
-                                <Picker.Item key={backlog.Backlog_ID} label={backlog.Backlog_Name} value={backlog.Backlog_ID} />
-                            ))}
-                        </Picker>
-                    ) : togglerIsVisible === "STATUS" ? (
-                        <Picker
-                            selectedValue={newStatus}
-                            onValueChange={(value) => setNewStatus(value)}
-                            style={bulkEditStyles.picker}
-                        >
-                            <Picker.Item label="Status" value="" />
-                            {renderProject.backlogs?.
-                                find(backlog => backlog.Backlog_ID === newBacklog)?.
-                                statuses?.map(status => (
-                                    <Picker.Item
-                                        key={`${status.Status_ID}`}
-                                        label={`${status.Status_Name}`}
-                                        value={status.Status_ID}
-                                    />
-                                ))
-                            }
-                        </Picker>
-                    ) : togglerIsVisible === "DUE_DATE" ? (
-                        <></>
-                        // <DateTimePicker
-                        //     value={newDueDate || new Date()}
-                        //     mode="date"
-                        //     display="default"
-                        //     onChange={(event, selectedDate) => {
-                        //         setShowDatePicker(false)
-                        //         if (selectedDate) setNewDueDate(selectedDate)
-                        //     }}
-                        // />
-                    ) : null}
-                </View>
-            </Animated.View>
-        )}
+        <BulkEditTogglerView
+            slideAnim={slideAnim}
+            togglerIsVisible={togglerIsVisible}
+            handleTogglerVisibility={handleTogglerVisibility}
+            newUserId={newUserId}
+            setNewUserId={setNewUserId}
+            renderProject={renderProject}
+            newBacklog={newBacklog}
+            setNewBacklog={setNewBacklog}
+            newStatus={newStatus}
+            setNewStatus={setNewStatus}
+        />
     </>
+)
+
+type BulkEditTogglerViewProps = {
+    slideAnim: Animated.Value
+    togglerIsVisible: string | false
+    handleTogglerVisibility: (visibility: false | string) => void
+    newUserId: number | undefined
+    setNewUserId: React.Dispatch<React.SetStateAction<number | undefined>>
+    renderProject: Project
+    newBacklog: number
+    setNewBacklog: React.Dispatch<React.SetStateAction<number>>
+    newStatus: string
+    setNewStatus: React.Dispatch<React.SetStateAction<string>>
+}
+
+export const BulkEditTogglerView: React.FC<BulkEditTogglerViewProps> = ({
+    slideAnim,
+    togglerIsVisible,
+    handleTogglerVisibility,
+    newUserId,
+    setNewUserId,
+    renderProject,
+    newBacklog,
+    setNewBacklog,
+    newStatus,
+    setNewStatus
+}) => togglerIsVisible && (
+    <Animated.View style={[
+        styles.container,
+        { zIndex: 1100, transform: [{ translateY: slideAnim }] }
+    ]}>
+        <View style={styles.header}>
+            <Text style={styles.title}>Select {togglerIsVisible}</Text>
+            <TouchableOpacity onPress={() => handleTogglerVisibility(false)}>
+                <FontAwesomeIcon icon={faXmark} size={20} />
+            </TouchableOpacity>
+        </View>
+        <View>
+            {togglerIsVisible === "Assignee" ? (
+                <Picker
+                    selectedValue={newUserId}
+                    onValueChange={(value) => setNewUserId(value)}
+                    style={bulkEditStyles.picker}
+                >
+                    <Picker.Item label="Assignee" value={undefined} />
+                    {renderProject.team?.user_seats?.map(userSeat => {
+                        const user = userSeat.user
+                        return (
+                            <Picker.Item
+                                key={user?.User_ID}
+                                label={`${user?.User_FirstName} ${user?.User_Surname}`}
+                                value={user?.User_ID}
+                            />
+                        )
+                    })}
+                </Picker>
+            ) : togglerIsVisible === "Backlog" ? (
+                <Picker
+                    selectedValue={newBacklog}
+                    onValueChange={(value) => {
+                        setNewBacklog(value)
+                        setNewStatus("0") // Reset status when changing backlog
+                    }}
+                    style={bulkEditStyles.picker}
+                >
+                    <Picker.Item label="Backlog" value="" />
+                    {renderProject.backlogs?.map(backlog => (
+                        <Picker.Item key={backlog.Backlog_ID} label={backlog.Backlog_Name} value={backlog.Backlog_ID} />
+                    ))}
+                </Picker>
+            ) : togglerIsVisible === "Status" ? (
+                <Picker
+                    selectedValue={newStatus}
+                    onValueChange={(value) => setNewStatus(value)}
+                    style={bulkEditStyles.picker}
+                >
+                    <Picker.Item label="Status" value="" />
+                    {renderProject.backlogs?.
+                        find(backlog => backlog.Backlog_ID === newBacklog)?.
+                        statuses?.map(status => (
+                            <Picker.Item
+                                key={`${status.Status_ID}`}
+                                label={`${status.Status_Name}`}
+                                value={status.Status_ID}
+                            />
+                        ))
+                    }
+                </Picker>
+            ) : togglerIsVisible === "Due Date" ? (
+                <></>
+                // <DateTimePicker
+                //     value={newDueDate || new Date()}
+                //     mode="date"
+                //     display="default"
+                //     onChange={(event, selectedDate) => {
+                //         setShowDatePicker(false)
+                //         if (selectedDate) setNewDueDate(selectedDate)
+                //     }}
+                // />
+            ) : null}
+        </View>
+    </Animated.View>
 )
 
 const bulkEditStyles = StyleSheet.create({

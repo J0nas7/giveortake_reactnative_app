@@ -53,7 +53,15 @@ export const useAxios = () => {
         // Check if postContent contains a file (e.g., image file) and use FormData if it does
         let dataToSend: any = postContent;
 
-        if (postContent && (Object.values(postContent).some((value) => value instanceof File || Array.isArray(value)))) {
+        // if (postContent && (Object.values(postContent).some((value) => value instanceof File || Array.isArray(value)))) {
+        if (
+            postContent &&
+            Object.values(postContent).some(
+                (value) =>
+                    value instanceof File ||
+                    (Array.isArray(value) && value.length > 0 && value.every((item) => item instanceof File))
+            )
+        ) {
             const formData = new FormData();
             for (const key in postContent) {
                 if (key === "images" && Array.isArray(postContent[key])) {
@@ -90,26 +98,36 @@ export const useAxios = () => {
         }
 
         try {
-            if (actionType === "get") {
-                // Perform a HTTP GET request
-                const { data: response } = await axios.get(axiosUrl, config)
-                return response
-            } else if (actionType === "post") {
-                // Perform a HTTP POST request
-                const { data: response } = await axios.post(axiosUrl, dataToSend, config)
-                return response
-            } else if (actionType === "put") {
-                // Perform a HTTP PUT request
-                const { data: response } = await axios.put(axiosUrl, dataToSend, config)
-                return response
-            } else if (actionType === "delete") {
-                // Perform a HTTP DELETE request
-                const { data: response } = await axios.delete(axiosUrl, config)
-                return response
+            let response;
+            switch (actionType) {
+                case "get":
+                    ({ data: response } = await axios.get(axiosUrl, config));
+                    break;
+                case "post":
+                    ({ data: response } = await axios.post(axiosUrl, dataToSend, config));
+                    break;
+                case "put":
+                    ({ data: response } = await axios.put(axiosUrl, dataToSend, config));
+                    break;
+                case "delete":
+                    ({ data: response } = await axios.delete(axiosUrl, config));
+                    break;
+                default:
+                    throw new Error(`Unsupported actionType: ${actionType}`);
             }
+            return response;
         } catch (error: unknown) {
             // Handle errors, log them, and return the error object
-            console.log(`axiosAction ${actionType.toUpperCase()} error`, error)
+            if (axios.isAxiosError(error)) {
+                console.log(
+                    `❌ useAxios ${actionType.toUpperCase()} (${apiEndPoint}) error:`,
+                    error.config,
+                    error.request,
+                    error.response
+                );
+            } else {
+                console.log(`⚠️ Non-Axios ${actionType.toUpperCase()} (${apiEndPoint}) error:`, error);
+            }
             return error
         }
     }

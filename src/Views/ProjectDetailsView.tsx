@@ -1,150 +1,212 @@
-import { faClock, faGauge, faLightbulb, faList, faUsers, faWindowRestore } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import { NavigationProp, useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
-import React, { useCallback, useEffect, useState } from "react";
-import { Button, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+// External
+import { NavigationProp, useNavigation, useRoute } from '@react-navigation/native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Alert, Button, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
+// Redux
+import {
+    selectAuthUser,
+    selectAuthUserSeatPermissions,
+    setSnackMessage,
+    useAppDispatch,
+    useTypedSelector,
+} from '@/src/Redux';
 
 // Internal
-import { useProjectsContext } from "@/src/Contexts";
-import { selectAuthUser, useTypedSelector } from "@/src/Redux";
-import { MainStackParamList, Project, ProjectFields } from "@/src/Types";
-import { ReadOnlyRow } from "../Components/ReadOnlyRow";
-import useMainViewJumbotron from "../Hooks/useMainViewJumbotron";
+import { ProjectBacklogsSection } from '@/src/Components/ProjectBacklogsSection';
+import { useProjectsContext } from '@/src/Contexts';
+import { LoadingState } from '@/src/Core-UI/LoadingState';
+import useRoleAccess from '@/src/Hooks/useRoleAccess';
+import { MainStackParamList, ProjectFields, ProjectStates } from '@/src/Types';
 
 export const ProjectDetailsView: React.FC = () => {
-    // Hooks
-    const navigation = useNavigation<NavigationProp<MainStackParamList>>();
+    // ---- Hooks ----
+    const dispatch = useAppDispatch();
     const route = useRoute();
-    const { projectById, readProjectById, saveProjectChanges, removeProject } = useProjectsContext();
-    const { handleScroll, handleFocusEffect } = useMainViewJumbotron({
-        title: `Project Info`,
-        faIcon: faLightbulb,
-        visibility: 100,
-        rightIcon: faUsers,
-        rightIconActionRoute: "Team",
-        rightIconActionParams: { id: ((projectById && projectById?.team?.Team_ID) ?? "").toString() },
-    })
-
-    // State
+    const navigation = useNavigation<NavigationProp<MainStackParamList>>();
     const { id: projectId } = route.params as { id: string };  // Get id as projectId from route params
-    const authUser = useTypedSelector(selectAuthUser);
-    const [renderProject, setRenderProject] = useState<Project | undefined>(undefined);
+    const { projectById, readProjectById, saveProjectChanges, removeProject } = useProjectsContext();
 
-    // Effects
+    const { canAccessProject, canManageProject } = useRoleAccess(
+        projectById ? projectById.team?.organisation?.User_ID : undefined,
+        'project',
+        parseInt(projectId)
+    );
+
+    // ---- State ----
+    const [showEditToggles, setShowEditToggles] = useState<boolean>(false)
+    const [renderProject, setRenderProject] = useState<ProjectStates>(undefined);
+    const authUser = useTypedSelector(selectAuthUser);
+    const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions);
+    // Calculate the number of accessible backlogs for the authenticated user using useMemo
+    const accessibleBacklogsCount = useMemo(() => {
+        if (!renderProject || !renderProject.backlogs) return 0;
+        return renderProject.backlogs.filter(
+            (backlog) =>
+                authUser &&
+                (
+                    renderProject.team?.organisation?.User_ID === authUser.User_ID || // Check if the user owns the organisation
+                    parsedPermissions?.includes(`accessBacklog.${backlog.Backlog_ID}`) // Check if the user has access permissions
+                )
+        ).length;
+    }, [renderProject, authUser, parsedPermissions]);
+
     useEffect(() => {
-        if (projectId) {
-            readProjectById(parseInt(projectId));
-        }
+        readProjectById(parseInt(projectId));
     }, [projectId]);
 
     useEffect(() => {
-        if (projectById) {
-            setRenderProject(projectById);
-        }
+        if (projectById) setRenderProject(projectById);
     }, [projectById]);
 
-    useFocusEffect(
-        useCallback(() => {
-            handleFocusEffect()
-        }, [])
-    )
-
-    // Methods
     const handleProjectChange = (field: ProjectFields, value: string) => {
-        setRenderProject((prev) =>
-            prev ? { ...prev, [field]: value } : undefined
-        );
+        if (!renderProject) return;
+        setRenderProject({ ...renderProject, [field]: value });
     };
 
     const handleSaveChanges = async () => {
         if (renderProject) {
-            await saveProjectChanges(renderProject, renderProject.Team_ID);
+            const success = await saveProjectChanges(renderProject, renderProject.Team_ID);
+            dispatch(setSnackMessage(success ? 'Changes saved!' : 'Failed to save changes.'));
         }
     };
 
     const handleDeleteProject = async () => {
-        if (renderProject?.Project_ID) {
-            const removed = await removeProject(renderProject.Project_ID, renderProject.Team_ID, undefined);
+        if (!renderProject || !renderProject.Project_ID) return
 
-            navigation.navigate("Team", { id: (renderProject.Team_ID ?? "").toString() });
-        }
+        Alert.alert(
+            'Confirm Delete',
+            'Are you sure you want to delete this project?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        await removeProject(renderProject.Project_ID!, renderProject.Team_ID, `/team/${renderProject.Team_ID}`);
+                        navigation.goBack();
+                    },
+                },
+            ]
+        );
     };
 
     if (!renderProject) return <Text>Loading...</Text>;
 
-    const isOwner = authUser?.User_ID === renderProject.team?.organisation?.User_ID;
-
     return (
-        <ScrollView contentContainerStyle={{ padding: 16 }}>
-            {/* Navigation Links */}
-            <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", marginBottom: 20 }}>
-                <ProjectNavButton icon={faGauge} label="Dashboard" route="Dashboard" projectId={renderProject.Project_ID} />
-                <ProjectNavButton icon={faList} label="Backlog" route="Backlog" projectId={renderProject.Project_ID} />
-                <ProjectNavButton icon={faWindowRestore} label="Kanban Board" route="Kanban" projectId={renderProject.Project_ID} />
-                <ProjectNavButton icon={faClock} label="Time Entries" route="Time" projectId={renderProject.Project_ID} />
-            </View>
+        <ScrollView contentContainerStyle={styles.container}>
+            <LoadingState
+                singular="Project"
+                renderItem={renderProject}
+                permitted={canAccessProject}
+            >
+                <TouchableOpacity onPress={() => setShowEditToggles(!showEditToggles)}>
+                    <Text style={{ color: 'blue', fontSize: 16 }}>{showEditToggles ? "OK" : "Edit"}</Text>
+                </TouchableOpacity>
 
-            {/* Content */}
-            {isOwner ? (
-                <>
-                    <Text style={{ fontSize: 18, fontWeight: "600", marginBottom: 8 }}>Edit Project Details</Text>
+                <Text style={styles.title}>Project Details</Text>
 
-                    <TextInput
-                        placeholder="Project Name"
-                        value={renderProject.Project_Name}
-                        onChangeText={(text) => handleProjectChange("Project_Name", text)}
-                        style={inputStyle}
-                    />
+                {canManageProject && showEditToggles ? (
+                    <>
+                        <TextInput
+                            style={inputStyle}
+                            placeholder="Project Name"
+                            value={renderProject.Project_Name}
+                            onChangeText={(value) => handleProjectChange('Project_Name', value)}
+                        />
 
-                    <TextInput
-                        placeholder="Project Key"
-                        value={renderProject.Project_Key}
-                        onChangeText={(text) => handleProjectChange("Project_Key", text)}
-                        style={inputStyle}
-                    />
+                        <TextInput
+                            style={inputStyle}
+                            placeholder="Project Key"
+                            value={renderProject.Project_Key}
+                            onChangeText={(value) => handleProjectChange('Project_Key', value)}
+                        />
 
-                    <TextInput
-                        placeholder="Project Description"
-                        value={renderProject.Project_Description}
-                        multiline
-                        numberOfLines={5}
-                        onChangeText={(text) => handleProjectChange("Project_Description", text)}
-                        style={[inputStyle, { textAlignVertical: "top" }]}
-                    />
+                        <TextInput
+                            style={styles.textArea}
+                            placeholder="Project Description"
+                            value={renderProject.Project_Description}
+                            onChangeText={(value) => handleProjectChange('Project_Description', value)}
+                            multiline
+                            numberOfLines={4}
+                        />
 
-                    <TextInput
-                        placeholder="Start Date"
-                        value={renderProject.Project_Start_Date || ""}
-                        onChangeText={(text) => handleProjectChange("Project_Start_Date", text)}
-                        style={inputStyle}
-                    />
+                        <TextInput
+                            style={inputStyle}
+                            placeholder="Start Date"
+                            value={renderProject.Project_Start_Date || ''}
+                            onChangeText={(value) => handleProjectChange('Project_Start_Date', value)}
+                        />
 
-                    <TextInput
-                        placeholder="End Date"
-                        value={renderProject.Project_End_Date || ""}
-                        onChangeText={(text) => handleProjectChange("Project_End_Date", text)}
-                        style={inputStyle}
-                    />
+                        <TextInput
+                            style={inputStyle}
+                            placeholder="End Date"
+                            value={renderProject.Project_End_Date || ''}
+                            onChangeText={(value) => handleProjectChange('Project_End_Date', value)}
+                        />
 
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 20 }}>
-                        <Button title="Save Changes" onPress={handleSaveChanges} color="#007AFF" />
-                        <Button title="Delete Project" onPress={handleDeleteProject} color="#FF3B30" />
-                    </View>
-                </>
-            ) : (
-                <>
-                    <Text style={{ fontSize: 18, fontWeight: "600", marginBottom: 8 }}>Project Details</Text>
-                    <ReadOnlyRow label="Project Name" value={renderProject.Project_Name} />
-                    <ReadOnlyRow label="Project Status" value={renderProject.Project_Status} />
-                    <ReadOnlyRow label="Project Key" value={`${renderProject.Project_Key}-0`} />
-                    <ReadOnlyRow label="Description" value={renderProject.Project_Description} />
-                    <ReadOnlyRow label="Start Date" value={renderProject.Project_Start_Date} />
-                    <ReadOnlyRow label="End Date" value={renderProject.Project_End_Date} />
-                </>
-            )}
+                        <View style={styles.buttonRow}>
+                            <Button title="Save Changes" onPress={handleSaveChanges} />
+                            <Button title="Delete Project" onPress={handleDeleteProject} color="red" />
+                        </View>
+                    </>
+                ) : (
+                    <>
+                        <Text style={styles.label}>Project Name: {renderProject.Project_Name}</Text>
+                        <Text style={styles.label}>Project Key: {renderProject.Project_Key}</Text>
+                        <Text style={styles.label}>Status: {renderProject.Project_Status}</Text>
+                        <Text style={styles.label}>Description:</Text>
+                        <Text style={styles.description}>{renderProject.Project_Description || 'N/A'}</Text>
+                    </>
+                )}
+
+                <ProjectBacklogsSection
+                    renderProject={renderProject}
+                    canManageProject={canManageProject}
+                    authUser={authUser}
+                    accessibleBacklogsCount={accessibleBacklogsCount}
+                />
+            </LoadingState>
         </ScrollView>
     );
 };
+
+const styles = StyleSheet.create({
+    container: {
+        padding: 16,
+        backgroundColor: '#fff',
+        flexGrow: 1,
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 16
+    },
+    textArea: {
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 6,
+        padding: 10,
+        marginBottom: 12,
+        height: 120,
+        textAlignVertical: 'top',
+    },
+    label: {
+        marginBottom: 6,
+        fontWeight: '600',
+    },
+    description: {
+        backgroundColor: '#f0f0f0',
+        padding: 10,
+        borderRadius: 6,
+        marginBottom: 12,
+    },
+    buttonRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 10,
+    },
+});
 
 const inputStyle = {
     borderWidth: 1,
@@ -152,35 +214,4 @@ const inputStyle = {
     borderRadius: 8,
     padding: 10,
     marginBottom: 12,
-};
-
-const ProjectNavButton = ({
-    icon,
-    label,
-    route,
-    projectId
-}: {
-    icon: any;
-    label: string;
-    route: keyof MainStackParamList;
-    projectId?: number;
-}) => {
-    const navigation = useNavigation<any>();
-    return (
-        <TouchableOpacity
-            style={{
-                width: "48%",
-                backgroundColor: "#EFEFFF",
-                padding: 10,
-                borderRadius: 10,
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 8
-            }}
-            onPress={() => navigation.navigate(route, { id: projectId })}
-        >
-            <FontAwesomeIcon icon={icon} size={16} style={{ marginRight: 6 }} />
-            <Text style={{ fontSize: 16, color: "#007AFF" }}>{label}</Text>
-        </TouchableOpacity>
-    );
 };

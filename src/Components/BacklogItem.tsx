@@ -96,10 +96,20 @@ const ProjectNavButton = ({
                 alignItems: "center",
                 marginBottom: 8
             }}
-            onPress={() => navigation.navigate(route as any, { id: routeId } as any)}
+            disabled={!routeId}
+            onPress={() => {
+                if (!routeId) return;
+                console.log("Navigating to:", route, "with id:", routeId);
+                navigation.navigate(
+                    "Dashboard",
+                    { id: "2" }
+                )
+            }}
         >
             <FontAwesomeIcon icon={icon} size={16} style={{ marginRight: 6 }} />
-            <Text style={{ fontSize: 16, color: "#007AFF" }}>{label}/{routeId}</Text>
+            <Text style={{ fontSize: 16, color: routeId ? "#007AFF" : "#aaa" }}>
+                {label}{routeId ? `/${routeId}` : ''}
+            </Text>
         </TouchableOpacity>
     );
 };

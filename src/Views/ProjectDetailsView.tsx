@@ -22,8 +22,8 @@ import { MainStackParamList, ProjectFields, ProjectStates } from '@/src/Types';
 export const ProjectDetailsView: React.FC = () => {
     // ---- Hooks ----
     const dispatch = useAppDispatch();
-    const route = useRoute();
     const navigation = useNavigation<NavigationProp<MainStackParamList>>();
+    const route = useRoute();
     const { id: projectId } = route.params as { id: string };  // Get id as projectId from route params
     const { projectById, readProjectById, saveProjectChanges, removeProject } = useProjectsContext();
 

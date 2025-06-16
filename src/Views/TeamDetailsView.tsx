@@ -1,5 +1,5 @@
 // External
-import { NavigationProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
     Alert,
@@ -15,8 +15,9 @@ import {
 // Internal
 import { useTeamsContext } from '@/src/Contexts';
 import { selectAuthUser, useTypedSelector } from '@/src/Redux';
-import { MainStackParamList, Team, TeamFields } from '@/src/Types';
+import { BottomTabParamList, Team, TeamFields } from '@/src/Types';
 import { faBuilding, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { ReadOnlyRow } from '../Components/ReadOnlyRow';
 import useMainViewJumbotron from '../Hooks/useMainViewJumbotron';
 
@@ -25,7 +26,8 @@ const screenWidth = Dimensions.get('window').width;
 export const TeamDetailsView: React.FC = () => {
     // Hooks
     const route = useRoute();
-    const navigation = useNavigation<NavigationProp<MainStackParamList>>();
+    // const navigation = useNavigation<NavigationProp<MainStackParamList>>();
+    const navigation = useNavigation<BottomTabNavigationProp<BottomTabParamList>>();
     const { id: teamId } = route.params as { id: string };
     const { teamById, readTeamById, saveTeamChanges, removeTeam } = useTeamsContext();
     const { handleScroll, handleFocusEffect } = useMainViewJumbotron({
@@ -130,7 +132,10 @@ export const TeamDetailsView: React.FC = () => {
                 <Text style={styles.title}>Projects Overview</Text>
                 {renderTeam.projects?.map((project) => (
                     <View key={project.Project_ID} style={styles.card}>
-                        <Text style={styles.link} onPress={() => navigation.navigate("Project", { id: (project.Project_ID ?? "").toString() })}>
+                        <Text style={styles.link} onPress={() => navigation.navigate("DashboardTab", {
+                            screen: "Dashboard",
+                            params: { id: "2" }
+                        })}>
                             {project.Project_Name}
                         </Text>
                         <ReadOnlyRow

@@ -1,4 +1,4 @@
-import { NavigationProp, useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import { NavigationProp, RouteProp, useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useCallback, useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 // import DraggableFlatList from "react-native-draggable-flatlist";
@@ -10,11 +10,17 @@ import { Backlog, MainStackParamList, Status, Task } from "@/src/Types";
 import { FlatList } from "react-native-gesture-handler";
 import useMainViewJumbotron from "../Hooks/useMainViewJumbotron";
 
-export const KanbanBoardView: React.FC = () => {
+type KanbanRouteProp = RouteProp<MainStackParamList, "Kanban">;
+
+type Props = {
+    route: KanbanRouteProp;
+};
+
+export const KanbanBoardView = ({ route }: Props) => {
     // Hooks
     const navigation = useNavigation<NavigationProp<MainStackParamList>>();
-    const route = useRoute<any>();
-    const { id: backlogId } = route.params as { id: string };
+    const backlogId = route.params?.id;
+    console.log("KANBAN ROUTE PARAM:", route);
     const { backlogById, readBacklogById } = useBacklogsContext();
     const {
         tasksById,
@@ -31,6 +37,8 @@ export const KanbanBoardView: React.FC = () => {
         rightIconActionRoute: "Backlog",
         rightIconActionParams: { id: ((backlogById && backlogById?.Backlog_ID) ?? "").toString() },
     })
+
+    console.log("KANBAN ROUTE PARAM:", route.params);
 
     // State
     const [backlog, setBacklog] = useState<Backlog | undefined>();
@@ -92,7 +100,8 @@ export const KanbanBoardView: React.FC = () => {
 
     return (
         <ScrollView style={styles.container}>
-            {backlogById && <Text style={styles.title}>{backlogId} - {backlogById.Backlog_Name}</Text>}
+            <Text style={styles.title}>Kanban Board</Text>
+            <Text style={styles.subtitle}>{backlogId} - {backlogById && backlogById.Backlog_Name}</Text>
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {kanbanColumns?.
@@ -136,9 +145,13 @@ const styles = StyleSheet.create({
         backgroundColor: "#F9FAFB",
     },
     title: {
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: 'bold',
-        marginBottom: 16
+        marginBottom: 4,
+    },
+    subtitle: {
+        fontSize: 16,
+        marginBottom: 16,
     },
     column: {
         width: 300,

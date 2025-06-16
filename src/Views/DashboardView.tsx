@@ -11,13 +11,14 @@ import { BarChart, PieChart } from 'react-native-chart-kit';
 const screenWidth = Dimensions.get('window').width;
 
 const DashboardContainer: React.FC = () => {
+    // Hooks
+    const route = useRoute();
+    const { id: backlogId } = route.params as { id: string };  // Get id as backlogId from route params
+
     const { t } = useTranslation(['dashboard']);
     const { tasksById, readTasksByBacklogId } = useTasksContext();
     const { backlogById: renderBacklog, readBacklogById } = useBacklogsContext();
-    const route = useRoute<any>();
-    const navigation = useNavigation<NavigationProp<MainStackParamList>>();
-
-    const { id: backlogId } = route.params as { id: string };
+    const navigation = useNavigation<NavigationProp<MainStackParamList>>()
 
     const { canAccessBacklog, canManageBacklog } = useRoleAccess(
         renderBacklog ? renderBacklog.project?.team?.organisation?.User_ID : undefined,
@@ -98,6 +99,9 @@ const DashboardContainer: React.FC = () => {
 
     return (
         <ScrollView style={styles.container}>
+            <Text style={styles.title}>{t('dashboard.title')}</Text>
+            <Text style={styles.subtitle}>{backlogId} - {renderBacklog && renderBacklog.Backlog_Name}</Text>
+
             <LoadingState
                 singular="Backlog"
                 renderItem={renderBacklog}
@@ -105,9 +109,6 @@ const DashboardContainer: React.FC = () => {
             >
                 {renderBacklog && (
                     <>
-                        <Text style={styles.title}>{t('dashboard.title')}</Text>
-                        <Text style={styles.subtitle}>{renderBacklog.Backlog_Name}</Text>
-
                         {/* KPIs */}
                         <View style={styles.kpiRow}>
                             <KPI label={t('dashboard.totalTasks')} value={totalTasks} />

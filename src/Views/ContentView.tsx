@@ -69,15 +69,15 @@ const DeviceIsLoggedIn = () => {
             { name: "Media", component: MediaFileView },
             { name: "Downloaded", component: DownloadedMediaFilesView },
             { name: "Profile", component: ProfileView }
-        ];
+        ]
 
-        const routesInBottomNav: { name: keyof MainStackParamList; component: React.FC }[] = [
-            { name: "Home", component: StartpageView },
-            { name: "Dashboard", component: DashboardView },
-            { name: "Backlogs", component: BacklogsPage },
-            { name: "Kanban", component: KanbanBoardView },
-            { name: "Time", component: TimeTracksView },
-        ];
+        const routesInBottomNav: { tab: keyof MainStackParamList; name: keyof MainStackParamList; component: React.FC<any> }[] = [
+            { tab: "HomeTab", name: "Home", component: StartpageView },
+            { tab: "DashboardTab", name: "Dashboard", component: DashboardView },
+            { tab: "BacklogsTab", name: "Backlogs", component: BacklogsPage },
+            { tab: "KanbanTab", name: "Kanban", component: KanbanBoardView },
+            { tab: "TimeTab", name: "Time", component: TimeTracksView },
+        ]
 
         const isNotificationsDetermined = useTypedSelector(selectIsNotificationsDetermined)
         const isNotificationsSkipped = useTypedSelector(selectIsNotificationsSkipped)
@@ -131,32 +131,31 @@ const DeviceIsLoggedIn = () => {
             };
 
             const withJumbotron = (Component: React.FC): React.FC => {
-                return (props: any) => (
-                    <ScreenWithJumbotron>
-                        <Component {...props} />
-                    </ScreenWithJumbotron>
-                );
+                return function WrappedWithJumbotron(props) {
+                    console.log("withJumbotron ROUTE PARAM:", props)
+                    return (
+                        <ScreenWithJumbotron>
+                            <Component {...props} />
+                        </ScreenWithJumbotron>
+                    );
+                };
             };
 
             return (
                 <MainStack.Navigator initialRouteName={name} screenOptions={{ headerShown: false }}>
                     <MainStack.Screen
                         name={name}
+                        // component={(props: any) => withJumbotron(component)({ ...props })}
                         component={withJumbotron(component)}
-                        initialParams={{ id: '1' }}
+                    // initialParams={{ id: '' }}
                     />
                     {routesNotInBottomNav.map(({ name: subname, component }) => {
-                        // let initialParams: { id: string; projectKey?: string; taskKey?: string } = { id: '1' }
-                        // if (subname === "Task") {
-                        //     initialParams = { id: '', projectKey: '', taskKey: '' }
-                        // }
-
                         return (
                             <MainStack.Screen
                                 key={subname}
                                 name={subname}
+                                // component={(props: any) => withJumbotron(component)({ ...props })}
                                 component={withJumbotron(component)}
-                            // initialParams={initialParams}
                             />
                         )
                     })}
@@ -168,7 +167,7 @@ const DeviceIsLoggedIn = () => {
         return (
             <>
                 <Tab.Navigator
-                    initialRouteName="Home"
+                    initialRouteName="HomeTab"
                     screenOptions={({ route }) => ({
                         tabBarIcon: ({ focused, color, size }) => {
                             let iconName = faHouseChimney; // Default icon
@@ -202,9 +201,9 @@ const DeviceIsLoggedIn = () => {
                         headerShown: false,  // Hide header title for all screens in this navigator
                     })}
                 >
-                    {routesInBottomNav.map(({ name, component }) => {
+                    {routesInBottomNav.map(({ tab, name, component }) => {
                         return (
-                            <Tab.Screen name={name} key={name}>
+                            <Tab.Screen name={tab} key={tab}>
                                 {() => <MenuStackNavigator name={name} component={component} />}
                             </Tab.Screen>
                         )

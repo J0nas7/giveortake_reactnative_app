@@ -2,14 +2,17 @@ import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 
 type ModalTogglerProps = {
-    visibility: false | string
+    visibility: string | false
+    callback: React.Dispatch<React.SetStateAction<string | false>>
     children: React.ReactNode
 }
 
 export const ModalToggler: React.FC<ModalTogglerProps> = ({
     visibility,
+    callback,
     children
 }) => {
     // ---- Toggler Logic & Animation ----
@@ -25,7 +28,9 @@ export const ModalToggler: React.FC<ModalTogglerProps> = ({
                 duration: 500,
                 useNativeDriver: true,
             }).start(() => {
-                setTogglerIsVisible(false); // hide component after animation
+                // hide component after animation
+                setTogglerIsVisible(false);
+                callback(false)
             });
         } else {
             // Slide in
@@ -82,15 +87,16 @@ export const ModalTogglerView: React.FC<BulkEditTogglerViewProps> = ({
                 <FontAwesomeIcon icon={faXmark} size={20} />
             </TouchableOpacity>
         </View>
-        <View>
+        <ScrollView>
             {children}
-        </View>
+        </ScrollView>
     </Animated.View>
 )
 
 const modalTogglerStyles = StyleSheet.create({
     container: {
         width: '100%',
+        maxHeight: '75%',
         padding: 16,
         backgroundColor: '#fff',
         position: 'absolute',

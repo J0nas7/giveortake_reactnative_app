@@ -1,5 +1,5 @@
 // External
-import { faChair, faShield, faUser } from '@fortawesome/free-solid-svg-icons'
+import { faChair, faChevronRight, faShield, faUser, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { Picker } from '@react-native-picker/picker'
 import { useRoute } from '@react-navigation/native'
@@ -347,53 +347,90 @@ export const TeamRolesSeatsView: React.FC<TeamRolesSeatsViewProps> = ({
     setTogglerIsVisible
 }) => (
     <>
-        <ScrollView style={TeamRolesSeatsViewStyles.container}>
-            {!selectedSeat && !displayInviteForm && !selectedRole && !displayNewRoleForm && (
-                <>
-                    <View style={TeamRolesSeatsViewStyles.header}>
-                        <FontAwesomeIcon icon={faChair} size={24} />
-                        <Text style={TeamRolesSeatsViewStyles.headerTitle}>{t('team:rolesSeatsManager:manageTeamRolesSeats')}</Text>
-                        {renderTeam && <Text style={TeamRolesSeatsViewStyles.subtitle}>{renderTeam.Team_Name}</Text>}
+        {!selectedSeat && !displayInviteForm && !selectedRole && !displayNewRoleForm && (
+            <ScrollView style={TeamRolesSeatsViewStyles.container}>
+                <View style={TeamRolesSeatsViewStyles.header}>
+                    <FontAwesomeIcon icon={faChair} size={24} />
+                    <Text style={TeamRolesSeatsViewStyles.headerTitle}>{t('team:rolesSeatsManager:manageTeamRolesSeats')}</Text>
+                    {renderTeam && <Text style={TeamRolesSeatsViewStyles.subtitle}>{renderTeam.Team_Name}</Text>}
+                </View>
+
+                {renderTeam && (
+                    <View style={TeamRolesSeatsViewStyles.actions}>
+                        {canManageTeamMembers && (
+                            <>
+                                <TouchableOpacity onPress={() => setDisplayInviteForm('new')}>
+                                    <Text style={TeamRolesSeatsViewStyles.link}>
+                                        <FontAwesomeIcon icon={faUser} /> {t('team:rolesSeatsManager:newInvite')}
+                                    </Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={() => setDisplayNewRoleForm(true)}>
+                                    <Text style={TeamRolesSeatsViewStyles.link}>
+                                        <FontAwesomeIcon icon={faShield} /> {t('team:rolesSeatsManager:newRole')}
+                                    </Text>
+                                </TouchableOpacity>
+                            </>
+                        )}
                     </View>
+                )}
 
-                    {renderTeam && (
-                        <View style={TeamRolesSeatsViewStyles.actions}>
-                            {canManageTeamMembers && (
-                                <>
-                                    <TouchableOpacity onPress={() => setDisplayInviteForm('new')}>
-                                        <Text style={TeamRolesSeatsViewStyles.link}>
-                                            <FontAwesomeIcon icon={faUser} /> {t('team:rolesSeatsManager:newInvite')}
-                                        </Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => setDisplayNewRoleForm(true)}>
-                                        <Text style={TeamRolesSeatsViewStyles.link}>
-                                            <FontAwesomeIcon icon={faShield} /> {t('team:rolesSeatsManager:newRole')}
-                                        </Text>
-                                    </TouchableOpacity>
-                                </>
-                            )}
-                        </View>
-                    )}
+                <Text style={TeamRolesSeatsViewStyles.sectionTitle}>{t('team:rolesSeatsManager:rolesHeadline')}</Text>
+                {renderTeam && Array.isArray(rolesAndPermissionsByTeamId) && (
+                    <View style={TeamRolesSeatsViewStyles.cardList}>
+                        {rolesAndPermissionsByTeamId.map((role) => (
+                            <View key={role.Role_ID} style={TeamRolesSeatsViewStyles.card}>
+                                <Text style={TeamRolesSeatsViewStyles.cardTitle}>{role.Role_Name}</Text>
+                                <Text style={TeamRolesSeatsViewStyles.cardSubText}>
+                                    {t('team:rolesSeatsManager:permissions')}: {role.permissions?.length}
+                                </Text>
+                                {canManageTeamMembers && (
+                                    <View style={TeamRolesSeatsViewStyles.cardButtons}>
+                                        <TouchableOpacity
+                                            onPress={() => handleSelectRole(role)}
+                                            style={TeamRolesSeatsViewStyles.buttonHalf}
+                                        >
+                                            <Text style={TeamRolesSeatsViewStyles.link}>{t('team:rolesSeatsManager:edit')}</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            onPress={() => role.Role_ID && handleRemoveRole(role.Role_ID)}
+                                            style={TeamRolesSeatsViewStyles.buttonHalf}
+                                        >
+                                            <Text style={TeamRolesSeatsViewStyles.link}>{t('team:rolesSeatsManager:remove')}</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
+                            </View>
+                        ))}
+                    </View>
+                )}
 
-                    <Text style={TeamRolesSeatsViewStyles.sectionTitle}>{t('team:rolesSeatsManager:rolesHeadline')}</Text>
-                    {renderTeam && Array.isArray(rolesAndPermissionsByTeamId) && (
-                        <View style={TeamRolesSeatsViewStyles.cardList}>
-                            {rolesAndPermissionsByTeamId.map((role) => (
-                                <View key={role.Role_ID} style={TeamRolesSeatsViewStyles.card}>
-                                    <Text style={TeamRolesSeatsViewStyles.cardTitle}>{role.Role_Name}</Text>
+                <Text style={TeamRolesSeatsViewStyles.sectionTitle}>{t('team:rolesSeatsManager:seatsHeadline')}</Text>
+                {renderTeam && (
+                    <View style={TeamRolesSeatsViewStyles.cardList}>
+                        {!renderUserSeats.length && authUser?.User_ID === renderTeam?.organisation?.User_ID ? (
+                            <Text>{t('team:rolesSeatsManager:length0_iamowner')}</Text>
+                        ) : (
+                            renderUserSeats.map((seat) => (
+                                <View key={seat.Seat_ID} style={TeamRolesSeatsViewStyles.card}>
+                                    <Text style={TeamRolesSeatsViewStyles.cardTitle}>
+                                        {seat.user?.User_FirstName} {seat.user?.User_Surname}
+                                    </Text>
                                     <Text style={TeamRolesSeatsViewStyles.cardSubText}>
-                                        {t('team:rolesSeatsManager:permissions')}: {role.permissions?.length}
+                                        {t('team:rolesSeatsManager:role')}: {seat.role?.Role_Name}
+                                    </Text>
+                                    <Text style={TeamRolesSeatsViewStyles.cardSubText}>
+                                        {t('team:rolesSeatsManager:status')}: {seat.Seat_Status}
                                     </Text>
                                     {canManageTeamMembers && (
                                         <View style={TeamRolesSeatsViewStyles.cardButtons}>
                                             <TouchableOpacity
-                                                onPress={() => handleSelectRole(role)}
+                                                onPress={() => handleSelectSeat(seat)}
                                                 style={TeamRolesSeatsViewStyles.buttonHalf}
                                             >
                                                 <Text style={TeamRolesSeatsViewStyles.link}>{t('team:rolesSeatsManager:edit')}</Text>
                                             </TouchableOpacity>
                                             <TouchableOpacity
-                                                onPress={() => role.Role_ID && handleRemoveRole(role.Role_ID)}
+                                                onPress={() => seat.Seat_ID && handleRemoveSeat(seat.Seat_ID)}
                                                 style={TeamRolesSeatsViewStyles.buttonHalf}
                                             >
                                                 <Text style={TeamRolesSeatsViewStyles.link}>{t('team:rolesSeatsManager:remove')}</Text>
@@ -401,118 +438,76 @@ export const TeamRolesSeatsView: React.FC<TeamRolesSeatsViewProps> = ({
                                         </View>
                                     )}
                                 </View>
-                            ))}
-                        </View>
-                    )}
+                            ))
+                        )}
+                    </View>
+                )}
+            </ScrollView>
+        )}
 
-                    <Text style={TeamRolesSeatsViewStyles.sectionTitle}>{t('team:rolesSeatsManager:seatsHeadline')}</Text>
-                    {renderTeam && (
-                        <View style={TeamRolesSeatsViewStyles.cardList}>
-                            {!renderUserSeats.length && authUser?.User_ID === renderTeam?.organisation?.User_ID ? (
-                                <Text>{t('team:rolesSeatsManager:length0_iamowner')}</Text>
-                            ) : (
-                                renderUserSeats.map((seat) => (
-                                    <View key={seat.Seat_ID} style={TeamRolesSeatsViewStyles.card}>
-                                        <Text style={TeamRolesSeatsViewStyles.cardTitle}>
-                                            {seat.user?.User_FirstName} {seat.user?.User_Surname}
-                                        </Text>
-                                        <Text style={TeamRolesSeatsViewStyles.cardSubText}>
-                                            {t('team:rolesSeatsManager:role')}: {seat.role?.Role_Name}
-                                        </Text>
-                                        <Text style={TeamRolesSeatsViewStyles.cardSubText}>
-                                            {t('team:rolesSeatsManager:status')}: {seat.Seat_Status}
-                                        </Text>
-                                        {canManageTeamMembers && (
-                                            <View style={TeamRolesSeatsViewStyles.cardButtons}>
-                                                <TouchableOpacity
-                                                    onPress={() => handleSelectSeat(seat)}
-                                                    style={TeamRolesSeatsViewStyles.buttonHalf}
-                                                >
-                                                    <Text style={TeamRolesSeatsViewStyles.link}>{t('team:rolesSeatsManager:edit')}</Text>
-                                                </TouchableOpacity>
-                                                <TouchableOpacity
-                                                    onPress={() => seat.Seat_ID && handleRemoveSeat(seat.Seat_ID)}
-                                                    style={TeamRolesSeatsViewStyles.buttonHalf}
-                                                >
-                                                    <Text style={TeamRolesSeatsViewStyles.link}>{t('team:rolesSeatsManager:remove')}</Text>
-                                                </TouchableOpacity>
-                                            </View>
-                                        )}
-                                    </View>
-                                ))
-                            )}
-                        </View>
-                    )}
-                </>
-            )}
+        {canManageTeamMembers && renderTeam && (
+            <>
+                {selectedSeat ? (
+                    <SelectedSeatForm
+                        selectedSeat={selectedSeat}
+                        rolesAndPermissionsByTeamId={rolesAndPermissionsByTeamId}
+                        handleSeatChange={handleSeatChange}
+                        t={t}
+                        availablePermissions={availablePermissions}
+                        togglePermission={togglePermission}
+                        renderTeam={renderTeam}
+                        setSelectedSeat={setSelectedSeat}
+                        setDisplayInviteForm={setDisplayInviteForm}
+                        handleSeatChanges={handleSeatChanges}
+                        togglerIsVisible={togglerIsVisible}
+                        setTogglerIsVisible={setTogglerIsVisible}
 
-            {canManageTeamMembers && renderTeam && (
-                <>
-                    {selectedSeat ? (
-                        <SelectedSeatForm
-                            selectedSeat={selectedSeat}
-                            rolesAndPermissionsByTeamId={rolesAndPermissionsByTeamId}
-                            handleSeatChange={handleSeatChange}
-                            t={t}
-                            availablePermissions={availablePermissions}
-                            togglePermission={togglePermission}
-                            renderTeam={renderTeam}
-                            setSelectedSeat={setSelectedSeat}
-                            setDisplayInviteForm={setDisplayInviteForm}
-                            handleSeatChanges={handleSeatChanges}
-                            togglerIsVisible={togglerIsVisible}
-                            setTogglerIsVisible={setTogglerIsVisible}
-
-                        />
-                    ) : displayInviteForm ? (
-                        <InviteUserForm
-                            teamId={teamId}
-                            t={t}
-                            displayInviteForm={displayInviteForm}
-                            rolesAndPermissionsByTeamId={rolesAndPermissionsByTeamId}
-                            addTeamUserSeat={addTeamUserSeat}
-                            readTeamUserSeatsByTeamId={readTeamUserSeatsByTeamId}
-                            setSelectedSeat={setSelectedSeat}
-                            setDisplayInviteForm={setDisplayInviteForm}
-                        // togglerIsVisible={togglerIsVisible}
-                        // setTogglerIsVisible={setTogglerIsVisible}
-                        />
-                    ) : selectedRole ? (
-                        <SelectedRoleForm
-                            selectedRole={selectedRole}
-                            handleRoleChange={handleRoleChange}
-                            t={t}
-                            availablePermissions={availablePermissions}
-                            togglePermission={togglePermission}
-                            renderTeam={renderTeam}
-                            setSelectedRole={setSelectedRole}
-                            setDisplayNewRoleForm={setDisplayNewRoleForm}
-                            handleRoleChanges={handleRoleChanges}
-                        // togglerIsVisible={togglerIsVisible}
-                        // setTogglerIsVisible={setTogglerIsVisible}
-                        />
-                    ) : displayNewRoleForm ? (
-                        <NewRoleForm
-                            renderTeam={renderTeam}
-                            teamId={teamId}
-                            t={t}
-                            displayNewRoleForm={displayNewRoleForm}
-                            rolesAndPermissionsByTeamId={rolesAndPermissionsByTeamId}
-                            availablePermissions={availablePermissions}
-                            addRole={addRole}
-                            readRolesAndPermissionsByTeamId={readRolesAndPermissionsByTeamId}
-                            setSelectedRole={setSelectedRole}
-                            setDisplayNewRoleForm={setDisplayNewRoleForm}
-                        // togglerIsVisible={togglerIsVisible}
-                        // setTogglerIsVisible={setTogglerIsVisible}
-                        />
-                    ) : null}
-                </>
-            )}
-        </ScrollView>
-        <ModalToggler visibility={togglerIsVisible}>
-            <Text>Place modal content here</Text>
-        </ModalToggler>
+                    />
+                ) : displayInviteForm ? (
+                    <InviteUserForm
+                        teamId={teamId}
+                        t={t}
+                        displayInviteForm={displayInviteForm}
+                        rolesAndPermissionsByTeamId={rolesAndPermissionsByTeamId}
+                        addTeamUserSeat={addTeamUserSeat}
+                        readTeamUserSeatsByTeamId={readTeamUserSeatsByTeamId}
+                        setSelectedSeat={setSelectedSeat}
+                        setDisplayInviteForm={setDisplayInviteForm}
+                        togglerIsVisible={togglerIsVisible}
+                        setTogglerIsVisible={setTogglerIsVisible}
+                    />
+                ) : selectedRole ? (
+                    <SelectedRoleForm
+                        selectedRole={selectedRole}
+                        handleRoleChange={handleRoleChange}
+                        t={t}
+                        availablePermissions={availablePermissions}
+                        togglePermission={togglePermission}
+                        renderTeam={renderTeam}
+                        setSelectedRole={setSelectedRole}
+                        setDisplayNewRoleForm={setDisplayNewRoleForm}
+                        handleRoleChanges={handleRoleChanges}
+                    // togglerIsVisible={togglerIsVisible}
+                    // setTogglerIsVisible={setTogglerIsVisible}
+                    />
+                ) : displayNewRoleForm ? (
+                    <NewRoleForm
+                        renderTeam={renderTeam}
+                        teamId={teamId}
+                        t={t}
+                        displayNewRoleForm={displayNewRoleForm}
+                        rolesAndPermissionsByTeamId={rolesAndPermissionsByTeamId}
+                        availablePermissions={availablePermissions}
+                        addRole={addRole}
+                        readRolesAndPermissionsByTeamId={readRolesAndPermissionsByTeamId}
+                        setSelectedRole={setSelectedRole}
+                        setDisplayNewRoleForm={setDisplayNewRoleForm}
+                        togglerIsVisible={togglerIsVisible}
+                        setTogglerIsVisible={setTogglerIsVisible}
+                    />
+                ) : null}
+            </>
+        )}
     </>
 )
 
@@ -543,43 +538,76 @@ export const SelectedSeatForm: React.FC<SelectedSeatFormProps> = ({
     setTogglerIsVisible
 }) => (
     <>
-        <View style={styles.container}>
-            <Text style={styles.title}>{t('team:rolesSeatsManager:editUserSeat')}</Text>
-            <Text style={styles.subtitle}>
-                {selectedSeat.user?.User_FirstName} {selectedSeat.user?.User_Surname}
-            </Text>
+        <ScrollView style={TeamRolesSeatsViewStyles.container}>
+            <View style={editorStyles.rowBetween}>
+                <TouchableOpacity onPress={() => {
+                    setDisplayInviteForm("")
+                    setSelectedSeat(undefined)
+                }}>
+                    <FontAwesomeIcon icon={faXmark} size={20} />
+                </TouchableOpacity>
+                <Text style={editorStyles.title}>
+                    {selectedSeat.user?.User_FirstName} {selectedSeat.user?.User_Surname}
+                </Text>
+            </View>
 
-            <View style={styles.formGroup}>
-                <Text>{t('team:rolesSeatsManager:userRole')}</Text>
-                <TouchableOpacity onPress={() => setTogglerIsVisible("UserRole")}>
-                    <Text>Lorem ipsum</Text>
+            <View style={editorStyles.formGroup}>
+                <Text style={editorStyles.label}>Role</Text>
+                <TouchableOpacity
+                    style={editorStyles.formGroupItemToggler}
+                    onPress={() => setTogglerIsVisible("UserRole")}
+                >
+                    <Text>
+                        {rolesAndPermissionsByTeamId?.find(role => role.Role_ID === selectedSeat.Role_ID)?.Role_Name}
+                    </Text>
+                    <FontAwesomeIcon icon={faChevronRight} />
                 </TouchableOpacity>
             </View>
 
-            <View style={styles.formGroup}>
-                <Text>{t('team:rolesSeatsManager:status')}</Text>
-                <Picker
-                    selectedValue={selectedSeat.Seat_Status}
-                    onValueChange={(value) => handleSeatChange('Seat_Status', value)}
+            <View style={editorStyles.formGroup}>
+                <Text style={editorStyles.label}>Status</Text>
+                <TouchableOpacity
+                    style={editorStyles.formGroupItemToggler}
+                    onPress={() => setTogglerIsVisible("UserStatus")}
                 >
-                    <Picker.Item label={t('team:rolesSeatsManager:active')} value="Active" />
-                    <Picker.Item label={t('team:rolesSeatsManager:inactive')} value="Inactive" />
-                    <Picker.Item label={t('team:rolesSeatsManager:pending')} value="Pending" />
-                </Picker>
+                    <Text>{selectedSeat.Seat_Status}</Text>
+                    <FontAwesomeIcon icon={faChevronRight} />
+                </TouchableOpacity>
             </View>
 
             <View style={styles.buttonRow}>
-                <TouchableOpacity onPress={() => {
-                    setSelectedSeat(undefined)
-                    setDisplayInviteForm('')
-                }}>
-                    <Text style={styles.cancelText}>{t('common:cancel')}</Text>
-                </TouchableOpacity>
                 <TouchableOpacity style={styles.button} onPress={handleSeatChanges}>
-                    <Text style={styles.buttonText}>{t('team:rolesSeatsManager:saveChanges')}</Text>
+                    <Text style={styles.buttonText}>Save changes</Text>
                 </TouchableOpacity>
             </View>
-        </View>
+        </ScrollView>
+
+        <ModalToggler visibility={togglerIsVisible} callback={setTogglerIsVisible}>
+            {selectedSeat && (
+                <>
+                    {togglerIsVisible === "UserRole" ? (
+                        <Picker
+                            selectedValue={selectedSeat.Role_ID}
+                            onValueChange={(itemValue) =>
+                                handleSeatChange('Role_ID', itemValue.toString())
+                            }>
+                            {rolesAndPermissionsByTeamId?.map((role) => (
+                                <Picker.Item key={role.Role_ID} label={role.Role_Name} value={role.Role_ID} />
+                            ))}
+                        </Picker>
+                    ) : togglerIsVisible === "UserStatus" ? (
+                        <Picker
+                            selectedValue={selectedSeat.Seat_Status}
+                            onValueChange={(value) => handleSeatChange('Seat_Status', value)}
+                        >
+                            <Picker.Item label={t('team:rolesSeatsManager:active')} value="Active" />
+                            <Picker.Item label={t('team:rolesSeatsManager:inactive')} value="Inactive" />
+                            <Picker.Item label={t('team:rolesSeatsManager:pending')} value="Pending" />
+                        </Picker>
+                    ) : null}
+                </>
+            )}
+        </ModalToggler>
     </>
 )
 
@@ -592,6 +620,8 @@ export interface InviteUserFormProps {
     readTeamUserSeatsByTeamId: (parentId: number) => Promise<void>
     setSelectedSeat: React.Dispatch<React.SetStateAction<TeamUserSeat | undefined>>
     setDisplayInviteForm: React.Dispatch<React.SetStateAction<string>>
+    togglerIsVisible: string | false
+    setTogglerIsVisible: React.Dispatch<React.SetStateAction<string | false>>
 }
 
 export const InviteUserForm: React.FC<InviteUserFormProps> = ({
@@ -602,18 +632,22 @@ export const InviteUserForm: React.FC<InviteUserFormProps> = ({
     addTeamUserSeat,
     readTeamUserSeatsByTeamId,
     setSelectedSeat,
-    setDisplayInviteForm
+    setDisplayInviteForm,
+    togglerIsVisible,
+    setTogglerIsVisible
 }) => {
-    const [email, setEmail] = useState("")
+    const [email, setEmail] = useState<string>(
+        __DEV__ ? 'charlie@givetake.net' : ''
+    )
     const [user, setUser] = useState<User | undefined>()
     const [role, setRole] = useState<Role | undefined>()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
     const handleSearchUser = async () => {
-        if (!displayInviteForm) return
+        if (!email) return
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-        if (!emailRegex.test(displayInviteForm)) {
+        if (!emailRegex.test(email)) {
             setError(t("team:rolesSeatsManager:invalidEmail"))
             return
         }
@@ -625,7 +659,7 @@ export const InviteUserForm: React.FC<InviteUserFormProps> = ({
 
         try {
             const { httpPostWithData } = useAxios()
-            const data = await httpPostWithData("users/userByEmail", { email: displayInviteForm })
+            const data = await httpPostWithData("users/userByEmail", { email })
 
             if (data.message) {
                 throw new Error(t("team:rolesSeatsManager:userNotFound"))
@@ -672,65 +706,97 @@ export const InviteUserForm: React.FC<InviteUserFormProps> = ({
     }, [displayInviteForm])
 
     return (
-        <ScrollView style={styles.container}>
-            <Text style={styles.title}>{t("team:rolesSeatsManager:searchAndInviteUser")}</Text>
-
-            <Text style={styles.label}>{t("team:rolesSeatsManager:email")}</Text>
-            <TextInput
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-            />
-
-            <View style={styles.buttonRow}>
-                <TouchableOpacity onPress={() => {
-                    setDisplayInviteForm("")
-                    setSelectedSeat(undefined)
-                }}>
-                    <Text style={styles.cancelText}>{t('common:cancel')}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.button} onPress={handleSearchUser}>
-                    <Text style={styles.buttonText}>{t("team:rolesSeatsManager:searchUser")}</Text>
-                </TouchableOpacity>
-            </View>
-
-            {loading && <ActivityIndicator style={{ marginTop: 16 }} />}
-            {error && <Text style={styles.errorText}>{error}</Text>}
-
-            {user && (
-                <View style={styles.userInfo}>
-                    <Text>{t("team:rolesSeatsManager:userFound")}</Text>
-                    <Text>{user.User_FirstName} {user.User_Surname}</Text>
-
-                    <Text style={styles.label}>Select Role</Text>
-                    <Picker
-                        selectedValue={role?.Role_ID}
-                        onValueChange={(value) =>
-                            setRole(rolesAndPermissionsByTeamId?.find(role => role.Role_ID === value))
-                        }
-                    >
-                        <Picker.Item label="-" value="" />
-                        {rolesAndPermissionsByTeamId?.map(r => (
-                            <Picker.Item key={r.Role_ID} label={r.Role_Name} value={r.Role_ID} />
-                        ))}
-                    </Picker>
+        <>
+            <ScrollView style={TeamRolesSeatsViewStyles.container}>
+                <View style={editorStyles.rowBetween}>
+                    <TouchableOpacity onPress={() => {
+                        setDisplayInviteForm("")
+                        setSelectedSeat(undefined)
+                    }}>
+                        <FontAwesomeIcon icon={faXmark} size={20} />
+                    </TouchableOpacity>
+                    <Text style={editorStyles.title}>
+                        {t("team:rolesSeatsManager:searchAndInviteUser")}
+                    </Text>
                 </View>
-            )}
 
-            {role && (
-                <View style={{ marginTop: 20 }}>
-                    <Text>{t("team:rolesSeatsManager:selectedRole")}</Text>
-                    <Text>Name: {role.Role_Name}</Text>
-                    <Text>Permissions: {role.permissions?.length}</Text>
+                <Text style={styles.label}>{t("team:rolesSeatsManager:email")}</Text>
+                <TextInput
+                    style={styles.input}
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                />
 
-                    <TouchableOpacity style={styles.button} onPress={handleSendInvite}>
-                        <Text style={styles.buttonText}>{t("team:rolesSeatsManager:sendInvite")}</Text>
+                <View style={styles.buttonRow}>
+                    <TouchableOpacity style={styles.button} onPress={handleSearchUser}>
+                        <Text style={styles.buttonText}>{t("team:rolesSeatsManager:searchUser")}</Text>
                     </TouchableOpacity>
                 </View>
-            )}
-        </ScrollView>
+
+                {loading && <ActivityIndicator style={{ marginTop: 16 }} />}
+                {error && <Text style={styles.errorText}>{error}</Text>}
+
+                {user && (
+                    <>
+                        <View style={{ marginBottom: 16 }}>
+                            <Text style={[styles.label, { fontWeight: '600' }]}>
+                                {t("team:rolesSeatsManager:userFound")}
+                            </Text>
+                            <Text>{user.User_FirstName} {user.User_Surname}</Text>
+                        </View>
+
+                        <View style={editorStyles.formGroup}>
+                            <Text style={editorStyles.label}>Select Role</Text>
+                            <TouchableOpacity
+                                style={editorStyles.formGroupItemToggler}
+                                onPress={() => setTogglerIsVisible("UserRole")}
+                            >
+                                <Text>
+                                    {rolesAndPermissionsByTeamId?.find(r => r.Role_ID === role?.Role_ID)?.Role_Name}
+                                </Text>
+                                <FontAwesomeIcon icon={faChevronRight} />
+                            </TouchableOpacity>
+                        </View>
+                    </>
+                )}
+
+                {role && (
+                    <View>
+                        <Text style={[styles.label, { fontWeight: '600' }]}>
+                            {t("team:rolesSeatsManager:selectedRole")}
+                        </Text>
+                        <Text>Name: {role.Role_Name}</Text>
+                        <Text>Permissions: {role.permissions?.length}</Text>
+
+                        <TouchableOpacity style={[styles.button, { marginTop: 16 }]} onPress={handleSendInvite}>
+                            <Text style={styles.buttonText}>{t("team:rolesSeatsManager:sendInvite")}</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+            </ScrollView>
+
+            <ModalToggler visibility={togglerIsVisible} callback={setTogglerIsVisible}>
+                {displayInviteForm && (
+                    <>
+                        {togglerIsVisible === "UserRole" && (
+                            <Picker
+                                selectedValue={role?.Role_ID}
+                                onValueChange={(value) =>
+                                    setRole(rolesAndPermissionsByTeamId?.find(role => role.Role_ID === value))
+                                }
+                            >
+                                <Picker.Item label="-" value="" />
+                                {rolesAndPermissionsByTeamId?.map(r => (
+                                    <Picker.Item key={r.Role_ID} label={r.Role_Name} value={r.Role_ID} />
+                                ))}
+                            </Picker>
+                        )}
+                    </>
+                )}
+            </ModalToggler>
+        </>
     )
 }
 
@@ -745,6 +811,8 @@ export interface NewRoleFormProps {
     readRolesAndPermissionsByTeamId: (teamId: number) => Promise<boolean>
     setSelectedRole: React.Dispatch<React.SetStateAction<Role | undefined>>
     setDisplayNewRoleForm: React.Dispatch<React.SetStateAction<boolean>>
+    togglerIsVisible: string | false
+    setTogglerIsVisible: React.Dispatch<React.SetStateAction<string | false>>
 }
 
 const NewRoleForm: React.FC<NewRoleFormProps> = ({
@@ -757,7 +825,9 @@ const NewRoleForm: React.FC<NewRoleFormProps> = ({
     addRole,
     readRolesAndPermissionsByTeamId,
     setSelectedRole,
-    setDisplayNewRoleForm
+    setDisplayNewRoleForm,
+    togglerIsVisible,
+    setTogglerIsVisible
 }) => {
     // Hooks
     const dispatch = useAppDispatch();
@@ -830,126 +900,161 @@ const NewRoleForm: React.FC<NewRoleFormProps> = ({
     }
 
     return (
-        <ScrollView style={styles.container}>
-            <Text style={styles.title}>{t('team:rolesSeatsManager:createNewRole')}</Text>
-
-            <View style={styles.formGroup}>
-                <Text style={styles.label}>{t('team:rolesSeatsManager:roleName')}</Text>
-                <TextInput
-                    style={styles.input}
-                    value={newRole.Role_Name}
-                    onChangeText={(value) => handleRoleChange('Role_Name', value)}
-                />
-            </View>
-
-            <Text style={[styles.label, { marginTop: 16 }]}>
-                {t('team:rolesSeatsManager:permissions')}
-            </Text>
-
-            {availablePermissions.map((permission) => {
-                const isPermissionActive = newRole.permissions?.find(perm => perm.Permission_Key === permission)
-                return (
-                    <TouchableOpacity
-                        key={permission}
-                        style={NewRoleFormStyles.permissionItem}
-                        onPress={() => togglePermission(
-                            permission,
-                            !isPermissionActive
-                        )}
-                    >
-                        <Text style={{ color: isPermissionActive ? '#007bff' : '#000' }}>
-                            {permission}
-                        </Text>
+        <>
+            <ScrollView style={TeamRolesSeatsViewStyles.container}>
+                <View style={editorStyles.rowBetween}>
+                    <TouchableOpacity onPress={() => setDisplayNewRoleForm(false)}>
+                        <FontAwesomeIcon icon={faXmark} size={20} />
                     </TouchableOpacity>
-                )
-            })}
+                    <Text style={editorStyles.title}>
+                        {t('team:rolesSeatsManager:createNewRole')}
+                    </Text>
+                </View>
 
-            {renderTeam?.projects?.map((project: Project) => {
-                const checkedAccess = newRole.permissions ?
-                    newRole.permissions.filter(permission =>
-                        `accessProject.${project.Project_ID}` === permission.Permission_Key
-                    ).length > 0 : false
-                const checkedManage = newRole.permissions ?
-                    newRole.permissions.filter(permission =>
-                        `manageProject.${project.Project_ID}` === permission.Permission_Key
-                    ).length > 0 : false
+                <View style={editorStyles.formGroup}>
+                    <Text style={editorStyles.label}>Role Name</Text>
+                    <TouchableOpacity
+                        style={editorStyles.formGroupItemToggler}
+                        onPress={() => setTogglerIsVisible("RoleName")}
+                    >
+                        <Text>{newRole.Role_Name}</Text>
+                        <FontAwesomeIcon icon={faChevronRight} />
+                    </TouchableOpacity>
+                </View>
 
-                const permissions = [
-                    {
-                        key1: `accessProject.${project.Project_ID}`,
-                        label1: `Access Project: ${project.Project_Name}`,
-                        checked1: checkedAccess,
-                        key2: `manageProject.${project.Project_ID}`,
-                        label2: `Manage Project: ${project.Project_Name}`,
-                        checked2: checkedManage,
-                    }
-                ];
+                <View style={editorStyles.formGroup}>
+                    <Text style={editorStyles.label}>Permissions</Text>
+                    <TouchableOpacity
+                        style={editorStyles.formGroupItemToggler}
+                        onPress={() => setTogglerIsVisible("RolePermissions")}
+                    >
+                        <Text>{newRole.permissions?.length} permissions</Text>
+                        <FontAwesomeIcon icon={faChevronRight} />
+                    </TouchableOpacity>
+                </View>
 
-                project.backlogs?.map((backlog: Backlog) => {
-                    const checkedAccess = newRole.permissions ?
-                        newRole.permissions.filter(permission =>
-                            `accessBacklog.${backlog.Backlog_ID}` === permission.Permission_Key
-                        ).length > 0 : false
-                    const checkedManage = newRole.permissions ?
-                        newRole.permissions.filter(permission =>
-                            `manageBacklog.${backlog.Backlog_ID}` === permission.Permission_Key
-                        ).length > 0 : false
+                <View style={NewRoleFormStyles.buttonRow}>
+                    <TouchableOpacity style={NewRoleFormStyles.button} onPress={handleCreateRole}>
+                        <Text style={NewRoleFormStyles.buttonText}>{t('team:rolesSeatsManager:createRole')}</Text>
+                    </TouchableOpacity>
+                </View>
+            </ScrollView>
 
-                    permissions.push(
-                        {
-                            key1: `accessBacklog.${backlog.Backlog_ID}`,
-                            label1: `Access Backlog: ${backlog.Backlog_Name}`,
-                            checked1: checkedAccess,
-                            key2: `manageBacklog.${backlog.Backlog_ID}`,
-                            label2: `Manage Backlog: ${backlog.Backlog_Name}`,
-                            checked2: checkedManage
-                        }
-                    );
-                });
+            <ModalToggler visibility={togglerIsVisible} callback={setTogglerIsVisible}>
+                {displayNewRoleForm && (
+                    <>
+                        {togglerIsVisible === "RoleName" ? (
+                            <TextInput
+                                style={styles.input}
+                                value={newRole.Role_Name}
+                                onChangeText={(value) => handleRoleChange('Role_Name', value)}
+                            />
+                        ) : togglerIsVisible === "RolePermissions" ? (
+                            <>
+                                <Text style={[editorStyles.label, { marginTop: 16 }]}>
+                                    {t('team:rolesSeatsManager:permissions')}
+                                </Text>
 
-                return permissions.map(permission => (
-                    <View key={permission.key1 + permission.key2} style={{ flexDirection: 'column', marginBottom: 8 }}>
-                        <TouchableOpacity
-                            style={NewRoleFormStyles.permissionItem}
-                            onPress={async () => {
-                                await togglePermission(permission.key1, !permission.checked1);
-                                if (!permission.checked1 === false) {
-                                    // If unchecking access, also uncheck manage
-                                    await togglePermission(permission.key2, false);
-                                }
-                            }}
-                        >
-                            <Text style={{ color: permission.checked1 ? '#007bff' : '#000' }}>
-                                {permission.label1}
-                            </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[NewRoleFormStyles.permissionItem, { paddingLeft: 16 }]}
-                            onPress={async () => {
-                                await togglePermission(permission.key2, !permission.checked2);
-                                if (!permission.checked2 === true) {
-                                    // If checking manage, also check access
-                                    await togglePermission(permission.key1, true);
-                                }
-                            }}
-                        >
-                            <Text style={{ color: permission.checked2 ? '#007bff' : '#000' }}>
-                                {permission.label2}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                ));
-            })}
+                                {availablePermissions.map((permission) => {
+                                    const isPermissionActive = newRole.permissions?.find(perm => perm.Permission_Key === permission)
+                                    return (
+                                        <TouchableOpacity
+                                            key={permission}
+                                            style={NewRoleFormStyles.permissionItem}
+                                            onPress={() => togglePermission(
+                                                permission,
+                                                !isPermissionActive
+                                            )}
+                                        >
+                                            <Text style={{ color: isPermissionActive ? '#007bff' : '#000' }}>
+                                                {permission}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    )
+                                })}
 
-            <View style={NewRoleFormStyles.buttonRow}>
-                <TouchableOpacity onPress={() => setDisplayNewRoleForm(false)}>
-                    <Text style={NewRoleFormStyles.cancelLink}>{t('Cancel')}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={NewRoleFormStyles.button} onPress={handleCreateRole}>
-                    <Text style={NewRoleFormStyles.buttonText}>{t('team:rolesSeatsManager:createRole')}</Text>
-                </TouchableOpacity>
-            </View>
-        </ScrollView>
+                                {renderTeam?.projects?.map((project: Project) => {
+                                    const checkedAccess = newRole.permissions ?
+                                        newRole.permissions.filter(permission =>
+                                            `accessProject.${project.Project_ID}` === permission.Permission_Key
+                                        ).length > 0 : false
+                                    const checkedManage = newRole.permissions ?
+                                        newRole.permissions.filter(permission =>
+                                            `manageProject.${project.Project_ID}` === permission.Permission_Key
+                                        ).length > 0 : false
+
+                                    const permissions = [
+                                        {
+                                            key1: `accessProject.${project.Project_ID}`,
+                                            label1: `Access Project: ${project.Project_Name}`,
+                                            checked1: checkedAccess,
+                                            key2: `manageProject.${project.Project_ID}`,
+                                            label2: `Manage Project: ${project.Project_Name}`,
+                                            checked2: checkedManage,
+                                        }
+                                    ];
+
+                                    project.backlogs?.map((backlog: Backlog) => {
+                                        const checkedAccess = newRole.permissions ?
+                                            newRole.permissions.filter(permission =>
+                                                `accessBacklog.${backlog.Backlog_ID}` === permission.Permission_Key
+                                            ).length > 0 : false
+                                        const checkedManage = newRole.permissions ?
+                                            newRole.permissions.filter(permission =>
+                                                `manageBacklog.${backlog.Backlog_ID}` === permission.Permission_Key
+                                            ).length > 0 : false
+
+                                        permissions.push(
+                                            {
+                                                key1: `accessBacklog.${backlog.Backlog_ID}`,
+                                                label1: `Access Backlog: ${backlog.Backlog_Name}`,
+                                                checked1: checkedAccess,
+                                                key2: `manageBacklog.${backlog.Backlog_ID}`,
+                                                label2: `Manage Backlog: ${backlog.Backlog_Name}`,
+                                                checked2: checkedManage
+                                            }
+                                        );
+                                    });
+
+                                    return permissions.map(permission => (
+                                        <View key={permission.key1 + permission.key2} style={{ flexDirection: 'column', marginBottom: 8 }}>
+                                            <TouchableOpacity
+                                                style={NewRoleFormStyles.permissionItem}
+                                                onPress={async () => {
+                                                    await togglePermission(permission.key1, !permission.checked1);
+                                                    if (!permission.checked1 === false) {
+                                                        // If unchecking access, also uncheck manage
+                                                        await togglePermission(permission.key2, false);
+                                                    }
+                                                }}
+                                            >
+                                                <Text style={{ color: permission.checked1 ? '#007bff' : '#000' }}>
+                                                    {permission.label1}
+                                                </Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity
+                                                style={[NewRoleFormStyles.permissionItem, { paddingLeft: 16 }]}
+                                                onPress={async () => {
+                                                    await togglePermission(permission.key2, !permission.checked2);
+                                                    if (!permission.checked2 === true) {
+                                                        // If checking manage, also check access
+                                                        await togglePermission(permission.key1, true);
+                                                    }
+                                                }}
+                                            >
+                                                <Text style={{ color: permission.checked2 ? '#007bff' : '#000' }}>
+                                                    {permission.label2}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    ));
+                                })}
+                            </>
+                        ) : null}
+                    </>
+                )}
+            </ModalToggler>
+        </>
     )
 }
 
@@ -976,11 +1081,11 @@ const SelectedRoleForm: React.FC<SelectedRoleFormProps> = ({
     setDisplayNewRoleForm,
     handleRoleChanges
 }) => (
-    <ScrollView style={styles.container}>
+    <ScrollView style={TeamRolesSeatsViewStyles.container}>
         <Text style={styles.title}>{t('team:rolesSeatsManager:editRole')}</Text>
 
-        <View style={styles.formGroup}>
-            <Text style={styles.label}>{t('team:rolesSeatsManager:roleName')}</Text>
+        <View style={editorStyles.formGroup}>
+            <Text style={editorStyles.label}>{t('team:rolesSeatsManager:roleName')}</Text>
             <TextInput
                 style={styles.input}
                 value={selectedRole.Role_Name}
@@ -1102,6 +1207,44 @@ const SelectedRoleForm: React.FC<SelectedRoleFormProps> = ({
     </ScrollView>
 )
 
+const editorStyles = StyleSheet.create({
+    rowBetween: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 16
+    },
+    title: {
+        fontSize: 20,
+        fontWeight: 'bold'
+    },
+    formGroup: {
+        width: '100%',
+        position: 'relative',
+        flexDirection: 'row',
+        gap: 8,
+        alignItems: 'center',
+        marginBottom: 16
+    },
+    formGroupItemToggler: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: '#f0f0f0',
+        flex: 1,
+        right: 0,
+        marginBottom: 0,
+        padding: 12,
+        borderRadius: 8
+    },
+    label: {
+        width: 100,
+        fontWeight: '600',
+        fontSize: 18,
+        marginTop: 12,
+        marginBottom: 4,
+    },
+})
+
 const TeamRolesSeatsViewStyles = StyleSheet.create({
     container: {
         flex: 1,
@@ -1167,10 +1310,6 @@ const TeamRolesSeatsViewStyles = StyleSheet.create({
 })
 
 const styles = StyleSheet.create({
-    container: {
-        padding: 16,
-        backgroundColor: '#fff'
-    },
     title: {
         fontSize: 20,
         fontWeight: 'bold',
@@ -1190,9 +1329,6 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 6,
         marginTop: 6
-    },
-    formGroup: {
-        marginBottom: 16
     },
     buttonRow: {
         flexDirection: 'row',
@@ -1244,9 +1380,6 @@ const NewRoleFormStyles = StyleSheet.create({
         padding: 10,
         borderRadius: 6,
         backgroundColor: '#FFF',
-    },
-    formGroup: {
-        marginBottom: 16,
     },
     permissionItem: {
         paddingVertical: 8,

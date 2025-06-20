@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react'
-import { Alert, Animated, Button, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import React, { useState } from 'react'
+import { Alert, Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 // import Clipboard from '@react-native-clipboard/clipboard'
 import { faCheck, faChevronRight, faCopy, faPencilAlt, faTrash, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
@@ -8,6 +8,7 @@ import { useNavigation, useRoute } from '@react-navigation/native'
 import { ScrollView } from 'react-native-gesture-handler'
 
 // Internal
+import { ModalToggler } from '@/src/Components/ModalToggler'
 import { useProjectsContext, useTasksContext } from '@/src/Contexts'
 import { useAxios } from '@/src/Hooks'
 import { Project } from '@/src/Types'
@@ -166,38 +167,7 @@ export const BulkEdit: React.FC<BulkEditProps> = ({
     const [newStatus, setNewStatus] = useState<string>("")
     const [newBacklog, setNewBacklog] = useState<number>(0)
     const [showDatePicker, setShowDatePicker] = useState<boolean>(false)
-
-    // ---- Toggler Logic & Animation ----
-    const screenHeight = Dimensions.get('window').height;
-    const slideAnim = useRef(new Animated.Value(screenHeight)).current;
-    const [togglerIsVisible, setTogglerIsVisible] = useState<false | string>(false)
-
-    const handleTogglerVisibility = (visibility: false | string) => {
-        if (visibility === false) {
-            // Slide out
-            Animated.timing(slideAnim, {
-                toValue: screenHeight,
-                duration: 500,
-                useNativeDriver: true,
-            }).start(() => {
-                setTogglerIsVisible(false); // hide component after animation
-            });
-        } else {
-            // Slide in
-
-            // Set visible first to render component
-            setTogglerIsVisible(visibility);
-
-            // Delay needed so component is in the tree before animating
-            requestAnimationFrame(() => {
-                Animated.timing(slideAnim, {
-                    toValue: 0,
-                    duration: 500,
-                    useNativeDriver: true,
-                }).start();
-            });
-        }
-    }
+    const [toggler, setToggler] = useState<string | false>(false)
 
     const handleBulkUpdate = async () => {
         if (!selectedTaskIds.length) return
@@ -232,9 +202,6 @@ export const BulkEdit: React.FC<BulkEditProps> = ({
             newDueDate={newDueDate}
             newStatus={newStatus}
             newBacklog={newBacklog}
-            slideAnim={slideAnim}
-            togglerIsVisible={togglerIsVisible}
-            handleTogglerVisibility={handleTogglerVisibility}
             setTaskBulkEditing={setTaskBulkEditing}
             setNewUserId={setNewUserId}
             setNewDueDate={setNewDueDate}
@@ -242,6 +209,8 @@ export const BulkEdit: React.FC<BulkEditProps> = ({
             setNewBacklog={setNewBacklog}
             setShowDatePicker={setShowDatePicker}
             handleBulkUpdate={handleBulkUpdate}
+            toggler={toggler}
+            setToggler={setToggler}
         />
     )
 }
@@ -253,9 +222,6 @@ type BulkEditViewProps = {
     newDueDate: Date | undefined
     newStatus: string
     newBacklog: number
-    slideAnim: Animated.Value
-    togglerIsVisible: string | false
-    handleTogglerVisibility: (visibility: false | string) => void
     setTaskBulkEditing: React.Dispatch<React.SetStateAction<boolean>>
     setNewUserId: React.Dispatch<React.SetStateAction<number | undefined>>
     setNewDueDate: React.Dispatch<React.SetStateAction<Date | undefined>>
@@ -263,6 +229,8 @@ type BulkEditViewProps = {
     setNewBacklog: React.Dispatch<React.SetStateAction<number>>
     setShowDatePicker: React.Dispatch<React.SetStateAction<boolean>>
     handleBulkUpdate: () => Promise<void>
+    toggler: string | false
+    setToggler: React.Dispatch<React.SetStateAction<string | false>>
 }
 
 export const BulkEditView: React.FC<BulkEditViewProps> = ({
@@ -272,9 +240,6 @@ export const BulkEditView: React.FC<BulkEditViewProps> = ({
     newDueDate,
     newStatus,
     newBacklog,
-    slideAnim,
-    togglerIsVisible,
-    handleTogglerVisibility,
     setTaskBulkEditing,
     setNewUserId,
     setNewDueDate,
@@ -282,6 +247,8 @@ export const BulkEditView: React.FC<BulkEditViewProps> = ({
     setNewBacklog,
     setShowDatePicker,
     handleBulkUpdate,
+    toggler,
+    setToggler
 }) => (
     <>
         <ScrollView style={bulkEditStyles.container}>
@@ -297,7 +264,7 @@ export const BulkEditView: React.FC<BulkEditViewProps> = ({
                 <Text style={bulkEditStyles.label}>Assignee</Text>
                 <TouchableOpacity
                     style={bulkEditStyles.bulkEditItemToggler}
-                    onPress={() => handleTogglerVisibility("Assignee")}
+                    onPress={() => setToggler("Assignee")}
                 >
                     {(() => {
                         const selectedUser = renderProject.team?.user_seats?.find(seat => seat.user?.User_ID === newUserId)?.user
@@ -311,7 +278,7 @@ export const BulkEditView: React.FC<BulkEditViewProps> = ({
                 <Text style={bulkEditStyles.label}>Due Date</Text>
                 <TouchableOpacity
                     style={bulkEditStyles.bulkEditItemToggler}
-                    onPress={() => handleTogglerVisibility("Due Date")}
+                    onPress={() => setToggler("Due Date")}
                 >
                     <Text>{newDueDate ? newDueDate.toDateString() : "Select Date"}</Text>
                     <FontAwesomeIcon icon={faChevronRight} />
@@ -327,7 +294,7 @@ export const BulkEditView: React.FC<BulkEditViewProps> = ({
                 <Text style={bulkEditStyles.label}>Status</Text>
                 <TouchableOpacity
                     style={bulkEditStyles.bulkEditItemToggler}
-                    onPress={() => handleTogglerVisibility("Status")}
+                    onPress={() => setToggler("Status")}
                 >
                     {(() => {
                         const selectedStatus = renderProject.backlogs?.
@@ -344,7 +311,7 @@ export const BulkEditView: React.FC<BulkEditViewProps> = ({
                 <Text style={bulkEditStyles.label}>Backlog</Text>
                 <TouchableOpacity
                     style={bulkEditStyles.bulkEditItemToggler}
-                    onPress={() => handleTogglerVisibility("Backlog")}
+                    onPress={() => setToggler("Backlog")}
                 >
                     {(() => {
                         const selectedBacklog = renderProject.backlogs?.find(backlog => backlog.Backlog_ID === newBacklog)
@@ -358,10 +325,8 @@ export const BulkEditView: React.FC<BulkEditViewProps> = ({
                 <Button title="Confirm" onPress={handleBulkUpdate} color="#007bff" />
             </View>
         </ScrollView>
+
         <BulkEditTogglerView
-            slideAnim={slideAnim}
-            togglerIsVisible={togglerIsVisible}
-            handleTogglerVisibility={handleTogglerVisibility}
             newUserId={newUserId}
             setNewUserId={setNewUserId}
             renderProject={renderProject}
@@ -369,14 +334,13 @@ export const BulkEditView: React.FC<BulkEditViewProps> = ({
             setNewBacklog={setNewBacklog}
             newStatus={newStatus}
             setNewStatus={setNewStatus}
+            toggler={toggler}
+            setToggler={setToggler}
         />
     </>
 )
 
 type BulkEditTogglerViewProps = {
-    slideAnim: Animated.Value
-    togglerIsVisible: string | false
-    handleTogglerVisibility: (visibility: false | string) => void
     newUserId: number | undefined
     setNewUserId: React.Dispatch<React.SetStateAction<number | undefined>>
     renderProject: Project
@@ -384,32 +348,24 @@ type BulkEditTogglerViewProps = {
     setNewBacklog: React.Dispatch<React.SetStateAction<number>>
     newStatus: string
     setNewStatus: React.Dispatch<React.SetStateAction<string>>
+    toggler: string | false
+    setToggler: React.Dispatch<React.SetStateAction<string | false>>
 }
 
 export const BulkEditTogglerView: React.FC<BulkEditTogglerViewProps> = ({
-    slideAnim,
-    togglerIsVisible,
-    handleTogglerVisibility,
     newUserId,
     setNewUserId,
     renderProject,
     newBacklog,
     setNewBacklog,
     newStatus,
-    setNewStatus
-}) => togglerIsVisible && (
-    <Animated.View style={[
-        styles.container,
-        { zIndex: 1100, transform: [{ translateY: slideAnim }] }
-    ]}>
-        <View style={styles.header}>
-            <Text style={styles.title}>Select {togglerIsVisible}</Text>
-            <TouchableOpacity onPress={() => handleTogglerVisibility(false)}>
-                <FontAwesomeIcon icon={faXmark} size={20} />
-            </TouchableOpacity>
-        </View>
+    setNewStatus,
+    toggler,
+    setToggler
+}) => toggler && (
+    <ModalToggler visibility={toggler} callback={setToggler}>
         <View>
-            {togglerIsVisible === "Assignee" ? (
+            {toggler === "Assignee" ? (
                 <Picker
                     selectedValue={newUserId}
                     onValueChange={(value) => setNewUserId(value)}
@@ -427,7 +383,7 @@ export const BulkEditTogglerView: React.FC<BulkEditTogglerViewProps> = ({
                         )
                     })}
                 </Picker>
-            ) : togglerIsVisible === "Backlog" ? (
+            ) : toggler === "Backlog" ? (
                 <Picker
                     selectedValue={newBacklog}
                     onValueChange={(value) => {
@@ -441,7 +397,7 @@ export const BulkEditTogglerView: React.FC<BulkEditTogglerViewProps> = ({
                         <Picker.Item key={backlog.Backlog_ID} label={backlog.Backlog_Name} value={backlog.Backlog_ID} />
                     ))}
                 </Picker>
-            ) : togglerIsVisible === "Status" ? (
+            ) : toggler === "Status" ? (
                 <Picker
                     selectedValue={newStatus}
                     onValueChange={(value) => setNewStatus(value)}
@@ -459,7 +415,7 @@ export const BulkEditTogglerView: React.FC<BulkEditTogglerViewProps> = ({
                         ))
                     }
                 </Picker>
-            ) : togglerIsVisible === "Due Date" ? (
+            ) : toggler === "Due Date" ? (
                 <></>
                 // <DateTimePicker
                 //     value={newDueDate || new Date()}
@@ -472,7 +428,7 @@ export const BulkEditTogglerView: React.FC<BulkEditTogglerViewProps> = ({
                 // />
             ) : null}
         </View>
-    </Animated.View>
+    </ModalToggler>
 )
 
 const bulkEditStyles = StyleSheet.create({

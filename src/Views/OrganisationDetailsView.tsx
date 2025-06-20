@@ -16,12 +16,14 @@ import {
 
 // Internal
 import { useOrganisationsContext } from '@/src/Contexts';
+import { LoadingState } from '@/src/Core-UI/LoadingState';
+import useRoleAccess from '@/src/Hooks/useRoleAccess';
 import { selectAuthUser, useTypedSelector } from '@/src/Redux';
 import { CreatedAtToTimeSince } from '../Components/CreatedAtToTimeSince';
 import useMainViewJumbotron from '../Hooks/useMainViewJumbotron';
-import { MainStackParamList, Organisation } from '../Types';
+import { MainStackParamList, Organisation, OrganisationStates } from '../Types';
 
-export const OrganisationDetailsView = () => {
+export const OrganisationDetails = () => {
     // Hooks
     const navigation = useNavigation<NavigationProp<MainStackParamList>>();
     const route = useRoute();
@@ -32,6 +34,11 @@ export const OrganisationDetailsView = () => {
         faIcon: faBuilding,
         visibility: 100,
     })
+    const { canModifyOrganisationSettings } = useRoleAccess(
+        organisationById ? organisationById.User_ID : 0,
+        "organisation",
+        organisationById ? organisationById.Organisation_ID : 0
+    )
 
     // State
     const authUser = useTypedSelector(selectAuthUser);
@@ -77,64 +84,97 @@ export const OrganisationDetailsView = () => {
         // }
     };
 
-    if (!organisation) return <Text style={styles.loading}>Loading...</Text>;
+    if (!organisation) return <Text style={styles.loading}>Loading...</Text>
 
     return (
+        <OrganisationDetailsView
+            organisation={organisation}
+            canModifyOrganisationSettings={canModifyOrganisationSettings}
+            navigation={navigation}
+            handleOrganisationChange={handleOrganisationChange}
+            handleSaveChanges={handleSaveChanges}
+            handleDeleteOrganisation={handleDeleteOrganisation}
+        />
+    )
+}
+
+type OrganisationDetailsViewProps = {
+    organisation: OrganisationStates
+    canModifyOrganisationSettings: boolean | undefined
+    navigation: NavigationProp<MainStackParamList>
+    handleOrganisationChange: (field: string, value: string) => void
+    handleSaveChanges: () => Promise<void>
+    handleDeleteOrganisation: () => Promise<void>
+}
+
+export const OrganisationDetailsView: React.FC<OrganisationDetailsViewProps> = ({
+    organisation,
+    canModifyOrganisationSettings,
+    navigation,
+    handleOrganisationChange,
+    handleSaveChanges,
+    handleDeleteOrganisation
+}) => {
+    return (
         <ScrollView contentContainerStyle={styles.container}>
-            {authUser?.User_ID === organisation.User_ID && (
-                <>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Organisation Name"
-                        value={organisation.Organisation_Name}
-                        onChangeText={(text) => handleOrganisationChange('Organisation_Name', text)}
-                    />
+            <LoadingState singular="Organisation" renderItem={organisation} permitted={undefined}>
+                {canModifyOrganisationSettings && organisation && (
+                    <>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Organisation Name"
+                            value={organisation.Organisation_Name}
+                            onChangeText={(text) => handleOrganisationChange('Organisation_Name', text)}
+                        />
 
-                    <TextInput
-                        style={[styles.input, { height: 120 }]}
-                        multiline
-                        placeholder="Organisation Description"
-                        value={organisation.Organisation_Description}
-                        onChangeText={(text) => handleOrganisationChange('Organisation_Description', text)}
-                    />
+                        <TextInput
+                            style={[styles.input, { height: 120 }]}
+                            multiline
+                            placeholder="Organisation Description"
+                            value={organisation.Organisation_Description}
+                            onChangeText={(text) => handleOrganisationChange('Organisation_Description', text)}
+                        />
 
-                    <View style={styles.buttonRow}>
-                        <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
-                            <Text style={styles.buttonText}>Save Changes</Text>
-                        </TouchableOpacity>
+                        <View style={styles.buttonRow}>
+                            <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
+                                <Text style={styles.buttonText}>Save Changes</Text>
+                            </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteOrganisation}>
-                            <Text style={styles.buttonText}>Delete Organisation</Text>
-                        </TouchableOpacity>
-                    </View>
+                            <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteOrganisation}>
+                                <Text style={styles.buttonText}>Delete Organisation</Text>
+                            </TouchableOpacity>
+                        </View>
 
-                    <TouchableOpacity
-                        style={styles.linkButton}
-                        onPress={() => navigation.navigate('CreateTeam', { id: (organisation.Organisation_ID ?? "").toString() })}
-                    >
-                        <FontAwesomeIcon icon={faUsers} size={16} />
-                        <Text style={styles.linkText}> Create Team</Text>
-                    </TouchableOpacity>
-                </>
-            )}
-
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Teams Overview</Text>
-                {organisation.teams?.map((team: any) => (
-                    <View key={team.Team_ID} style={styles.card}>
                         <TouchableOpacity
-                            onPress={() => navigation.navigate('Team', { id: (team.Team_ID ?? "").toString() })}
+                            style={styles.linkButton}
+                            onPress={() => navigation.navigate('CreateTeam', { id: (organisation.Organisation_ID ?? "").toString() })}
                         >
-                            <Text style={styles.teamName}>{team.Team_Name}</Text>
+                            <FontAwesomeIcon icon={faUsers} size={16} />
+                            <Text style={styles.linkText}> Create Team</Text>
                         </TouchableOpacity>
-                        <Text style={styles.description}>
-                            {team.Team_Description || 'No description available'}
-                        </Text>
-                        <Text style={styles.meta}>Created: <CreatedAtToTimeSince dateCreatedAt={team.Team_CreatedAt} /></Text>
-                        <Text style={styles.meta}>Members: {team.user_seats?.length || 0}</Text>
+                    </>
+                )}
+
+                {organisation && (
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>Teams Overview</Text>
+                        {organisation.teams?.map((team: any) => (
+                            <View key={team.Team_ID} style={styles.card}>
+                                <TouchableOpacity
+                                    onPress={() => navigation.navigate('Team', { id: (team.Team_ID ?? "").toString() })}
+                                >
+                                    <Text style={styles.teamName}>{team.Team_Name}</Text>
+                                </TouchableOpacity>
+                                <Text style={styles.description}>
+                                    {team.Team_Description || 'No description available'}
+                                </Text>
+                                <Text style={styles.meta}>Created: <CreatedAtToTimeSince dateCreatedAt={team.Team_CreatedAt} /></Text>
+                                <Text style={styles.meta}>Members: {team.user_seats?.length || 0}</Text>
+                            </View>
+                        ))}
                     </View>
-                ))}
-            </View>
+                )}
+            </LoadingState>
         </ScrollView>
     );
 };

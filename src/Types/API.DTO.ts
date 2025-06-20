@@ -26,16 +26,17 @@ export type MainStackParamList = {
     NotificationsInstructionsView: undefined; // No params
     Organisation: { id: string }; // Requires an id parameter
     Team: { id: string }; // Requires an id parameter
+    TeamRolesSeatsManager: { id: string }; // Requires an id parameter
     CreateTeam: { id: string }; // Requires an id parameter
     Project: { id: string }; // Requires an id parameter
     Backlogs: { id: string }; // Requires an id parameter
-    BacklogsTab: { id: string }; // Requires an id parameter
     Task: { projectKey: string; taskKey: string }; // Requires projectKey and taskKey parameters
     Media: { projectKey: string; taskKey: string, mediaID: string }; // Requires projectKey and taskKey parameters
 
     Dashboard: { id: string }; // Requires an id parameter
     DashboardTab: { id: string }; // Requires an id parameter
     Backlog: { id: string }; // Requires an id parameter
+    BacklogTab: { id: string }; // Requires an id parameter
     CreateBacklog: { id: string }; // Requires an id parameter
     Kanban: { id: string }; // Requires an id parameter
     KanbanTab: { id: string }; // Requires an id parameter
@@ -50,11 +51,11 @@ export type MainStackParamList = {
 type BottomTabParamListType = NavigatorScreenParams<MainStackParamList>
 
 export type BottomTabParamList = {
-    HomeTab: BottomTabParamListType;
-    DashboardTab: BottomTabParamListType;
-    BacklogsTab: BottomTabParamListType;
-    KanbanTab: BottomTabParamListType;
-    TimeTab: BottomTabParamListType;
+    Home: BottomTabParamListType;
+    Dashboard: BottomTabParamListType;
+    Backlog: BottomTabParamListType;
+    Kanban: BottomTabParamListType;
+    Time: BottomTabParamListType;
 }
 
 export type GuestStackParamList = {

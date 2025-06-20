@@ -25,7 +25,7 @@ import {
     DownloadedMediaFilesView,
     KanbanBoardView,
     MediaFileView,
-    OrganisationDetailsView,
+    OrganisationDetails,
     ProfileView,
     ProjectDetailsView,
     SignInView,
@@ -35,6 +35,7 @@ import {
     TimeTracksView
 } from '@/src/Views'
 import { BacklogsPage } from '@/src/Views/BacklogsView'
+import { TeamRolesSeatsManager } from '@/src/Views/TeamRolesSeatsManager'
 import { faBuilding, faClock, faGauge, faHouseChimney, faLightbulb, faList, faUsers, faWindowRestore } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { TaskTimeTrackPlayer } from '../Components/TaskTimeTrackPlayer'
@@ -60,11 +61,12 @@ const DeviceIsLoggedIn = () => {
         });
 
         const routesNotInBottomNav: { name: keyof MainStackParamList; component: React.FC }[] = [
-            { name: "Organisation", component: OrganisationDetailsView },
+            { name: "Organisation", component: OrganisationDetails },
             { name: "Team", component: TeamDetailsView },
+            { name: "TeamRolesSeatsManager", component: TeamRolesSeatsManager },
             { name: "Project", component: ProjectDetailsView },
             { name: "CreateBacklog", component: CreateBacklog },
-            { name: "Backlog", component: BacklogPage },
+            { name: "Backlogs", component: BacklogsPage },
             { name: "Task", component: TaskDetailsView },
             { name: "Media", component: MediaFileView },
             { name: "Downloaded", component: DownloadedMediaFilesView },
@@ -72,11 +74,11 @@ const DeviceIsLoggedIn = () => {
         ]
 
         const routesInBottomNav: { tab: keyof MainStackParamList; name: keyof MainStackParamList; component: React.FC<any> }[] = [
-            { tab: "HomeTab", name: "Home", component: StartpageView },
-            { tab: "DashboardTab", name: "Dashboard", component: DashboardView },
-            { tab: "BacklogsTab", name: "Backlogs", component: BacklogsPage },
-            { tab: "KanbanTab", name: "Kanban", component: KanbanBoardView },
-            { tab: "TimeTab", name: "Time", component: TimeTracksView },
+            { tab: "Home", name: "HomeTab", component: StartpageView },
+            { tab: "Dashboard", name: "DashboardTab", component: DashboardView },
+            { tab: "Backlog", name: "BacklogTab", component: BacklogPage },
+            { tab: "Kanban", name: "KanbanTab", component: KanbanBoardView },
+            { tab: "Time", name: "TimeTab", component: TimeTracksView },
         ]
 
         const isNotificationsDetermined = useTypedSelector(selectIsNotificationsDetermined)
@@ -167,7 +169,7 @@ const DeviceIsLoggedIn = () => {
         return (
             <>
                 <Tab.Navigator
-                    initialRouteName="HomeTab"
+                    initialRouteName="Home"
                     screenOptions={({ route }) => ({
                         tabBarIcon: ({ focused, color, size }) => {
                             let iconName = faHouseChimney; // Default icon

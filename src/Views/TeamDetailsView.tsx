@@ -1,5 +1,5 @@
 // External
-import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import { NavigationProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
     Alert,
@@ -9,15 +9,16 @@ import {
     StyleSheet,
     Text,
     TextInput,
+    TouchableOpacity,
     View
 } from 'react-native';
 
 // Internal
 import { useTeamsContext } from '@/src/Contexts';
 import { selectAuthUser, useTypedSelector } from '@/src/Redux';
-import { BottomTabParamList, Team, TeamFields } from '@/src/Types';
+import { MainStackParamList, Team, TeamFields } from '@/src/Types';
 import { faBuilding, faUsers } from '@fortawesome/free-solid-svg-icons';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { ReadOnlyRow } from '../Components/ReadOnlyRow';
 import useMainViewJumbotron from '../Hooks/useMainViewJumbotron';
 
@@ -26,8 +27,7 @@ const screenWidth = Dimensions.get('window').width;
 export const TeamDetailsView: React.FC = () => {
     // Hooks
     const route = useRoute();
-    // const navigation = useNavigation<NavigationProp<MainStackParamList>>();
-    const navigation = useNavigation<BottomTabNavigationProp<BottomTabParamList>>();
+    const navigation = useNavigation<NavigationProp<MainStackParamList>>();
     const { id: teamId } = route.params as { id: string };
     const { teamById, readTeamById, saveTeamChanges, removeTeam } = useTeamsContext();
     const { handleScroll, handleFocusEffect } = useMainViewJumbotron({
@@ -42,7 +42,7 @@ export const TeamDetailsView: React.FC = () => {
     // State
     const authUser = useTypedSelector(selectAuthUser);
     const [renderTeam, setRenderTeam] = useState<Team | undefined>(undefined);
-    const [isOwner, setIsOwner] = useState<boolean | undefined>(authUser && renderTeam?.organisation?.User_ID === authUser.User_ID);
+    const [isOwner, setIsOwner] = useState<boolean>(false);
 
     // Effects
     useEffect(() => {
@@ -52,6 +52,8 @@ export const TeamDetailsView: React.FC = () => {
     useEffect(() => {
         if (teamById) {
             setRenderTeam(teamById);
+
+            setIsOwner(authUser && teamById.organisation?.User_ID === authUser.User_ID || false)
         }
     }, [teamById]);
 
@@ -95,6 +97,15 @@ export const TeamDetailsView: React.FC = () => {
         <ScrollView style={styles.container}>
             {isOwner ? (
                 <View style={styles.section}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+                        <TouchableOpacity
+                            onPress={() =>
+                                navigation.navigate("TeamRolesSeatsManager", { id: (renderTeam.Team_ID || "").toString() })
+                            }
+                        >
+                            <FontAwesomeIcon icon={faUsers} size={20} />
+                        </TouchableOpacity>
+                    </View>
                     <Text style={styles.label}>Team Name</Text>
                     <TextInput
                         style={styles.input}
@@ -132,10 +143,9 @@ export const TeamDetailsView: React.FC = () => {
                 <Text style={styles.title}>Projects Overview</Text>
                 {renderTeam.projects?.map((project) => (
                     <View key={project.Project_ID} style={styles.card}>
-                        <Text style={styles.link} onPress={() => navigation.navigate("DashboardTab", {
-                            screen: "Dashboard",
-                            params: { id: "2" }
-                        })}>
+                        <Text style={styles.link} onPress={() =>
+                            navigation.navigate("Project", { id: (project.Project_ID || "").toString() })
+                        }>
                             {project.Project_Name}
                         </Text>
                         <ReadOnlyRow

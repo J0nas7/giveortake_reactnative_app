@@ -1,6 +1,6 @@
 // External
 import { faLightbulb, faList } from '@fortawesome/free-solid-svg-icons'
-import { NavigationProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
+import { NavigationProp, RouteProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { RefreshControl, ScrollView } from 'react-native-gesture-handler'
@@ -17,7 +17,7 @@ import { MainStackParamList, ProjectStates, User } from '@/src/Types'
 
 export const BacklogsPage = () => {
     // ---- Hooks ----
-    const route = useRoute();
+    const route = useRoute<RouteProp<MainStackParamList, 'Backlogs'>>();
     const {
         projectById: renderProject,
         readProjectById
@@ -38,7 +38,7 @@ export const BacklogsPage = () => {
     const navigation = useNavigation<NavigationProp<MainStackParamList>>()
 
     // ---- State ----
-    const { id: projectId } = route.params as { id: string };  // Get id as projectId from route params
+    const projectId = route.params.id  // Get id as projectId from route params
     const authUser = useTypedSelector(selectAuthUser)
     const parsedPermissions = useTypedSelector(selectAuthUserSeatPermissions)
     const [showEditToggles, setShowEditToggles] = useState<boolean>(false)

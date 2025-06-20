@@ -2,7 +2,7 @@ import useRoleAccess from '@/src/Hooks/useRoleAccess'
 import { BacklogStates, MainStackParamList, Project, User } from '@/src/Types'
 import { faGauge, faList, faWindowRestore } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
-import { NavigationProp, useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import React, { useMemo } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
@@ -84,7 +84,7 @@ const ProjectNavButton = ({
     route: keyof MainStackParamList;
     routeId?: string;
 }) => {
-    const navigation = useNavigation<NavigationProp<MainStackParamList>>();
+    const navigation = useNavigation<any>();
     return (
         <TouchableOpacity
             style={{
@@ -100,10 +100,10 @@ const ProjectNavButton = ({
             onPress={() => {
                 if (!routeId) return;
                 console.log("Navigating to:", route, "with id:", routeId);
-                navigation.navigate(
-                    "Dashboard",
-                    { id: "2" }
-                )
+                navigation.navigate(route, {
+                    screen: `${route}Tab`,
+                    params: { id: routeId }
+                })
             }}
         >
             <FontAwesomeIcon icon={icon} size={16} style={{ marginRight: 6 }} />

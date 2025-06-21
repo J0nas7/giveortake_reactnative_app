@@ -1,7 +1,7 @@
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 type ModalTogglerProps = {
@@ -17,7 +17,8 @@ export const ModalToggler: React.FC<ModalTogglerProps> = ({
 }) => {
     // ---- Toggler Logic & Animation ----
     const screenHeight = Dimensions.get('window').height;
-    const slideAnim = useRef(new Animated.Value(screenHeight)).current;
+    const MODAL_HEIGHT = screenHeight * 0.75; // Or your maxHeight
+    const slideAnim = useRef(new Animated.Value(MODAL_HEIGHT)).current;
     const [togglerIsVisible, setTogglerIsVisible] = useState<false | string>(false)
 
     const handleTogglerVisibility = (visibility: false | string) => {
@@ -77,23 +78,38 @@ export const ModalTogglerView: React.FC<BulkEditTogglerViewProps> = ({
     handleTogglerVisibility,
     children
 }) => togglerIsVisible && (
-    <Animated.View style={[
-        modalTogglerStyles.container,
-        { zIndex: 1100, transform: [{ translateY: slideAnim }] }
-    ]}>
-        <View style={modalTogglerStyles.header}>
-            <Text style={modalTogglerStyles.title}>Select {togglerIsVisible}</Text>
-            <TouchableOpacity onPress={() => handleTogglerVisibility(false)}>
-                <FontAwesomeIcon icon={faXmark} size={20} />
-            </TouchableOpacity>
+    <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
+        style={StyleSheet.absoluteFill}
+    >
+        <View style={modalTogglerStyles.wrapper}>
+            <Animated.View style={[
+                modalTogglerStyles.container,
+                { transform: [{ translateY: slideAnim }] }
+            ]}>
+                <View style={modalTogglerStyles.header}>
+                    <Text style={modalTogglerStyles.title}>Select {togglerIsVisible}</Text>
+                    <TouchableOpacity onPress={() => handleTogglerVisibility(false)}>
+                        <FontAwesomeIcon icon={faXmark} size={20} />
+                    </TouchableOpacity>
+                </View>
+                <ScrollView
+                    keyboardShouldPersistTaps="handled"
+                    contentContainerStyle={{ paddingBottom: 40 }}
+                >
+                    {children}
+                </ScrollView>
+            </Animated.View>
         </View>
-        <ScrollView>
-            {children}
-        </ScrollView>
-    </Animated.View>
+    </KeyboardAvoidingView>
 )
 
 const modalTogglerStyles = StyleSheet.create({
+    wrapper: {
+        flex: 1,
+        justifyContent: 'flex-end', // Push modal to bottom via flex
+    },
     container: {
         width: '100%',
         maxHeight: '75%',
@@ -102,7 +118,7 @@ const modalTogglerStyles = StyleSheet.create({
         position: 'absolute',
         zIndex: 1000,
         top: 'auto',
-        bottom: 0,
+        // bottom: 0,
 
         opacity: 0.95,
         borderTopLeftRadius: 24,

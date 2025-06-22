@@ -17,7 +17,7 @@ import {
 } from 'react-native'
 
 // Internal
-import { ModalToggler } from '@/src/Components/ModalToggler'
+import { editorStyles, ModalToggler } from '@/src/Components/ModalToggler'
 import { useTeamsContext, useTeamUserSeatsContext, useUsersContext } from '@/src/Contexts'
 import { useAxios } from '@/src/Hooks'
 import useRoleAccess from '@/src/Hooks/useRoleAccess'
@@ -1206,44 +1206,6 @@ const SelectedRoleForm: React.FC<SelectedRoleFormProps> = ({
         </View>
     </ScrollView>
 )
-
-const editorStyles = StyleSheet.create({
-    rowBetween: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 16
-    },
-    title: {
-        fontSize: 20,
-        fontWeight: 'bold'
-    },
-    formGroup: {
-        width: '100%',
-        position: 'relative',
-        flexDirection: 'row',
-        gap: 8,
-        alignItems: 'center',
-        marginBottom: 16
-    },
-    formGroupItemToggler: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: '#f0f0f0',
-        flex: 1,
-        right: 0,
-        marginBottom: 0,
-        padding: 12,
-        borderRadius: 8
-    },
-    label: {
-        width: 100,
-        fontWeight: '600',
-        fontSize: 18,
-        marginTop: 12,
-        marginBottom: 4,
-    },
-})
 
 const TeamRolesSeatsViewStyles = StyleSheet.create({
     container: {

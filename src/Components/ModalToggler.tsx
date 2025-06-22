@@ -94,10 +94,7 @@ export const ModalTogglerView: React.FC<BulkEditTogglerViewProps> = ({
                         <FontAwesomeIcon icon={faXmark} size={20} />
                     </TouchableOpacity>
                 </View>
-                <ScrollView
-                    keyboardShouldPersistTaps="handled"
-                    contentContainerStyle={{ paddingBottom: 40 }}
-                >
+                <ScrollView>
                     {children}
                 </ScrollView>
             </Animated.View>
@@ -105,7 +102,45 @@ export const ModalTogglerView: React.FC<BulkEditTogglerViewProps> = ({
     </KeyboardAvoidingView>
 )
 
-const modalTogglerStyles = StyleSheet.create({
+export const editorStyles = StyleSheet.create({
+    rowBetween: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 16
+    },
+    title: {
+        fontSize: 20,
+        fontWeight: 'bold'
+    },
+    formGroup: {
+        width: '100%',
+        position: 'relative',
+        flexDirection: 'row',
+        gap: 8,
+        alignItems: 'center',
+        marginBottom: 16
+    },
+    formGroupItemToggler: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: '#f0f0f0',
+        flex: 1,
+        right: 0,
+        marginBottom: 0,
+        padding: 12,
+        borderRadius: 8
+    },
+    label: {
+        width: 100,
+        fontWeight: '600',
+        fontSize: 18,
+        marginTop: 12,
+        marginBottom: 4,
+    },
+})
+
+export const modalTogglerStyles = StyleSheet.create({
     wrapper: {
         flex: 1,
         justifyContent: 'flex-end', // Push modal to bottom via flex

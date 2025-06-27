@@ -93,69 +93,55 @@ const CreateBacklogView: React.FC<CreateBacklogViewProps> = ({
     newBacklog,
     handleInputChange,
     handleCreateBacklog,
-}) => {
-    if (!canManageProject) {
-        return (
-            <View style={styles.container}>
-                <Text>You do not have permission to create a backlog.</Text>
+}) => (
+    <ScrollView contentContainerStyle={styles.container}>
+        <LoadingState singular="Project" renderItem={projectById} permitted={canManageProject}>
+            <Text style={styles.heading}>Create New Backlog</Text>
+
+            <Text style={styles.label}>Backlog Name *</Text>
+            <TextInput
+                style={styles.input}
+                value={newBacklog.Backlog_Name}
+                onChangeText={(text) => handleInputChange('Backlog_Name', text)}
+            />
+
+            <Text style={styles.label}>Is Primary Backlog?</Text>
+            <Switch
+                value={newBacklog.Backlog_IsPrimary}
+                onValueChange={(val) => handleInputChange('Backlog_IsPrimary', val)}
+            />
+
+            <Text style={styles.label}>Start Date *</Text>
+            <TextInput
+                style={styles.input}
+                value={newBacklog.Backlog_StartDate}
+                onChangeText={(text) => handleInputChange('Backlog_StartDate', text)}
+                placeholder="YYYY-MM-DD"
+            />
+
+            <Text style={styles.label}>End Date</Text>
+            <TextInput
+                style={styles.input}
+                value={newBacklog.Backlog_EndDate}
+                onChangeText={(text) => handleInputChange('Backlog_EndDate', text)}
+                placeholder="YYYY-MM-DD"
+            />
+
+            <Text style={styles.label}>Backlog Description</Text>
+            <TextInput
+                style={[styles.input, styles.textArea]}
+                multiline
+                numberOfLines={5}
+                value={newBacklog.Backlog_Description}
+                onChangeText={(text) => handleInputChange('Backlog_Description', text)}
+            />
+
+            <View style={styles.buttonContainer}>
+                <Button title="Create Backlog" onPress={handleCreateBacklog} />
             </View>
-        );
-    }
-
-    return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <LoadingState
-                singular="Project"
-                renderItem={projectById}
-                permitted={canManageProject}
-            >
-                <Text style={styles.heading}>Create New Backlog</Text>
-
-                <Text style={styles.label}>Backlog Name *</Text>
-                <TextInput
-                    style={styles.input}
-                    value={newBacklog.Backlog_Name}
-                    onChangeText={(text) => handleInputChange('Backlog_Name', text)}
-                />
-
-                <Text style={styles.label}>Is Primary Backlog?</Text>
-                <Switch
-                    value={newBacklog.Backlog_IsPrimary}
-                    onValueChange={(val) => handleInputChange('Backlog_IsPrimary', val)}
-                />
-
-                <Text style={styles.label}>Start Date *</Text>
-                <TextInput
-                    style={styles.input}
-                    value={newBacklog.Backlog_StartDate}
-                    onChangeText={(text) => handleInputChange('Backlog_StartDate', text)}
-                    placeholder="YYYY-MM-DD"
-                />
-
-                <Text style={styles.label}>End Date</Text>
-                <TextInput
-                    style={styles.input}
-                    value={newBacklog.Backlog_EndDate}
-                    onChangeText={(text) => handleInputChange('Backlog_EndDate', text)}
-                    placeholder="YYYY-MM-DD"
-                />
-
-                <Text style={styles.label}>Backlog Description</Text>
-                <TextInput
-                    style={[styles.input, styles.textArea]}
-                    multiline
-                    numberOfLines={5}
-                    value={newBacklog.Backlog_Description}
-                    onChangeText={(text) => handleInputChange('Backlog_Description', text)}
-                />
-
-                <View style={styles.buttonContainer}>
-                    <Button title="Create Backlog" onPress={handleCreateBacklog} />
-                </View>
-            </LoadingState>
-        </ScrollView>
-    );
-};
+        </LoadingState>
+    </ScrollView>
+);
 
 const styles = StyleSheet.create({
     container: {

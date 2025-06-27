@@ -22,19 +22,22 @@ import { GuestStackParamList, MainStackParamList } from '@/src/Types'
 import {
     BacklogPage,
     CreateBacklog,
+    CreateProject,
     DownloadedMediaFilesView,
     KanbanBoardView,
     MediaFileView,
     OrganisationDetails,
     ProfileView,
-    ProjectDetailsView,
+    ProjectDetails,
     SignInView,
     StartpageView,
     TaskDetailsView,
-    TeamDetailsView,
+    TeamDetails,
     TimeTracksView
 } from '@/src/Views'
+import { BacklogDetails } from '@/src/Views/BacklogDetails'
 import { BacklogsPage } from '@/src/Views/BacklogsView'
+import { CreateTeam } from '@/src/Views/CreateTeam'
 import { TeamRolesSeatsManager } from '@/src/Views/TeamRolesSeatsManager'
 import { faBuilding, faClock, faGauge, faHouseChimney, faLightbulb, faList, faUsers, faWindowRestore } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
@@ -62,11 +65,14 @@ const DeviceIsLoggedIn = () => {
 
         const routesNotInBottomNav: { name: keyof MainStackParamList; component: React.FC }[] = [
             { name: "Organisation", component: OrganisationDetails },
-            { name: "Team", component: TeamDetailsView },
+            { name: "Team", component: TeamDetails },
+            { name: "CreateTeam", component: CreateTeam },
             { name: "TeamRolesSeatsManager", component: TeamRolesSeatsManager },
-            { name: "Project", component: ProjectDetailsView },
+            { name: "Project", component: ProjectDetails },
+            { name: "CreateProject", component: CreateProject },
             { name: "CreateBacklog", component: CreateBacklog },
             { name: "Backlogs", component: BacklogsPage },
+            { name: "BacklogDetails", component: BacklogDetails },
             { name: "Task", component: TaskDetailsView },
             { name: "Media", component: MediaFileView },
             { name: "Downloaded", component: DownloadedMediaFilesView },

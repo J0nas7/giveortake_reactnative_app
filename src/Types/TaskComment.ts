@@ -1,4 +1,4 @@
-import { Task, TaskTimeTrack, User } from "./";
+import { Task, User } from "./";
 
 // Task Comment Type
 export type TaskComment = {
@@ -14,7 +14,7 @@ export type TaskComment = {
     // Relationships
     task?: Task;
     user?: User;
-    timeTracks?: TaskTimeTrack[]
+    // timeTracks?: TaskTimeTrack[]
     children_comments?: TaskComment[]
     parentComment?: TaskComment
 }

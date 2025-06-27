@@ -2,6 +2,7 @@ export * from './ContentView'
 export * from './StartpageView'
 
 export * from './CreateBacklogView'
+export * from './CreateProject'
 export * from './DownloadedMediaFilesView'
 export * from './MediaFileView'
 export * from './OrganisationDetailsView'
@@ -16,3 +17,4 @@ export * from './TimeTracksView'
 
 export * from './ProfileView'
 export * from './SignInView'
+

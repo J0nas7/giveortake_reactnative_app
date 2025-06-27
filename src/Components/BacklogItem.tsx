@@ -2,7 +2,7 @@ import useRoleAccess from '@/src/Hooks/useRoleAccess'
 import { BacklogStates, MainStackParamList, Project, User } from '@/src/Types'
 import { faGauge, faList, faWindowRestore } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
-import { useNavigation } from '@react-navigation/native'
+import { NavigationProp, useNavigation } from '@react-navigation/native'
 import React, { useMemo } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
@@ -17,6 +17,7 @@ export const BacklogItem: React.FC<BacklogItemProps> = ({
     renderProject,
     authUser
 }) => {
+    const navigation = useNavigation<NavigationProp<MainStackParamList>>();
     const { canAccessBacklog, canManageBacklog } = useRoleAccess(
         renderProject.team?.organisation?.User_ID,
         "backlog",
@@ -61,7 +62,12 @@ export const BacklogItem: React.FC<BacklogItemProps> = ({
 
             {canManageBacklog && (
                 <View>
-                    <Text style={styles.edit}>Edit Backlog</Text>
+                    <Text
+                        style={styles.edit}
+                        onPress={() => navigation.navigate("BacklogDetails", { id: (backlog.Backlog_ID || "").toString() })}
+                    >
+                        Edit Backlog
+                    </Text>
                     {backlog.Backlog_IsPrimary ? (
                         <Text style={styles.disabled}>Primary Backlog</Text>
                     ) : (

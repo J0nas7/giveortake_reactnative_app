@@ -255,11 +255,7 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
     setDisplaySubview,
     backlogViewRefresh
 }) => !backlogsViewRefreshing && (
-    <LoadingState
-        singular="Backlog"
-        renderItem={renderBacklog}
-        permitted={canAccessBacklog}
-    >
+    <LoadingState singular="Backlog" renderItem={renderBacklog} permitted={canAccessBacklog}>
         {displaySubview === "CreateTask" && renderBacklog ? (
             <CreateTaskView
                 renderBacklog={renderBacklog}

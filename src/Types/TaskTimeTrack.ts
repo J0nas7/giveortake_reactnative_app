@@ -1,4 +1,4 @@
-import { Project, Task, TaskComment, User } from "./"
+import { Project, Task, User } from "./"
 
 // Task Time Track Type
 export type TaskTimeTrack = {
@@ -6,7 +6,7 @@ export type TaskTimeTrack = {
     Task_ID: number
     Backlog_ID: number
     User_ID: number
-    Comment_ID?: number | null
+    // Comment_ID?: number | null
     Time_Tracking_Start_Time: string // ISO 8601 format (e.g., "YYYY-MM-DDTHH:mm:ssZ")
     Time_Tracking_End_Time?: string | null // Nullable, if tracking is still active
     Time_Tracking_Duration?: number | null // In minutes
@@ -19,7 +19,7 @@ export type TaskTimeTrack = {
     task?: Task
     project?: Project
     user?: User
-    comment?: TaskComment
+    // comment?: TaskComment
 }
 
 export type TaskTimeTrackFields =

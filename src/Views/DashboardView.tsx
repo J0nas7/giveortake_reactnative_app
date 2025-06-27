@@ -1,8 +1,9 @@
 import { useBacklogsContext, useTasksContext } from '@/src/Contexts';
 import { LoadingState } from '@/src/Core-UI/LoadingState';
 import useRoleAccess from '@/src/Hooks/useRoleAccess';
-import { MainStackParamList, Task } from '@/src/Types';
+import { BacklogStates, MainStackParamList, Task } from '@/src/Types';
 import { NavigationProp, useNavigation, useRoute } from '@react-navigation/native';
+import { TFunction } from 'i18next';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -82,7 +83,7 @@ const DashboardContainer: React.FC = () => {
         }));
     }, [renderBacklog]);
 
-    const barChartData = {
+    const barChartData = { // TODO Insert Real Data
         labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
         datasets: [
             {
@@ -98,67 +99,118 @@ const DashboardContainer: React.FC = () => {
     };
 
     return (
-        <ScrollView style={styles.container}>
-            <Text style={styles.title}>{t('dashboard.title')}</Text>
-            <Text style={styles.subtitle}>{backlogId} - {renderBacklog && renderBacklog.Backlog_Name}</Text>
-
-            <LoadingState
-                singular="Backlog"
-                renderItem={renderBacklog}
-                permitted={canAccessBacklog}
-            >
-                {renderBacklog && (
-                    <>
-                        {/* KPIs */}
-                        <View style={styles.kpiRow}>
-                            <KPI label={t('dashboard.totalTasks')} value={totalTasks} />
-                            <KPI label={t('dashboard.completedTasks')} value={`${completedTasks} (${completionRate}%)`} />
-                        </View>
-                        <View style={styles.kpiRow}>
-                            <KPI label={t('dashboard.overdueTasks')} value={overdueTasks} />
-                            <KPI label={t('dashboard.tasksInProgress')} value={inProgressTasks} />
-                        </View>
-
-                        {/* Progress Bar */}
-                        <Text style={styles.sectionTitle}>{t('dashboard.progress')}</Text>
-                        <View style={styles.progressBar}>
-                            <View style={[styles.progressFill, { width: `${completionRate}%` }]}>
-                                <Text style={styles.progressText}>{completionRate}%</Text>
-                            </View>
-                        </View>
-
-                        {/* Pie Chart */}
-                        <Text style={styles.sectionTitle}>{t('dashboard.analytics')}</Text>
-                        <PieChart
-                            data={pieData}
-                            width={screenWidth - 32}
-                            height={220}
-                            chartConfig={chartConfig}
-                            accessor="count"
-                            backgroundColor="transparent"
-                            paddingLeft="16"
-                            absolute
-                        />
-
-                        {/* Bar Chart */}
-                        <Text style={styles.sectionTitle}>{t('dashboard.taskCompletionOverTime')}</Text>
-                        <BarChart
-                            data={barChartData}
-                            width={screenWidth - 32}
-                            height={260}
-                            chartConfig={chartConfig}
-                            fromZero
-                            withInnerLines={false}
-                            showBarTops
-                            yAxisLabel=""
-                            yAxisSuffix=""
-                        />
-                    </>
-                )}
-            </LoadingState>
-        </ScrollView>
+        <DashboardContainerView
+            t={t}
+            renderBacklog={renderBacklog}
+            canAccessBacklog={canAccessBacklog}
+            canManageBacklog={canManageBacklog}
+            totalTasks={totalTasks}
+            completedTasks={completedTasks}
+            completionRate={completionRate}
+            overdueTasks={overdueTasks}
+            inProgressTasks={inProgressTasks}
+            pieData={pieData}
+            barChartData={barChartData}
+        />
     );
 };
+
+type DashboardContainerViewProps = {
+    t: TFunction<[string], undefined>
+    renderBacklog: BacklogStates;
+    canAccessBacklog: boolean | undefined;
+    canManageBacklog: boolean | undefined;
+    totalTasks: number
+    completedTasks: number
+    completionRate: number
+    overdueTasks: number
+    inProgressTasks: number
+    pieData: {
+        name: string;
+        count: number;
+        color: string;
+        legendFontColor: string;
+        legendFontSize: number;
+    }[]
+    barChartData: {
+        labels: string[];
+        datasets: {
+            data: number[];
+            color: () => string;
+        }[];
+        legend: string[];
+    }
+}
+
+const DashboardContainerView: React.FC<DashboardContainerViewProps> = ({
+    t,
+    renderBacklog,
+    canAccessBacklog,
+    canManageBacklog,
+    totalTasks,
+    completedTasks,
+    completionRate,
+    overdueTasks,
+    inProgressTasks,
+    pieData,
+    barChartData
+}) => (
+    <ScrollView style={styles.container}>
+        <Text style={styles.title}>{t('dashboard.title')}</Text>
+        <Text style={styles.subtitle}>{renderBacklog && renderBacklog.Backlog_Name}</Text>
+
+        <LoadingState singular="Backlog" renderItem={renderBacklog} permitted={canAccessBacklog}>
+            {renderBacklog && (
+                <>
+                    {/* KPIs */}
+                    <View style={styles.kpiRow}>
+                        <KPI label={t('dashboard.totalTasks')} value={totalTasks} />
+                        <KPI label={t('dashboard.completedTasks')} value={`${completedTasks} (${completionRate}%)`} />
+                    </View>
+                    <View style={styles.kpiRow}>
+                        <KPI label={t('dashboard.overdueTasks')} value={overdueTasks} />
+                        <KPI label={t('dashboard.tasksInProgress')} value={inProgressTasks} />
+                    </View>
+
+                    {/* Progress Bar */}
+                    <Text style={styles.sectionTitle}>{t('dashboard.progress')}</Text>
+                    <View style={styles.progressBar}>
+                        <View style={[styles.progressFill, { width: `${completionRate}%` }]}>
+                            <Text style={styles.progressText}>{completionRate}%</Text>
+                        </View>
+                    </View>
+
+                    {/* Pie Chart */}
+                    <Text style={styles.sectionTitle}>{t('dashboard.analytics')}</Text>
+                    <PieChart
+                        data={pieData}
+                        width={screenWidth - 32}
+                        height={220}
+                        chartConfig={chartConfig}
+                        accessor="count"
+                        backgroundColor="transparent"
+                        paddingLeft="16"
+                        absolute
+                    />
+
+                    {/* Bar Chart */}
+                    <Text style={styles.sectionTitle}>{t('dashboard.taskCompletionOverTime')}</Text>
+                    <BarChart
+                        data={barChartData}
+                        width={screenWidth - 32}
+                        height={260}
+                        chartConfig={chartConfig}
+                        fromZero
+                        withInnerLines={false}
+                        showBarTops
+                        yAxisLabel=""
+                        yAxisSuffix=""
+                    />
+                </>
+            )}
+        </LoadingState>
+    </ScrollView>
+)
 
 const KPI = ({ label, value }: { label: string; value: string | number }) => (
     <View style={styles.kpiCard}>

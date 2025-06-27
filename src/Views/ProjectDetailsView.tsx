@@ -19,7 +19,7 @@ import { LoadingState } from '@/src/Core-UI/LoadingState';
 import useRoleAccess from '@/src/Hooks/useRoleAccess';
 import { MainStackParamList, ProjectFields, ProjectStates } from '@/src/Types';
 
-export const ProjectDetailsView: React.FC = () => {
+export const ProjectDetails: React.FC = () => {
     // ---- Hooks ----
     const dispatch = useAppDispatch();
     const navigation = useNavigation<NavigationProp<MainStackParamList>>();
@@ -94,82 +94,128 @@ export const ProjectDetailsView: React.FC = () => {
     if (!renderProject) return <Text>Loading...</Text>;
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <LoadingState
-                singular="Project"
-                renderItem={renderProject}
-                permitted={canAccessProject}
-            >
-                <TouchableOpacity onPress={() => setShowEditToggles(!showEditToggles)}>
-                    <Text style={{ color: 'blue', fontSize: 16 }}>{showEditToggles ? "OK" : "Edit"}</Text>
-                </TouchableOpacity>
-
-                <Text style={styles.title}>Project Details</Text>
-
-                {canManageProject && showEditToggles ? (
-                    <>
-                        <TextInput
-                            style={inputStyle}
-                            placeholder="Project Name"
-                            value={renderProject.Project_Name}
-                            onChangeText={(value) => handleProjectChange('Project_Name', value)}
-                        />
-
-                        <TextInput
-                            style={inputStyle}
-                            placeholder="Project Key"
-                            value={renderProject.Project_Key}
-                            onChangeText={(value) => handleProjectChange('Project_Key', value)}
-                        />
-
-                        <TextInput
-                            style={styles.textArea}
-                            placeholder="Project Description"
-                            value={renderProject.Project_Description}
-                            onChangeText={(value) => handleProjectChange('Project_Description', value)}
-                            multiline
-                            numberOfLines={4}
-                        />
-
-                        <TextInput
-                            style={inputStyle}
-                            placeholder="Start Date"
-                            value={renderProject.Project_Start_Date || ''}
-                            onChangeText={(value) => handleProjectChange('Project_Start_Date', value)}
-                        />
-
-                        <TextInput
-                            style={inputStyle}
-                            placeholder="End Date"
-                            value={renderProject.Project_End_Date || ''}
-                            onChangeText={(value) => handleProjectChange('Project_End_Date', value)}
-                        />
-
-                        <View style={styles.buttonRow}>
-                            <Button title="Save Changes" onPress={handleSaveChanges} />
-                            <Button title="Delete Project" onPress={handleDeleteProject} color="red" />
-                        </View>
-                    </>
-                ) : (
-                    <>
-                        <Text style={styles.label}>Project Name: {renderProject.Project_Name}</Text>
-                        <Text style={styles.label}>Project Key: {renderProject.Project_Key}</Text>
-                        <Text style={styles.label}>Status: {renderProject.Project_Status}</Text>
-                        <Text style={styles.label}>Description:</Text>
-                        <Text style={styles.description}>{renderProject.Project_Description || 'N/A'}</Text>
-                    </>
-                )}
-
-                <ProjectBacklogsSection
-                    renderProject={renderProject}
-                    canManageProject={canManageProject}
-                    authUser={authUser}
-                    accessibleBacklogsCount={accessibleBacklogsCount}
-                />
-            </LoadingState>
-        </ScrollView>
+        <ProjectDetailsView
+            project={renderProject}
+            showEditToggles={showEditToggles}
+            setShowEditToggles={setShowEditToggles}
+            canAccessProject={canAccessProject}
+            canManageProject={canManageProject}
+            onFieldChange={handleProjectChange}
+            onSave={handleSaveChanges}
+            onDelete={handleDeleteProject}
+            authUser={authUser}
+            accessibleBacklogsCount={accessibleBacklogsCount}
+        />
     );
 };
+
+type ProjectDetailsViewProps = {
+    project: ProjectStates;
+    showEditToggles: boolean;
+    setShowEditToggles: (show: boolean) => void;
+    canAccessProject: boolean | undefined;
+    canManageProject: boolean | undefined;
+    onFieldChange: (field: ProjectFields, value: string) => void;
+    onSave: () => void;
+    onDelete: () => void;
+    authUser: any;
+    accessibleBacklogsCount: number;
+};
+
+export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
+    project, showEditToggles, setShowEditToggles,
+    canAccessProject, canManageProject,
+    onFieldChange, onSave, onDelete,
+    authUser, accessibleBacklogsCount
+}) => (
+    <ScrollView contentContainerStyle={styles.container}>
+        <LoadingState singular="Project" renderItem={project} permitted={canAccessProject}>
+            {project && (
+                <>
+                    <TouchableOpacity onPress={() => setShowEditToggles(!showEditToggles)}>
+                        <Text style={{ color: 'blue', fontSize: 16 }}>{showEditToggles ? "OK" : "Edit"}</Text>
+                    </TouchableOpacity>
+
+                    <Text style={styles.title}>Project Details</Text>
+
+                    {canManageProject && showEditToggles ? (
+                        <>
+                            <TextInput
+                                style={inputStyle}
+                                placeholder="Project Name"
+                                value={project.Project_Name}
+                                onChangeText={(value) => onFieldChange('Project_Name', value)}
+                            />
+
+                            <Text style={styles.label}>Project Status *</Text>
+                            <View>
+                                {['Planned', 'Active', 'Completed', 'On Hold'].map((status) => (
+                                    <View key={status} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                                        <Button
+                                            title={status}
+                                            onPress={() => onFieldChange('Project_Status', status)}
+                                            color={project.Project_Status === status ? '#007AFF' : '#ccc'}
+                                        />
+                                    </View>
+                                ))}
+                            </View>
+
+                            <TextInput
+                                style={inputStyle}
+                                placeholder="Project Key"
+                                value={project.Project_Key}
+                                onChangeText={(value) => onFieldChange('Project_Key', value)}
+                            />
+
+                            <TextInput
+                                style={styles.textArea}
+                                placeholder="Project Description"
+                                value={project.Project_Description}
+                                onChangeText={(value) => onFieldChange('Project_Description', value)}
+                                multiline
+                                numberOfLines={4}
+                            />
+
+                            <TextInput
+                                style={inputStyle}
+                                placeholder="Start Date"
+                                value={project.Project_Start_Date || ''}
+                                onChangeText={(value) => onFieldChange('Project_Start_Date', value)}
+                            />
+
+                            <TextInput
+                                style={inputStyle}
+                                placeholder="End Date"
+                                value={project.Project_End_Date || ''}
+                                onChangeText={(value) => onFieldChange('Project_End_Date', value)}
+                            />
+
+                            <View style={styles.buttonRow}>
+                                <Button title="Save Changes" onPress={onSave} />
+                                <Button title="Delete Project" onPress={onDelete} color="red" />
+                            </View>
+                        </>
+                    ) : (
+                        <>
+                            <Text style={styles.label}>Project Name: {project.Project_Name}</Text>
+                            <Text style={styles.label}>Project Key: {project.Project_Key}</Text>
+                            <Text style={styles.label}>Status: {project.Project_Status}</Text>
+                            <Text style={styles.label}>Description:</Text>
+                            <Text style={styles.description}>{project.Project_Description || 'N/A'}</Text>
+                        </>
+                    )}
+
+                    <ProjectBacklogsSection
+                        renderProject={project}
+                        canManageProject={canManageProject}
+                        authUser={authUser}
+                        accessibleBacklogsCount={accessibleBacklogsCount}
+                    />
+                </>
+            )}
+        </LoadingState>
+    </ScrollView>
+);
 
 const styles = StyleSheet.create({
     container: {

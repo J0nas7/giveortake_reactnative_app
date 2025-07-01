@@ -3,8 +3,8 @@ import { faArrowDown, faArrowUp, faLock, faPencil, faTrash } from '@fortawesome/
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { NavigationProp, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
-import { Alert, Button, Keyboard, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { FlatList, TextInput } from 'react-native-gesture-handler';
+import { Alert, Button, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { TextInput } from 'react-native-gesture-handler';
 
 // Internal
 import { useBacklogsContext, useStatusContext } from '@/src/Contexts';
@@ -285,39 +285,44 @@ const BacklogDetailsView: React.FC<BacklogDetailsViewProps> = (props) => {
 
     return (
         localBacklog && (
-            <ScrollView contentContainerStyle={{ padding: 16 }}>
-                <View>
-                    <Text style={{ fontSize: 24, fontWeight: 'bold' }}>
-                        {localBacklog?.Backlog_Name || 'Backlog'}
-                    </Text>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
+            >
+                <ScrollView contentContainerStyle={{ padding: 16 }}>
+                    <View>
+                        <Text style={{ fontSize: 24, fontWeight: 'bold' }}>
+                            {localBacklog?.Backlog_Name || 'Backlog'}
+                        </Text>
 
-                    {canAccessBacklog && localBacklog && (
-                        <BacklogHeaderLinks
+                        {canAccessBacklog && localBacklog && (
+                            <BacklogHeaderLinks
+                                localBacklog={localBacklog}
+                                navigation={navigation}
+                            />
+                        )}
+                    </View>
+
+                    {localBacklog && (
+                        <BacklogDetailsEditor
                             localBacklog={localBacklog}
-                            navigation={navigation}
+                            canManageBacklog={canManageBacklog}
+                            handleBacklogInputChange={handleBacklogInputChange}
+                            handleSaveBacklogChanges={handleSaveBacklogChanges}
+                            handleDeleteBacklog={handleDeleteBacklog}
+                            handleBacklogChange={handleBacklogChange}
                         />
                     )}
-                </View>
 
-                {localBacklog && (
-                    <BacklogDetailsEditor
-                        localBacklog={localBacklog}
-                        canManageBacklog={canManageBacklog}
-                        handleBacklogInputChange={handleBacklogInputChange}
-                        handleSaveBacklogChanges={handleSaveBacklogChanges}
-                        handleDeleteBacklog={handleDeleteBacklog}
-                        handleBacklogChange={handleBacklogChange}
-                    />
-                )}
+                    {canManageBacklog && localBacklog?.statuses && (
+                        <StatusListEditor {...props} />
+                    )}
 
-                {canManageBacklog && localBacklog?.statuses && (
-                    <StatusListEditor {...props} />
-                )}
-
-                {canAccessBacklog && localBacklog?.tasks && stats && (
-                    <TaskSummaryCard stats={stats} />
-                )}
-            </ScrollView>
+                    {canAccessBacklog && localBacklog?.tasks && stats && (
+                        <TaskSummaryCard stats={stats} />
+                    )}
+                </ScrollView>
+            </KeyboardAvoidingView>
         )
     );
 };
@@ -528,7 +533,7 @@ export const StatusListEditor: React.FC<BacklogDetailsViewProps> = (props) => {
                 <Text style={styles.header}>Statuses</Text>
 
                 {/* Create new status */}
-                <View style={styles.row}>
+                <View style={[styles.row, { marginBottom: 20 }]}>
                     <TextInput
                         style={styles.input}
                         placeholder="New status"
@@ -546,17 +551,13 @@ export const StatusListEditor: React.FC<BacklogDetailsViewProps> = (props) => {
                     </TouchableOpacity>
                 </View>
 
-                <FlatList
-                    data={
-                        localBacklog.statuses
-                            // Status_Order low to high:
-                            ?.sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))
-                    }
-                    keyExtractor={(item) => String(item.Status_ID)}
-                    renderItem={({ item: status }) =>
-                        <StatusRow status={status} />
-                    }
-                />
+                <View>
+                    {localBacklog.statuses
+                        ?.sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))
+                        ?.map((status) => (
+                            <StatusRow key={status.Status_ID} status={status} />
+                        ))}
+                </View>
             </View>
         )
     );

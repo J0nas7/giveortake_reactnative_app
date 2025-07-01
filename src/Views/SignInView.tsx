@@ -1,27 +1,21 @@
-import React, { FormEvent, useEffect, useRef, useState } from "react"
+import { NavigationProp, useNavigation } from "@react-navigation/native";
+import React, { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
-    View,
+    ActivityIndicator,
+    StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
-    Keyboard,
-    StyleSheet,
-    Platform,
-    Alert,
-    ActivityIndicator
-} from "react-native"
-import { useTranslation } from "react-i18next"
-import { NavigationProp, useNavigation } from "@react-navigation/native"
+    View
+} from "react-native";
 import { Camera, CameraDevice, Code, useCameraDevices, useCodeScanner } from 'react-native-vision-camera';
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Internal
-import { useAuth } from "@/src/Hooks"
-import { MainStackParamList } from "../Types"
-import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import { useAuth } from "@/src/Hooks";
 import { faQrcode } from "@fortawesome/free-solid-svg-icons";
-import axios from "axios";
-import { env, paths } from "../env";
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import { MainStackParamList } from "../Types";
 
 export const SignInView = () => {
     const { handleLoginSubmit, handleLoginByQR } = useAuth()
@@ -29,10 +23,12 @@ export const SignInView = () => {
 
     const { t } = useTranslation(['guest'])
     const [userEmail, setUserEmail] = useState<string>(
-        __DEV__ ? 'buzz@givetake.net' : ''
+        // __DEV__ ? 'buzz@givetake.net' : ''
+        __DEV__ ? 'charlie@givetake.net' : ''
     )
     const [userPassword, setUserPassword] = useState<string>(
-        __DEV__ ? 'Lightyear' : ''
+        // __DEV__ ? 'Lightyear' : ''
+        __DEV__ ? 'password123' : ''
     )
     const [showPassword, setShowPassword] = useState<boolean>(false)
     const [loginPending, setLoginPending] = useState<boolean>(false)

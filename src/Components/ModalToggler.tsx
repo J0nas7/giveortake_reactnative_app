@@ -151,7 +151,7 @@ export const modalTogglerStyles = StyleSheet.create({
         padding: 16,
         backgroundColor: '#fff',
         position: 'absolute',
-        zIndex: 1000,
+        zIndex: 1100,
         top: 'auto',
         // bottom: 0,
 

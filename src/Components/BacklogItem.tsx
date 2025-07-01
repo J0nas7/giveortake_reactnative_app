@@ -114,7 +114,7 @@ const ProjectNavButton = ({
         >
             <FontAwesomeIcon icon={icon} size={16} style={{ marginRight: 6 }} />
             <Text style={{ fontSize: 16, color: routeId ? "#007AFF" : "#aaa" }}>
-                {label}{routeId ? `/${routeId}` : ''}
+                {label}
             </Text>
         </TouchableOpacity>
     );

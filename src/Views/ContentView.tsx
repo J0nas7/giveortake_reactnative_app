@@ -345,7 +345,6 @@ export const ContentView: React.FC = () => {
                 <SafeAreaView style={styles.container}>
                     <View style={cardStyles.cardContainer}>
                         <ActivityIndicator size="large" color="#000" />
-                        <Text>Lorem ipsum</Text>
                     </View>
                 </SafeAreaView>
             )}

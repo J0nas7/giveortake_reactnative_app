@@ -18,6 +18,14 @@ export const LoadingState: React.FC<LoadingStateType> = ({
     permitted,
     children,
 }) => {
+    if (renderItem === undefined) {
+        return (
+            <View style={styles.spinnerContainer}>
+                <ActivityIndicator size="large" color="#888" />
+            </View>
+        )
+    }
+
     if (permitted !== undefined && !permitted) {
         return (
             <View style={styles.center}>
@@ -32,14 +40,6 @@ export const LoadingState: React.FC<LoadingStateType> = ({
         return (
             <View style={styles.center}>
                 <Text style={styles.message}>{singular} not found</Text>
-            </View>
-        )
-    }
-
-    if (renderItem === undefined) {
-        return (
-            <View style={styles.spinnerContainer}>
-                <ActivityIndicator size="large" color="#888" />
             </View>
         )
     }

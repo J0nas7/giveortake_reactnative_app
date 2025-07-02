@@ -91,8 +91,6 @@ export const ProjectDetails: React.FC = () => {
         );
     };
 
-    if (!renderProject) return <Text>Loading...</Text>;
-
     return (
         <ProjectDetailsView
             project={renderProject}
@@ -123,10 +121,16 @@ type ProjectDetailsViewProps = {
 };
 
 export const ProjectDetailsView: React.FC<ProjectDetailsViewProps> = ({
-    project, showEditToggles, setShowEditToggles,
-    canAccessProject, canManageProject,
-    onFieldChange, onSave, onDelete,
-    authUser, accessibleBacklogsCount
+    project,
+    showEditToggles,
+    setShowEditToggles,
+    canAccessProject,
+    canManageProject,
+    onFieldChange,
+    onSave,
+    onDelete,
+    authUser,
+    accessibleBacklogsCount
 }) => (
     <ScrollView contentContainerStyle={styles.container}>
         <LoadingState singular="Project" renderItem={project} permitted={canAccessProject}>

@@ -23,12 +23,12 @@ export const SignInView = () => {
 
     const { t } = useTranslation(['guest'])
     const [userEmail, setUserEmail] = useState<string>(
-        // __DEV__ ? 'buzz@givetake.net' : ''
-        __DEV__ ? 'charlie@givetake.net' : ''
+        __DEV__ ? 'buzz@givetake.net' : ''
+        // __DEV__ ? 'charlie@givetake.net' : ''
     )
     const [userPassword, setUserPassword] = useState<string>(
-        // __DEV__ ? 'Lightyear' : ''
-        __DEV__ ? 'password123' : ''
+        __DEV__ ? 'Lightyear' : ''
+        // __DEV__ ? 'password123' : ''
     )
     const [showPassword, setShowPassword] = useState<boolean>(false)
     const [loginPending, setLoginPending] = useState<boolean>(false)

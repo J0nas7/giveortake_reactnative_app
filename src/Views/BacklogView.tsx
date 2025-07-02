@@ -21,15 +21,15 @@ import { TaskBulkActionMenu } from '@/src/Components/TaskBulkActionMenu';
 import { useBacklogsContext, useTasksContext } from '@/src/Contexts';
 import { LoadingState } from '@/src/Core-UI/LoadingState';
 import useRoleAccess from '@/src/Hooks/useRoleAccess';
-import { BacklogStates, Task, TaskFields } from '@/src/Types';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { BacklogStates, MainStackParamList, Task, TaskFields } from '@/src/Types';
+import { NavigationProp, useNavigation, useRoute } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { RefreshControl } from 'react-native-gesture-handler';
 
 export const BacklogPage = () => {
     // ---- Hooks ----
     const route = useRoute<any>();
-    const navigation = useNavigation();
+    const navigation = useNavigation<NavigationProp<MainStackParamList>>();
     const { t } = useTranslation(['backlog'])
     const {
         backlogById: renderBacklog,
@@ -180,6 +180,7 @@ export const BacklogPage = () => {
             currentSort={currentSort}
             currentOrder={currentOrder}
             t={t}
+            navigation={navigation}
             selectedTaskIds={selectedTaskIds}
             setSelectedTaskIds={setSelectedTaskIds}
             selectedStatusIds={selectedStatusIds}
@@ -209,6 +210,7 @@ export interface BacklogContainerViewProps {
     currentSort: string;
     currentOrder: string;
     t: TFunction
+    navigation: NavigationProp<MainStackParamList>
     selectedTaskIds: string[]
     setSelectedTaskIds: React.Dispatch<React.SetStateAction<string[]>>
     selectedStatusIds: string[]
@@ -235,6 +237,8 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
     sortedTasks,
     currentSort,
     currentOrder,
+    t,
+    navigation,
     selectedTaskIds,
     setSelectedTaskIds,
     selectedStatusIds,
@@ -273,6 +277,7 @@ export const BacklogContainerView: React.FC<BacklogContainerViewProps> = ({
             </>
         ) : renderBacklog ? (
             <RenderBacklogView
+                navigation={navigation}
                 renderBacklog={renderBacklog}
                 sortedTasks={sortedTasks}
                 selectAll={selectAll}
@@ -422,6 +427,7 @@ export const CreateTaskView: React.FC<CreateTaskViewProps> = ({
 }
 
 type RenderBacklogViewProps = {
+    navigation: NavigationProp<MainStackParamList>
     renderBacklog: BacklogStates
     sortedTasks: Task[]
     selectAll: boolean
@@ -436,6 +442,7 @@ type RenderBacklogViewProps = {
 }
 
 export const RenderBacklogView: React.FC<RenderBacklogViewProps> = ({
+    navigation,
     renderBacklog,
     sortedTasks,
     selectAll,
@@ -498,12 +505,12 @@ export const RenderBacklogView: React.FC<RenderBacklogViewProps> = ({
                         selectedStatusIds.length === 0 || selectedStatusIds.includes(task.Status_ID.toString())
                     )}
                     keyExtractor={item => (item.Task_ID ?? "").toString()}
-                    renderItem={({ item, index }) => {
+                    renderItem={({ item: task, index }) => {
                         const assignee = renderBacklog.project?.team?.user_seats?.find(
-                            (userSeat) => userSeat.user?.User_ID === item.Assigned_User_ID
+                            (userSeat) => userSeat.user?.User_ID === task.Assigned_User_ID
                         )?.user;
 
-                        const isSelected = selectedTaskIds.includes(item.Task_ID!.toString());
+                        const isSelected = selectedTaskIds.includes(task.Task_ID!.toString());
 
                         return (
                             <View style={[
@@ -521,7 +528,7 @@ export const RenderBacklogView: React.FC<RenderBacklogViewProps> = ({
                                         justifyContent: 'center',
                                         marginRight: 8
                                     }}
-                                    onPress={() => handleCheckboxChange({ target: { value: item.Task_ID } } as any)}
+                                    onPress={() => handleCheckboxChange({ target: { value: task.Task_ID } } as any)}
                                     accessibilityRole="checkbox"
                                     accessibilityState={{ checked: isSelected }}
                                 >
@@ -537,13 +544,20 @@ export const RenderBacklogView: React.FC<RenderBacklogViewProps> = ({
                                     )}
                                 </TouchableOpacity>
                                 <View>
-                                    <Text style={styles.taskKey}>
-                                        {renderBacklog.project?.Project_Key}-{item.Task_Key}
-                                    </Text>
-                                    <Text style={styles.taskTitle}>{item.Task_Title}</Text>
-                                    <Text>{renderBacklog.statuses?.find(s => s.Status_ID === item.Status_ID)?.Status_Name}</Text>
+                                    <TouchableOpacity
+                                        onPress={() => navigation.navigate(
+                                            "Task", {
+                                            projectKey: renderBacklog.project?.Project_Key ?? "",
+                                            taskKey: (task.Task_Key ?? "").toString()
+                                        }
+                                        )}
+                                    >
+                                        <Text style={styles.taskTitle}>{renderBacklog.project?.Project_Key}-{task.Task_Key}</Text>
+                                        <Text style={styles.taskTitle}>{task.Task_Title}</Text>
+                                    </TouchableOpacity>
+                                    <Text>{renderBacklog.statuses?.find(s => s.Status_ID === task.Status_ID)?.Status_Name}</Text>
                                     <Text>{assignee ? `${assignee.User_FirstName} ${assignee.User_Surname}` : "Unassigned"}</Text>
-                                    <Text>{item.Task_CreatedAt}</Text>
+                                    <Text>{task.Task_CreatedAt && new Date(task.Task_CreatedAt).toLocaleDateString()}</Text>
                                 </View>
                             </View>
                         );

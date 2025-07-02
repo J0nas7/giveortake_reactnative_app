@@ -2,7 +2,7 @@ import { BacklogItem } from '@/src/Components/BacklogItem'
 import { MainStackParamList, ProjectStates, User } from '@/src/Types'
 import { faClock, faList, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
-import { NavigationProp, useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import React from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
@@ -55,7 +55,8 @@ const ProjectNavButton = ({
     route: keyof MainStackParamList;
     routeId?: number;
 }) => {
-    const navigation = useNavigation<NavigationProp<MainStackParamList>>();
+    // const navigation = useNavigation<NavigationProp<MainStackParamList>>();
+    const navigation = useNavigation<any>();
     return (
         <TouchableOpacity
             style={{
@@ -67,7 +68,16 @@ const ProjectNavButton = ({
                 alignItems: "center",
                 marginBottom: 8
             }}
-            onPress={() => navigation.navigate(route as any, { id: routeId })}
+            onPress={() => {
+                if (route == "Time") {
+                    navigation.navigate(route, {
+                        screen: `${route}Tab`,
+                        params: { id: routeId }
+                    })
+                } else {
+                    navigation.navigate(route as any, { id: routeId })
+                }
+            }}
         >
             <FontAwesomeIcon icon={icon} size={16} style={{ marginRight: 6 }} />
             <Text style={{ fontSize: 16, color: "#007AFF" }}>{label}</Text>

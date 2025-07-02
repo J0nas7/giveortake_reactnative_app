@@ -125,7 +125,7 @@ export const TaskTimeTracksProvider: React.FC<{ children: React.ReactNode }> = (
             if (params.length > 0) url += `?${params.join('&')}`
 
             const data = await httpGetRequest(url)
-            console.log("data", params, data)
+            console.log("getTaskTimeTracksByProject result", url, data.data.length, data.data)
 
             if (!data.message) {
                 setTaskTimeTracksByProjectId(data.data)

@@ -1,7 +1,7 @@
 // External
 import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
-import { useRoute } from '@react-navigation/native'
+import { NavigationProp, useNavigation, useRoute } from '@react-navigation/native'
 import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -16,7 +16,7 @@ import {
 
 // Internal
 import { useBacklogsContext, useTasksContext } from '@/src/Contexts'
-import { BacklogStates, Task } from '@/src/Types'
+import { BacklogStates, MainStackParamList, Task } from '@/src/Types'
 
 type BacklogWithSiblingsContainerProps = {
     backlogId: number | undefined
@@ -33,6 +33,7 @@ export const BacklogWithSiblingsContainer: React.FC<BacklogWithSiblingsContainer
 }) => {
     // ---- Hooks ----
     const route = useRoute()
+    const navigation = useNavigation<NavigationProp<MainStackParamList>>();
     const { t } = useTranslation(['backlog'])
     const { readBacklogById } = useBacklogsContext()
     const { readTasksByBacklogId, addTask } = useTasksContext()
@@ -104,6 +105,7 @@ export const BacklogWithSiblingsContainer: React.FC<BacklogWithSiblingsContainer
     return (
         <BacklogWithSiblingsContainerView
             t={t}
+            navigation={navigation}
             backlog={localBacklog}
             localNewTask={localNewTask}
             setLocalNewTask={setLocalNewTask}
@@ -121,6 +123,7 @@ export const BacklogWithSiblingsContainer: React.FC<BacklogWithSiblingsContainer
 
 type BacklogWithSiblingsContainerViewProps = {
     t: (key: string) => string
+    navigation: NavigationProp<MainStackParamList>
     backlog: BacklogStates
     localNewTask: Partial<Task>
     setLocalNewTask: React.Dispatch<React.SetStateAction<Partial<Task>>>
@@ -136,6 +139,7 @@ type BacklogWithSiblingsContainerViewProps = {
 
 export const BacklogWithSiblingsContainerView: React.FC<BacklogWithSiblingsContainerViewProps> = ({
     t,
+    navigation,
     backlog,
     localNewTask,
     setLocalNewTask,
@@ -176,25 +180,27 @@ export const BacklogWithSiblingsContainerView: React.FC<BacklogWithSiblingsConta
         <FlatList
             data={sortedTasks}
             keyExtractor={(item) => item.Task_ID!.toString()}
-            renderItem={({ item: task, index }) => (
-                <View style={[
-                    styles.taskRow,
-                    // even: light gray, odd: white
-                    { backgroundColor: index % 2 === 0 ? '#f0f0f0' : '#ffffff' }
-                ]}>
-                    {showEditToggles && (
-                        <View>
+            renderItem={({ item: task, index }) => {
+                const assignee = backlog.project?.team?.user_seats?.find(
+                    (userSeat) => userSeat.user?.User_ID === task.Assigned_User_ID
+                )?.user;
+
+                const isSelected = selectedTaskIds.includes(task.Task_ID!.toString());
+
+                return (
+                    <View style={[
+                        styles.taskRow,
+                        // even: light gray, odd: white
+                        { backgroundColor: index % 2 === 0 ? '#f0f0f0' : '#ffffff' }
+                    ]}>
+                        {showEditToggles && (
                             <TouchableOpacity
                                 style={{
                                     width: 24,
                                     height: 24,
                                     borderRadius: 12,
                                     borderWidth: 2,
-                                    borderColor:
-                                        (selectedTaskIds.includes(task.Task_ID!.toString())) ?
-                                            '#007bff' :
-                                            '#b0b0b0' // darker gray than #f0f0f0
-                                    ,
+                                    borderColor: isSelected ? '#007bff' : '#b0b0b0',
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     marginRight: 8
@@ -208,10 +214,10 @@ export const BacklogWithSiblingsContainerView: React.FC<BacklogWithSiblingsConta
 
                                     if (selectAll) setSelectAll(false)
                                 }}
-                                accessibilityRole="radio"
-                                accessibilityState={{ selected: selectedTaskIds.includes(task.Task_ID!.toString()) }}
+                                accessibilityRole="checkbox"
+                                accessibilityState={{ checked: isSelected }}
                             >
-                                {(selectedTaskIds.includes(task.Task_ID!.toString())) && (
+                                {isSelected && (
                                     <View
                                         style={{
                                             width: 16,
@@ -222,26 +228,28 @@ export const BacklogWithSiblingsContainerView: React.FC<BacklogWithSiblingsConta
                                     />
                                 )}
                             </TouchableOpacity>
+                        )}
+                        <View>
+                            <TouchableOpacity
+                                onPress={() => navigation.navigate(
+                                    "Task", {
+                                    projectKey: backlog.project?.Project_Key ?? "",
+                                    taskKey: (task.Task_Key ?? "").toString()
+                                }
+                                )}
+                            >
+                                <Text style={styles.taskTitle}>{backlog.project?.Project_Key}-{task.Task_Key}</Text>
+                                <Text style={styles.taskTitle}>{task.Task_Title}</Text>
+                            </TouchableOpacity>
+                            <Text>{backlog.statuses?.find(s => s.Status_ID === task.Status_ID)?.Status_Name}</Text>
+                            <Text>{assignee ? `${assignee.User_FirstName} ${assignee.User_Surname}` : "Unassigned"}</Text>
+                            <Text>{task.Task_CreatedAt && new Date(task.Task_CreatedAt).toLocaleDateString()}</Text>
                         </View>
-                    )}
-                    <View>
-                        <Text style={styles.taskTitle}>{task.Task_Title}</Text>
-                        <Text>{backlog.statuses?.find(status => status.Status_ID === task.Status_ID)?.Status_Name}</Text>
-                        {(() => {
-                            const assignee = backlog?.project?.team?.user_seats?.find(
-                                userSeat => userSeat.User_ID === task.Assigned_User_ID
-                            )?.user
-                            return (
-                                <Text>
-                                    {assignee ? `${assignee.User_FirstName} ${assignee.User_Surname}` : "Unassigned"}
-                                </Text>
-                            )
-                        })()}
                     </View>
-                </View>
-            )}
+                )
+            }}
         />
-    </View>
+    </View >
 )
 
 const styles = StyleSheet.create({
@@ -273,5 +281,5 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 6,
     },
-    taskTitle: { fontWeight: '600' },
+    taskTitle: { fontWeight: '600', color: 'blue' },
 })

@@ -4,7 +4,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { NavigationProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
     Button,
     Dimensions,
     ScrollView,
@@ -19,8 +18,9 @@ import {
 import { useTeamsContext } from '@/src/Contexts';
 import { LoadingState } from '@/src/Core-UI/LoadingState';
 import useRoleAccess from '@/src/Hooks/useRoleAccess';
-import { selectAuthUser, useTypedSelector } from '@/src/Redux';
-import { MainStackParamList, Team, TeamFields } from '@/src/Types';
+import { AppDispatch, selectAuthUser, setSnackMessage, useTypedSelector } from '@/src/Redux';
+import { MainStackParamList, TeamFields, TeamStates } from '@/src/Types';
+import { useDispatch } from 'react-redux';
 import { ReadOnlyRow } from '../Components/ReadOnlyRow';
 import useMainViewJumbotron from '../Hooks/useMainViewJumbotron';
 
@@ -28,6 +28,7 @@ const screenWidth = Dimensions.get('window').width;
 
 export const TeamDetails: React.FC = () => {
     // Hooks
+    const dispatch = useDispatch<AppDispatch>()
     const route = useRoute();
     const navigation = useNavigation<NavigationProp<MainStackParamList>>();
     const { id: teamId } = route.params as { id: string };
@@ -44,7 +45,7 @@ export const TeamDetails: React.FC = () => {
 
     // State
     const authUser = useTypedSelector(selectAuthUser);
-    const [renderTeam, setRenderTeam] = useState<Team | undefined>(undefined);
+    const [localTeam, setLocalTeam] = useState<TeamStates>(undefined);
 
     // Effects
     useEffect(() => {
@@ -53,7 +54,7 @@ export const TeamDetails: React.FC = () => {
 
     useEffect(() => {
         if (teamById) {
-            setRenderTeam(teamById)
+            setLocalTeam(teamById)
         }
     }, [teamById]);
 
@@ -65,35 +66,31 @@ export const TeamDetails: React.FC = () => {
 
     // Methods
     const handleTeamChange = (field: TeamFields, value: string) => {
-        if (!renderTeam) return;
+        if (!localTeam) return;
 
-        setRenderTeam((prev) => ({
-            ...prev!,
+        setLocalTeam({
+            ...localTeam,
             [field]: value,
-        }));
+        });
     };
 
     const handleSaveChanges = async () => {
-        if (renderTeam) {
-            await saveTeamChanges(renderTeam, renderTeam.Organisation_ID);
-            Alert.alert('Saved', 'Team changes saved successfully!');
+        if (localTeam) {
+            await saveTeamChanges(localTeam, localTeam.Organisation_ID);
+            dispatch(setSnackMessage('Team changes saved successfully!'));
         }
     };
 
     const handleDeleteTeam = async () => {
-        if (!renderTeam || !renderTeam.Team_ID) return;
+        if (!localTeam || !localTeam.Team_ID) return;
 
-        const removed = await removeTeam(renderTeam.Team_ID, renderTeam.Organisation_ID, undefined);
-        navigation.navigate("Organisation", { id: renderTeam.Organisation_ID.toString() });
+        const removed = await removeTeam(localTeam.Team_ID, localTeam.Organisation_ID, undefined);
+        navigation.navigate("Organisation", { id: localTeam.Organisation_ID.toString() });
     };
-
-    if (!renderTeam) {
-        return <Text>Loading...</Text>;
-    }
 
     return (
         <TeamDetailsView
-            team={renderTeam}
+            team={localTeam}
             canManageTeamMembers={canManageTeamMembers}
             canModifyTeamSettings={canModifyTeamSettings}
             navigation={navigation}
@@ -106,7 +103,7 @@ export const TeamDetails: React.FC = () => {
 };
 
 type TeamDetailsViewProps = {
-    team: Team;
+    team: TeamStates;
     canManageTeamMembers: boolean | undefined
     canModifyTeamSettings: boolean | undefined
     navigation: NavigationProp<MainStackParamList>
@@ -128,85 +125,89 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
 }) => (
     <ScrollView style={styles.container} onScroll={onScroll}>
         <LoadingState singular="Team" renderItem={team} permitted={undefined}>
-            {canModifyTeamSettings ? (
-                <View style={styles.section}>
-                    {canManageTeamMembers && (
-                        <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+            {team && (
+                <>
+                    {canModifyTeamSettings ? (
+                        <View style={styles.section}>
+                            {canManageTeamMembers && (
+                                <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+                                    <TouchableOpacity
+                                        onPress={() =>
+                                            navigation.navigate("TeamRolesSeatsManager", {
+                                                id: (team.Team_ID || "").toString(),
+                                            })
+                                        }
+                                    >
+                                        <FontAwesomeIcon icon={faUsers} size={20} />
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            <Text style={styles.label}>Team Name</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={team.Team_Name}
+                                onChangeText={(text) => onChange('Team_Name', text)}
+                            />
+
+                            <Text style={styles.label}>Team Description</Text>
+                            <TextInput
+                                style={[styles.input, styles.textArea]}
+                                multiline
+                                numberOfLines={4}
+                                value={team.Team_Description}
+                                onChangeText={(text) => onChange('Team_Description', text)}
+                            />
+
+                            <View style={styles.buttonGroup}>
+                                <Button title="Save Changes" onPress={onSave} />
+                                <Button title="Delete Team" color="red" onPress={onDelete} />
+                            </View>
+
                             <TouchableOpacity
-                                onPress={() =>
-                                    navigation.navigate("TeamRolesSeatsManager", {
-                                        id: (team.Team_ID || "").toString(),
-                                    })
-                                }
+                                style={styles.linkButton}
+                                onPress={() => navigation.navigate('CreateProject', { id: (team.Team_ID ?? "").toString() })}
                             >
-                                <FontAwesomeIcon icon={faUsers} size={20} />
+                                <FontAwesomeIcon icon={faLightbulb} size={16} />
+                                <Text style={styles.linkText}> Create Project</Text>
                             </TouchableOpacity>
+                        </View>
+                    ) : (
+                        <View style={styles.section}>
+                            <ReadOnlyRow label="Team Name" value={team.Team_Name} />
+                            <ReadOnlyRow
+                                label="Team Description"
+                                value={team.Team_Description || 'No description available'}
+                            />
                         </View>
                     )}
 
-                    <Text style={styles.label}>Team Name</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={team.Team_Name}
-                        onChangeText={(text) => onChange('Team_Name', text)}
-                    />
-
-                    <Text style={styles.label}>Team Description</Text>
-                    <TextInput
-                        style={[styles.input, styles.textArea]}
-                        multiline
-                        numberOfLines={4}
-                        value={team.Team_Description}
-                        onChangeText={(text) => onChange('Team_Description', text)}
-                    />
-
-                    <View style={styles.buttonGroup}>
-                        <Button title="Save Changes" onPress={onSave} />
-                        <Button title="Delete Team" color="red" onPress={onDelete} />
+                    <View style={styles.section}>
+                        <Text style={styles.title}>Projects Overview</Text>
+                        {team.projects?.map((project) => (
+                            <View key={project.Project_ID} style={styles.card}>
+                                <Text
+                                    style={styles.link}
+                                    onPress={() =>
+                                        navigation.navigate("Project", {
+                                            id: (project.Project_ID || "").toString(),
+                                        })
+                                    }
+                                >
+                                    {project.Project_Name}
+                                </Text>
+                                <ReadOnlyRow
+                                    label="Project Description"
+                                    value={project.Project_Description || 'No description available'}
+                                />
+                                <Text>Status: {project.Project_Status}</Text>
+                                <Text>Start: {project.Project_Start_Date || 'N/A'}</Text>
+                                <Text>End: {project.Project_End_Date || 'N/A'}</Text>
+                            </View>
+                        ))}
                     </View>
-
-                    <TouchableOpacity
-                        style={styles.linkButton}
-                        onPress={() => navigation.navigate('CreateProject', { id: (team.Team_ID ?? "").toString() })}
-                    >
-                        <FontAwesomeIcon icon={faLightbulb} size={16} />
-                        <Text style={styles.linkText}> Create Project</Text>
-                    </TouchableOpacity>
-                </View>
-            ) : (
-                <View style={styles.section}>
-                    <ReadOnlyRow label="Team Name" value={team.Team_Name} />
-                    <ReadOnlyRow
-                        label="Team Description"
-                        value={team.Team_Description || 'No description available'}
-                    />
-                </View>
+                </>
             )}
-
-            <View style={styles.section}>
-                <Text style={styles.title}>Projects Overview</Text>
-                {team.projects?.map((project) => (
-                    <View key={project.Project_ID} style={styles.card}>
-                        <Text
-                            style={styles.link}
-                            onPress={() =>
-                                navigation.navigate("Project", {
-                                    id: (project.Project_ID || "").toString(),
-                                })
-                            }
-                        >
-                            {project.Project_Name}
-                        </Text>
-                        <ReadOnlyRow
-                            label="Project Description"
-                            value={project.Project_Description || 'No description available'}
-                        />
-                        <Text>Status: {project.Project_Status}</Text>
-                        <Text>Start: {project.Project_Start_Date || 'N/A'}</Text>
-                        <Text>End: {project.Project_End_Date || 'N/A'}</Text>
-                    </View>
-                ))}
-            </View>
         </LoadingState>
     </ScrollView>
 );

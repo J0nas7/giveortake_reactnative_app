@@ -84,8 +84,6 @@ export const OrganisationDetails = () => {
         // }
     };
 
-    if (!organisation) return <Text style={styles.loading}>Loading...</Text>
-
     return (
         <OrganisationDetailsView
             organisation={organisation}

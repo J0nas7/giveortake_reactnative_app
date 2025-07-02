@@ -9,7 +9,7 @@ import { PieChart } from 'react-native-chart-kit';
 
 // Internal
 import { useProjectsContext, useTaskTimeTrackContext, useTeamUserSeatsContext } from "@/src/Contexts";
-import { Project, Task, TaskTimeTrack, TeamUserSeat } from "@/src/Types";
+import { Backlog, Project, Task, TaskTimeTrack, TeamUserSeat } from "@/src/Types";
 import { SecondsToTimeDisplay } from "../Components/CreatedAtToTimeSince";
 import useMainViewJumbotron from "../Hooks/useMainViewJumbotron";
 
@@ -35,12 +35,14 @@ export const TimeTracksView = () => {
         startDate: startDateParam,
         endDate: endDateParam,
         userIds: urlUserIds,
+        backlogIds: urlBacklogIds,
         taskIds: urlTaskIds
     } = route.params as {
         id: string;
         startDate?: string;
         endDate?: string;
         userIds?: string;
+        backlogIds?: string;
         taskIds?: string;
     };
 
@@ -49,6 +51,7 @@ export const TimeTracksView = () => {
 
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
     const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
+    const [selectedBacklogIds, setSelectedBacklogIds] = useState<string[]>([])
 
 
     const [renderProject, setRenderProject] = useState<Project | undefined>();
@@ -62,26 +65,42 @@ export const TimeTracksView = () => {
         ?.flatMap((backlog) => backlog.tasks || []) || [];
 
     // Methods
-    const getPreviousWeekStartAndEnd = () => {
+    const getPreviousWeekStartAndEnd = (): { startTime: string; endTime: string } => {
         const today = new Date();
+
+        // Set time to midnight for accuracy
         today.setHours(0, 0, 0, 0);
+
+        // Get current day of the week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
         const dayOfWeek = today.getDay();
-        const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 
-        const start = new Date(today);
-        start.setDate(today.getDate() - mondayOffset - 7);
+        // Adjust so Monday is the first day of the week
+        const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // If Sunday, go back 6 days; else go back (dayOfWeek - 1)
 
-        const end = new Date(start);
-        end.setDate(start.getDate() + 6);
-        end.setHours(23, 59, 59, 0);
+        // Start of previous week (last week's Monday)
+        const startOfPreviousWeek = new Date(today);
+        startOfPreviousWeek.setDate(today.getDate() - mondayOffset - 7); // Go back 7 days from this week's Monday
 
-        const format = (date: Date) => {
-            return date.toISOString().slice(0, 19).replace("T", " ");
+        // End of previous week (last week's Sunday)
+        const endOfPreviousWeek = new Date(startOfPreviousWeek);
+        endOfPreviousWeek.setDate(startOfPreviousWeek.getDate() + 6); // Move to Sunday of that week
+        endOfPreviousWeek.setHours(23, 59, 59, 0);
+
+        // Format function to YYYY-MM-DD HH:mm:ss
+        const formatDate = (date: Date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            // return `${year}-${month}-${day}`;
         };
 
         return {
-            startTime: format(start),
-            endTime: format(end),
+            startTime: formatDate(startOfPreviousWeek),
+            endTime: formatDate(endOfPreviousWeek),
         };
     };
 
@@ -90,6 +109,23 @@ export const TimeTracksView = () => {
     const [endDate, setEndDate] = useState<string>(endDateParam || defaultEnd);
 
     // Effects
+    // Sync selected backlog IDs with URL or default to all backlogs
+    useEffect(() => {
+        if (!renderProject) return
+
+        if (urlBacklogIds) {
+            // If backlogIds exist in the URL, use them
+            const backlogIdsFromURL = urlBacklogIds ? urlBacklogIds.split(",") : [];
+            setSelectedBacklogIds(backlogIdsFromURL);
+        } else if (renderProject?.backlogs?.length) {
+            // If no backlogIds in URL, select all backlogs by default
+            const allBacklogIds = renderProject.backlogs
+                .map((backlog: Backlog) => backlog.Backlog_ID?.toString())
+                .filter((backlogId) => backlogId !== undefined) // Remove undefined values
+            setSelectedBacklogIds(allBacklogIds)
+        }
+    }, [urlBacklogIds, renderProject])
+
     useEffect(() => {
         if (urlUserIds) {
             // If userIds exist in the URL, use them
@@ -120,16 +156,21 @@ export const TimeTracksView = () => {
     }, [urlTaskIds, renderProject]);
 
     useEffect(() => {
-        if (projectId && selectedUserIds.length && selectedTaskIds.length) {
-            getTaskTimeTracksByProject(
-                parseInt(projectId),
-                startDate,
-                endDate,
-                selectedUserIds,
-                selectedTaskIds
-            );
+        const loadRenders = async () => {
+            console.log("loadRenders", selectedBacklogIds, selectedUserIds, selectedTaskIds)
+            if (selectedBacklogIds.length && selectedUserIds.length && selectedTaskIds.length) {
+                await getTaskTimeTracksByProject(
+                    parseInt(projectId),
+                    startDate,
+                    endDate,
+                    selectedBacklogIds,
+                    selectedUserIds,
+                    selectedTaskIds
+                )
+            }
         }
-    }, [projectId, selectedUserIds, selectedTaskIds, startDate, endDate]);
+        loadRenders()
+    }, [projectId, selectedBacklogIds, selectedUserIds, selectedTaskIds, startDate, endDate])
 
     useEffect(() => {
         if (projectId) {
@@ -178,7 +219,13 @@ export const TimeTracksView = () => {
     return (
         <ScrollView style={styles.timeTracksContainer}>
             <View style={styles.section}>
-                <TimeSummary timeTracks={renderTimeTracks} />
+                <Text>selectedTaskIds length {selectedTaskIds.length}</Text>
+                <Text>backlogs length {renderProject?.backlogs?.length}</Text>
+                <TimeSummary
+                    timeTracks={renderTimeTracks}
+                    startDate={startDate}
+                    endDate={endDate}
+                />
             </View>
 
             <View style={styles.section}>
@@ -257,10 +304,18 @@ const styles = StyleSheet.create({
 
 interface TimeTracksSubComponentsProps {
     timeTracks: TaskTimeTrack[] | undefined;
+    startDate?: string
+    endDate?: string
 }
 
-export const TimeSummary: React.FC<TimeTracksSubComponentsProps> = ({ timeTracks }) => {
+export const TimeSummary: React.FC<TimeTracksSubComponentsProps> = ({
+    timeTracks,
+    startDate,
+    endDate
+}) => {
     const { t } = useTranslation(['timetrack']);
+    const startDateWithoutTime = new Date(startDate ? startDate : '')
+    const endDateWithoutTime = new Date(endDate ? endDate : '')
 
     // Calculate total time tracked
     const totalTimeTracked = useMemo(() => {
@@ -281,6 +336,10 @@ export const TimeSummary: React.FC<TimeTracksSubComponentsProps> = ({ timeTracks
     return (
         <View style={timeSummaryStyles.container}>
             <View style={timeSummaryStyles.summaryBox}>
+                <Text>{timeTracks?.length} timetracks</Text>
+            </View>
+
+            <View style={timeSummaryStyles.summaryBox}>
                 <FontAwesomeIcon icon={faClock} size={24} color="#3b82f6" style={timeSummaryStyles.icon} />
                 <Text style={timeSummaryStyles.heading}>
                     {t('timetrack.timeSummary.totalTimeTracked')}
@@ -288,6 +347,10 @@ export const TimeSummary: React.FC<TimeTracksSubComponentsProps> = ({ timeTracks
                 <Text style={timeSummaryStyles.value}>
                     <SecondsToTimeDisplay totalSeconds={totalTimeTracked} />
                 </Text>
+            </View>
+
+            <View style={timeSummaryStyles.summaryBox}>
+                <Text>{startDateWithoutTime.toLocaleString()} - {endDateWithoutTime.toLocaleString()}</Text>
             </View>
 
             <View style={timeSummaryStyles.summaryBox}>

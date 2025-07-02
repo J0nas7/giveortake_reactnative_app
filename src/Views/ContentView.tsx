@@ -90,13 +90,14 @@ const DeviceIsLoggedIn = () => {
         const isNotificationsDetermined = useTypedSelector(selectIsNotificationsDetermined)
         const isNotificationsSkipped = useTypedSelector(selectIsNotificationsSkipped)
 
-        useEffect(() => {
-            if (isNotificationsDetermined === false && isNotificationsSkipped === false) {
-                navigation.navigate('NotificationsInstructionsView')
-            } else {
-                navigation.navigate('Home')
-            }
-        }, [isNotificationsDetermined, isNotificationsSkipped, navigation])
+        // useEffect(() => {
+        //     // TODO
+        //     if (isNotificationsDetermined === false && isNotificationsSkipped === false) {
+        //         navigation.navigate('NotificationsInstructionsView')
+        //     } else {
+        //         navigation.navigate('Home')
+        //     }
+        // }, [isNotificationsDetermined, isNotificationsSkipped, navigation])
 
         const MenuStackNavigator: React.FC<MenuStackProps> = ({ name, component }) => {
             const MainStack = createStackNavigator<MainStackParamList>()

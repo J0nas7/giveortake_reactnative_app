@@ -117,6 +117,8 @@ export const HeadlineJumbotron: React.FC = () => {
 
 const ParentButton: React.FC<{ currentRoute: string | null }> = ({ currentRoute }) => {
     const navigation = useNavigation<StackNavigationProp<MainStackParamList>>()
+    const state = useNavigationState(state => state);
+
     const { teamById } = useTeamsContext();
     const { projectById } = useProjectsContext();
 
@@ -155,19 +157,34 @@ const ParentButton: React.FC<{ currentRoute: string | null }> = ({ currentRoute 
 
     if (currentRoute !== "Home" && !projectById && !teamById) return null
 
+    const navigateToParent = () => {
+        if (currentRoute) {
+            if (state && navigation.canGoBack()) {
+                const routeIndex = state.index;
+                if (routeIndex > 0) {
+                    const previousRoute = state.routes[routeIndex - 1];
+
+                    if (previousRoute.name === parentRoute[currentRoute]) {
+                        navigation.goBack()
+                        console.log('Going back to:', previousRoute.name, "parent:", parentRoute[currentRoute]);
+                        return
+                    }
+                }
+            }
+
+            navigation.navigate(
+                parentRoute[currentRoute] as keyof MainStackParamList,
+                parentParems[currentRoute]
+            );
+        }
+    }
+
     return (
         <>
             {currentRoute && faParentIcons[currentRoute] && (
                 <TouchableOpacity
                     style={{ padding: 4 }}
-                    onPress={() => {
-                        if (currentRoute) {
-                            navigation.navigate(
-                                parentRoute[currentRoute] as keyof MainStackParamList,
-                                parentParems[currentRoute]
-                            );
-                        }
-                    }}
+                    onPress={navigateToParent}
                 >
                     <FontAwesomeIcon icon={faParentIcons[currentRoute]} color={'white'} size={20} />
                 </TouchableOpacity>

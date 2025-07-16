@@ -124,9 +124,9 @@ export const editorStyles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: '#f0f0f0',
         flex: 1,
         right: 0,
+        backgroundColor: '#f0f0f0',
         marginBottom: 0,
         padding: 12,
         borderRadius: 8

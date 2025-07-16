@@ -5,7 +5,7 @@ npm install:
     @react-navigation/stack
     axios
 
-    i18next react-i18next i18next-http-backend 
+    i18next react-i18next i18next-http-backend
     i18next-browser-languagedetector react-native-localize
 
     @react-native-async-storage/async-storage
@@ -20,14 +20,16 @@ npm install:
     react-native-vision-camera
     react-native-worklets-core react-native-reanimated
     react-native-pdf react-native-blob-util react-native-webview
-    
+
+    @react-native-community/datetimepicker
+
     --save-dev:
         babel-plugin-module-resolver
         @types/react-native-push-notification
 
 
-Key: 
-Team: 
+Key:
+Team:
 
 
 ## iOS repo-update:
@@ -36,7 +38,7 @@ pod install --repo-update
 
 ## Android Studio couldn't find node?
 ## Should be run from a terminal window.
-## If you are using Mac you can run Android Studio using this command in terminal. 
+## If you are using Mac you can run Android Studio using this command in terminal.
 open -a /Applications/Android\ Studio.app
 
 ## Update JavaScript bundle for Android

@@ -1,5 +1,5 @@
 // External
-import { faBuilding, faLightbulb, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faBuilding, faPlus, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { NavigationProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 
 // Internal
+import { editorStyles } from '@/src/Components/ModalToggler';
 import { useTeamsContext } from '@/src/Contexts';
 import { LoadingState } from '@/src/Core-UI/LoadingState';
 import useRoleAccess from '@/src/Hooks/useRoleAccess';
@@ -44,6 +45,7 @@ export const TeamDetails: React.FC = () => {
     })
 
     // State
+    const [showEditToggles, setShowEditToggles] = useState<boolean>(false)
     const authUser = useTypedSelector(selectAuthUser);
     const [localTeam, setLocalTeam] = useState<TeamStates>(undefined);
 
@@ -94,6 +96,8 @@ export const TeamDetails: React.FC = () => {
             canManageTeamMembers={canManageTeamMembers}
             canModifyTeamSettings={canModifyTeamSettings}
             navigation={navigation}
+            showEditToggles={showEditToggles}
+            setShowEditToggles={setShowEditToggles}
             onChange={handleTeamChange}
             onSave={handleSaveChanges}
             onDelete={handleDeleteTeam}
@@ -107,6 +111,8 @@ type TeamDetailsViewProps = {
     canManageTeamMembers: boolean | undefined
     canModifyTeamSettings: boolean | undefined
     navigation: NavigationProp<MainStackParamList>
+    showEditToggles: boolean;
+    setShowEditToggles: React.Dispatch<React.SetStateAction<boolean>>
     onChange: (field: TeamFields, value: string) => void;
     onSave: () => void;
     onDelete: () => void;
@@ -115,9 +121,11 @@ type TeamDetailsViewProps = {
 
 export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
     team,
-    navigation,
     canManageTeamMembers,
     canModifyTeamSettings,
+    navigation,
+    showEditToggles,
+    setShowEditToggles,
     onChange,
     onSave,
     onDelete,
@@ -127,10 +135,11 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
         <LoadingState singular="Team" renderItem={team} permitted={undefined}>
             {team && (
                 <>
-                    {canModifyTeamSettings ? (
-                        <View style={styles.section}>
-                            {canManageTeamMembers && (
-                                <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+                    <View style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+                        <Text style={styles.title}>{team.Team_Name}</Text>
+                        {canModifyTeamSettings && (
+                            <View style={{ display: "flex", flexDirection: "row", gap: 12 }}>
+                                {canManageTeamMembers && showEditToggles && (
                                     <TouchableOpacity
                                         onPress={() =>
                                             navigation.navigate("TeamRolesSeatsManager", {
@@ -140,23 +149,36 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                                     >
                                         <FontAwesomeIcon icon={faUsers} size={20} />
                                     </TouchableOpacity>
-                                </View>
-                            )}
+                                )}
+                                <TouchableOpacity onPress={() => setShowEditToggles(!showEditToggles)}>
+                                    <Text style={{ color: 'blue', fontSize: 16 }}>{showEditToggles ? "OK" : "Edit"}</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
 
-                            <Text style={styles.label}>Team Name</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={team.Team_Name}
-                                onChangeText={(text) => onChange('Team_Name', text)}
-                            />
+                    {canModifyTeamSettings && showEditToggles ? (
+                        <View style={styles.section}>
+                            <View style={editorStyles.formGroup}>
+                                <Text style={editorStyles.label}>Name *</Text>
+                                <TextInput
+                                    style={[inputStyle, editorStyles.formGroupItemToggler]}
+                                    placeholder="Project Name"
+                                    value={team.Team_Name}
+                                    onChangeText={(value) => onChange('Team_Name', value)}
+                                />
+                            </View>
 
-                            <Text style={styles.label}>Team Description</Text>
+                            <View style={editorStyles.formGroup}>
+                                <Text style={[editorStyles.label, { width: "100%" }]}>Description *</Text>
+                            </View>
                             <TextInput
                                 style={[styles.input, styles.textArea]}
+                                placeholder="Team Description"
+                                value={team.Team_Description}
+                                onChangeText={(value) => onChange('Team_Description', value)}
                                 multiline
                                 numberOfLines={4}
-                                value={team.Team_Description}
-                                onChangeText={(text) => onChange('Team_Description', text)}
                             />
 
                             <View style={styles.buttonGroup}>
@@ -168,44 +190,46 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
                                 style={styles.linkButton}
                                 onPress={() => navigation.navigate('CreateProject', { id: (team.Team_ID ?? "").toString() })}
                             >
-                                <FontAwesomeIcon icon={faLightbulb} size={16} />
+                                <FontAwesomeIcon icon={faPlus} size={16} style={{ marginRight: 6 }} />
                                 <Text style={styles.linkText}> Create Project</Text>
                             </TouchableOpacity>
                         </View>
                     ) : (
                         <View style={styles.section}>
-                            <ReadOnlyRow label="Team Name" value={team.Team_Name} />
+                            <ReadOnlyRow label="Name" value={team.Team_Name} />
                             <ReadOnlyRow
-                                label="Team Description"
+                                label="Description"
                                 value={team.Team_Description || 'No description available'}
                             />
                         </View>
                     )}
 
-                    <View style={styles.section}>
-                        <Text style={styles.title}>Projects Overview</Text>
-                        {team.projects?.map((project) => (
-                            <View key={project.Project_ID} style={styles.card}>
-                                <Text
-                                    style={styles.link}
-                                    onPress={() =>
-                                        navigation.navigate("Project", {
-                                            id: (project.Project_ID || "").toString(),
-                                        })
-                                    }
-                                >
-                                    {project.Project_Name}
-                                </Text>
-                                <ReadOnlyRow
-                                    label="Project Description"
-                                    value={project.Project_Description || 'No description available'}
-                                />
-                                <Text>Status: {project.Project_Status}</Text>
-                                <Text>Start: {project.Project_Start_Date || 'N/A'}</Text>
-                                <Text>End: {project.Project_End_Date || 'N/A'}</Text>
-                            </View>
-                        ))}
-                    </View>
+                    {!showEditToggles && (
+                        <View style={styles.section}>
+                            <Text style={styles.title}>Projects Overview</Text>
+                            {team.projects?.map((project) => (
+                                <View key={project.Project_ID} style={styles.card}>
+                                    <Text
+                                        style={styles.link}
+                                        onPress={() =>
+                                            navigation.navigate("Project", {
+                                                id: (project.Project_ID || "").toString(),
+                                            })
+                                        }
+                                    >
+                                        {project.Project_Name}
+                                    </Text>
+                                    <ReadOnlyRow
+                                        label="Project Description"
+                                        value={project.Project_Description || 'No description available'}
+                                    />
+                                    <Text>Status: {project.Project_Status}</Text>
+                                    <Text>Start: {project.Project_Start_Date || 'N/A'}</Text>
+                                    <Text>End: {project.Project_End_Date || 'N/A'}</Text>
+                                </View>
+                            ))}
+                        </View>
+                    )}
                 </>
             )}
         </LoadingState>
@@ -215,6 +239,7 @@ export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
 const styles = StyleSheet.create({
     container: {
         padding: 16,
+        backgroundColor: '#fff',
     },
     section: {
         marginBottom: 24,
@@ -258,13 +283,24 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
     },
     linkButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 24,
+        width: "48%",
+        backgroundColor: "#EFEFFF",
+        padding: 10,
+        borderRadius: 10,
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 8
     },
     linkText: {
-        color: '#2563eb',
         fontSize: 16,
-        marginLeft: 6,
+        color: "#007AFF"
     },
 });
+
+const inputStyle = {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12,
+};

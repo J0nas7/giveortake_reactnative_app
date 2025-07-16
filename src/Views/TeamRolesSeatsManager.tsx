@@ -1,5 +1,5 @@
 // External
-import { faChair, faChevronRight, faShield, faUser, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faChair, faChevronLeft, faChevronRight, faShield, faUser } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome'
 import { Picker } from '@react-native-picker/picker'
 import { useRoute } from '@react-navigation/native'
@@ -544,7 +544,7 @@ export const SelectedSeatForm: React.FC<SelectedSeatFormProps> = ({
                     setDisplayInviteForm("")
                     setSelectedSeat(undefined)
                 }}>
-                    <FontAwesomeIcon icon={faXmark} size={20} />
+                    <FontAwesomeIcon icon={faChevronLeft} size={20} />
                 </TouchableOpacity>
                 <Text style={editorStyles.title}>
                     {selectedSeat.user?.User_FirstName} {selectedSeat.user?.User_Surname}
@@ -713,7 +713,7 @@ export const InviteUserForm: React.FC<InviteUserFormProps> = ({
                         setDisplayInviteForm("")
                         setSelectedSeat(undefined)
                     }}>
-                        <FontAwesomeIcon icon={faXmark} size={20} />
+                        <FontAwesomeIcon icon={faChevronLeft} size={20} />
                     </TouchableOpacity>
                     <Text style={editorStyles.title}>
                         {t("team:rolesSeatsManager:searchAndInviteUser")}
@@ -904,7 +904,7 @@ const NewRoleForm: React.FC<NewRoleFormProps> = ({
             <ScrollView style={TeamRolesSeatsViewStyles.container}>
                 <View style={editorStyles.rowBetween}>
                     <TouchableOpacity onPress={() => setDisplayNewRoleForm(false)}>
-                        <FontAwesomeIcon icon={faXmark} size={20} />
+                        <FontAwesomeIcon icon={faChevronLeft} size={20} />
                     </TouchableOpacity>
                     <Text style={editorStyles.title}>
                         {t('team:rolesSeatsManager:createNewRole')}

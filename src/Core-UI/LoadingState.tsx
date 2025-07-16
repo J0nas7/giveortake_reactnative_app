@@ -58,6 +58,8 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     spinnerContainer: {
+        flex: 1,
+        height: '100%',
         alignItems: 'center',
         justifyContent: 'center',
         padding: 16,

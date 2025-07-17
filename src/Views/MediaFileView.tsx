@@ -5,7 +5,7 @@ import { Alert } from 'react-native';
 import RNBlobUtil from 'react-native-blob-util';
 
 // Internal
-import { MediaFile } from '@/src/Components/Task';
+import { MediaFile, MediaFileProps } from '@/src/Components/Task';
 import { env } from '@/src/env';
 import { useTasksContext } from '../Contexts';
 import { TaskMediaFile } from '../Types';
@@ -27,6 +27,7 @@ export const MediaFileView = () => {
     const [fileDownloaded, setFileDownloaded] = useState(false);
     const [fileUrl, setFileUrl] = useState<string>('')
     const [fileName, setFileName] = useState<string>('')
+    const [fileType, setFileType] = useState<string>('')
 
     // Methods
     const downloadFile = async () => {
@@ -116,20 +117,21 @@ export const MediaFileView = () => {
                 const { Media_File_Path, Media_File_Type } = media;
                 setFileUrl(`${env.url.API_URL}/storage/${Media_File_Path}`);
                 setFileName(media.Media_File_Name.split('-').slice(1).join('-'));
+                setFileType(media.Media_File_Type);
             }
         }
         checkFile();
     }, [media])
 
-    return (
-        <MediaFile
-            loading={loading}
-            media={media}
-            fileDownloaded={fileDownloaded}
-            fileUrl={fileUrl}
-            fileName={fileName}
-            Media_File_Type={media ? media.Media_File_Type : ""}
-            downloadFile={downloadFile}
-        />
-    )
+    const mediaFileProps: MediaFileProps = {
+        loading,
+        media,
+        fileDownloaded,
+        fileUrl,
+        fileName,
+        fileType,
+        downloadFile
+    }
+
+    return <MediaFile {...mediaFileProps} />
 }

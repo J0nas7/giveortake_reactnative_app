@@ -3,7 +3,7 @@ import { NavigationProp } from '@react-navigation/native';
 import React from 'react';
 import { FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-type KanbanBoardProps = {
+export type KanbanBoardProps = {
     backlogId: string
     backlogById: BacklogStates
     kanbanColumns: Status[] | undefined

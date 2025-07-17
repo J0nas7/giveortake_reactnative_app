@@ -4,7 +4,7 @@ import { faLightbulb } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { Button, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
-type CreateProps = {
+export type CreateProps = {
     teamById: TeamStates | undefined;
     newProject: Project;
     canModifyTeamSettings: boolean | undefined

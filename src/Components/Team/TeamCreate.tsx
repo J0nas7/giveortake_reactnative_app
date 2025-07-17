@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { NavigationProp } from '@react-navigation/native';
 import { Button, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-type TeamCreateProps = {
+export type TeamCreateProps = {
     newTeam: Team;
     organisationById: OrganisationStates
     navigation: NavigationProp<MainStackParamList>

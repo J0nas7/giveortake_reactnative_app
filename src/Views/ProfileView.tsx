@@ -1,4 +1,4 @@
-import { Profile } from '@/src/Components/Misc';
+import { Profile, ProfileProps } from '@/src/Components/Misc';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../Hooks';
@@ -15,10 +15,10 @@ export const ProfileView = () => {
         loadToken();
     }, []);
 
-    return (
-        <Profile
-            accessToken={accessToken}
-            handleLogoutSubmit={handleLogoutSubmit}
-        />
-    )
+    const profileProps: ProfileProps = {
+        accessToken,
+        handleLogoutSubmit
+    }
+
+    return <Profile {...profileProps} />
 }

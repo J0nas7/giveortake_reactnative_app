@@ -5,7 +5,7 @@ import { NavigationProp } from '@react-navigation/native'
 import React from 'react'
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
-type StartpageProps = {
+export type StartpageProps = {
     navigation: NavigationProp<MainStackParamList>
     authUser: User | undefined
     organisationsById: Organisation[]

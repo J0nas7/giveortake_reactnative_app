@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 
 // Internal
-import { ProjectCreate } from '@/src/Components/Project';
+import { CreateProps, ProjectCreate } from '@/src/Components/Project';
 import { useProjectsContext, useTeamsContext } from '@/src/Contexts';
 import useRoleAccess from '@/src/Hooks/useRoleAccess';
 import { selectAuthUser, useTypedSelector } from '@/src/Redux';
@@ -61,13 +61,13 @@ export const CreateProjectView = () => {
         navigation.navigate('Team', { id: teamId.toString() });
     };
 
-    return (
-        <ProjectCreate
-            teamById={teamById}
-            newProject={newProject}
-            canModifyTeamSettings={canModifyTeamSettings}
-            handleInputChange={handleInputChange}
-            handleCreateProject={handleCreateProject}
-        />
-    );
+    const createProps: CreateProps = {
+        teamById,
+        newProject,
+        canModifyTeamSettings,
+        handleInputChange,
+        handleCreateProject,
+    }
+
+    return <ProjectCreate {...createProps} />
 };

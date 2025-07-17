@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useState } from "react";
 // import DraggableFlatList from "react-native-draggable-flatlist";
 import { faLightbulb, faWindowRestore } from "@fortawesome/free-solid-svg-icons";
 
-import { KanbanBoard } from '@/src/Components/Backlog';
+import { KanbanBoard, KanbanBoardProps } from '@/src/Components/Backlog';
 import { useBacklogsContext, useTasksContext } from "@/src/Contexts";
 import { Backlog, MainStackParamList, Status, Task } from "@/src/Types";
 import useMainViewJumbotron from "../Hooks/useMainViewJumbotron";
@@ -75,13 +75,13 @@ export const KanbanBoardView = () => {
         await readTasksByBacklogId(parseInt(backlogId), true)
     };
 
-    return (
-        <KanbanBoard
-            backlogId={backlogId}
-            backlogById={backlogById}
-            kanbanColumns={kanbanColumns}
-            tasks={tasks}
-            navigation={navigation}
-        />
-    );
+    const kanbanBoardProps: KanbanBoardProps = {
+        backlogId,
+        backlogById,
+        kanbanColumns,
+        tasks,
+        navigation
+    }
+
+    return <KanbanBoard {...kanbanBoardProps} />
 };

@@ -3,13 +3,13 @@ import React from 'react';
 import { ActivityIndicator, Button, Dimensions, Image, StyleSheet, Text, View } from 'react-native';
 import Pdf from 'react-native-pdf';
 
-type MediaFileProps = {
+export type MediaFileProps = {
     loading: boolean
     media: TaskMediaFile | undefined
     fileDownloaded: boolean
     fileUrl: string
     fileName: string
-    Media_File_Type: string
+    fileType: string
     downloadFile: () => Promise<void>
 }
 
@@ -19,7 +19,7 @@ export const MediaFile: React.FC<MediaFileProps> = ({
     fileDownloaded,
     fileUrl,
     fileName,
-    Media_File_Type,
+    fileType,
     downloadFile
 }) => {
     // Render
@@ -49,7 +49,7 @@ export const MediaFile: React.FC<MediaFileProps> = ({
                     <Button title="Download" onPress={downloadFile} />
                 )}
             </View>
-            {Media_File_Type === 'pdf' ? (
+            {fileType === 'pdf' ? (
                 <>
                     <Pdf
                         source={{ uri: fileUrl, cache: true }}
@@ -57,10 +57,10 @@ export const MediaFile: React.FC<MediaFileProps> = ({
                         onError={(error) => console.log('PDF Error:', error)}
                     />
                 </>
-            ) : (media.Media_File_Type === "jpeg" || media.Media_File_Type === "jpg") ? (
+            ) : (fileType === "jpeg" || fileType === "jpg") ? (
                 <Image source={{ uri: fileUrl }} style={styles.image} resizeMode="contain" />
             ) : (
-                <Text>Unsupported file type: {Media_File_Type}</Text>
+                <Text>Unsupported file type: {fileType}</Text>
             )}
         </View>
     );

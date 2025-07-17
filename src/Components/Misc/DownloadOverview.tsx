@@ -14,7 +14,7 @@ export type DisplayFile = {
     projectKey?: string;
 };
 
-type OverviewProps = {
+export type OverviewProps = {
     favoriteMedia: DisplayFile | undefined
     navigation: NavigationProp<MainStackParamList>
     groupedFiles: Record<string, DisplayFile[]>

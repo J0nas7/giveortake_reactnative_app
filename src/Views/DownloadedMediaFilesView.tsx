@@ -1,4 +1,4 @@
-import { DisplayFile, DownloadOverview, downloadOverviewStyles } from '@/src/Components/Misc/DownloadOverview';
+import { DisplayFile, DownloadOverview, downloadOverviewStyles, OverviewProps } from '@/src/Components/Misc/DownloadOverview';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -141,13 +141,13 @@ export const DownloadedMediaFilesView = () => {
         loadFiles();
     }, []);
 
-    return (
-        <DownloadOverview
-            favoriteMedia={favoriteMedia}
-            navigation={navigation}
-            groupedFiles={groupedFiles}
-            renderLeftActions={renderLeftActions}
-            renderRightActions={renderRightActions}
-        />
-    );
+    const overviewProps: OverviewProps = {
+        favoriteMedia,
+        navigation,
+        groupedFiles,
+        renderLeftActions,
+        renderRightActions
+    }
+
+    return <DownloadOverview {...overviewProps} />
 };

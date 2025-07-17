@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Camera, CameraDevice, Code, useCameraDevices, useCodeScanner } from 'react-native-vision-camera';
 
 // Internal
-import { SignIn } from '@/src/Components/Auth';
+import { SignIn, SignInProps } from '@/src/Components/Auth';
 import { useAuth } from "@/src/Hooks";
 import { MainStackParamList } from "../Types";
 
@@ -74,23 +74,23 @@ export const SignInView = () => {
 
     const doScanQR = () => setDevice(devices.find((d) => d.position === "back"))
 
-    return (
-        <SignIn
-            device={device}
-            cameraRef={cameraRef}
-            codeScanner={codeScanner}
-            t={t}
-            navigation={navigation}
-            userEmail={userEmail}
-            setUserEmail={setUserEmail}
-            loginPending={loginPending}
-            setLoginPending={setLoginPending}
-            userPassword={userPassword}
-            setUserPassword={setUserPassword}
-            showPassword={showPassword}
-            setShowPassword={setShowPassword}
-            doLogin={doLogin}
-            doScanQR={doScanQR}
-        />
-    )
+    const signInProps: SignInProps = {
+        device,
+        cameraRef,
+        codeScanner,
+        t,
+        navigation,
+        userEmail,
+        setUserEmail,
+        loginPending,
+        setLoginPending,
+        userPassword,
+        setUserPassword,
+        showPassword,
+        setShowPassword,
+        doLogin,
+        doScanQR
+    }
+
+    return <SignIn {...signInProps} />
 }

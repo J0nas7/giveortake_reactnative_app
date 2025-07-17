@@ -3,7 +3,7 @@ import { NavigationProp, useFocusEffect, useNavigation } from "@react-navigation
 import React, { useCallback, useEffect } from "react"
 
 // Internal
-import { Startpage } from '@/src/Components/Auth'
+import { Startpage, StartpageProps } from '@/src/Components/Auth'
 import { useOrganisationsContext, useTeamUserSeatsContext } from "@/src/Contexts"
 import { AppDispatch, selectAuthUser, setSnackMessage, useTypedSelector } from "@/src/Redux"
 import { faUser } from "@fortawesome/free-regular-svg-icons"
@@ -53,13 +53,13 @@ export const StartpageView = () => {
         readOrganisationsByUserId(authUser.User_ID)
     }
 
-    return (
-        <Startpage
-            navigation={navigation}
-            authUser={authUser}
-            organisationsById={organisationsById}
-            approvePending={approvePending}
-            removeTeamUserSeat={removeTeamUserSeat}
-        />
-    )
+    const startpageProps: StartpageProps = {
+        navigation,
+        authUser,
+        organisationsById,
+        approvePending,
+        removeTeamUserSeat
+    }
+
+    return <Startpage {...startpageProps} />
 }

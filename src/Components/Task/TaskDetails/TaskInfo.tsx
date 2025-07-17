@@ -1,5 +1,5 @@
 import { CreatedAtToTimeSince, SecondsToTimeDisplay, TimeSpentDisplay } from '@/src/Components/CreatedAtToTimeSince';
-import { Card } from '@/src/Components/Partials/TaskDetails/TaskCard';
+import { Card } from '@/src/Components/Task/TaskDetails/TaskCard';
 import { useTasksContext, useTaskTimeTrackContext } from '@/src/Contexts';
 import { selectAuthUser, selectAuthUserTaskTimeTrack, useTypedSelector } from '@/src/Redux';
 import { Task, TaskTimeTrack } from '@/src/Types';

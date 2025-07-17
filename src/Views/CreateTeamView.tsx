@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Alert } from "react-native";
 
 // Internal
-import { TeamCreate } from '@/src/Components/Team';
+import { TeamCreate, TeamCreateProps } from '@/src/Components/Team';
 import { useOrganisationsContext, useTeamsContext } from "@/src/Contexts";
 import useRoleAccess from '@/src/Hooks/useRoleAccess';
 import { MainStackParamList, Team, TeamFields } from "@/src/Types";
@@ -56,14 +56,14 @@ export const CreateTeamView = () => {
         }
     }, [organisationById]);
 
-    return (
-        <TeamCreate
-            newTeam={newTeam}
-            organisationById={organisationById}
-            navigation={navigation}
-            canModifyOrganisationSettings={canModifyOrganisationSettings}
-            handleInputChange={handleInputChange}
-            handleCreateTeam={handleCreateTeam}
-        />
-    );
+    const teamCreateProps: TeamCreateProps = {
+        newTeam,
+        organisationById,
+        navigation,
+        canModifyOrganisationSettings,
+        handleInputChange,
+        handleCreateTeam
+    }
+
+    return <TeamCreate {...teamCreateProps} />
 };

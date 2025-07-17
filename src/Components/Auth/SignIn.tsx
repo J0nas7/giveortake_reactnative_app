@@ -5,7 +5,7 @@ import React, { Dispatch, RefObject, SetStateAction } from 'react'
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { Camera, CameraDevice, CodeScanner } from 'react-native-vision-camera'
 
-type SignInProps = {
+export type SignInProps = {
     device: CameraDevice | undefined
     cameraRef: RefObject<Camera | null>
     codeScanner: CodeScanner

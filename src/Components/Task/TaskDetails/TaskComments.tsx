@@ -6,7 +6,7 @@ import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-nativ
 
 // Internal
 import { CreatedAtToTimeSince } from '@/src/Components/CreatedAtToTimeSince';
-import { Card } from '@/src/Components/Partials/TaskDetails/TaskCard';
+import { Card } from '@/src/Components/Task/TaskDetails/TaskCard';
 import { useTaskCommentsContext, useTasksContext } from '@/src/Contexts';
 import { LoadingState } from '@/src/Core-UI/LoadingState';
 import { selectAuthUser, useTypedSelector } from '@/src/Redux';

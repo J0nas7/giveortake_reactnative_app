@@ -1,21 +1,17 @@
 // External
 import { faLightbulb, faList } from '@fortawesome/free-solid-svg-icons'
-import { NavigationProp, RouteProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
+import { RouteProp, useFocusEffect, useRoute } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { RefreshControl, ScrollView } from 'react-native-gesture-handler'
 
 // Internal
-import { BacklogWithSiblingsContainer } from '@/src/Components/BacklogWithSiblingsContainer'
-import { TaskBulkActionMenu } from '@/src/Components/TaskBulkActionMenu'
+import { Backlogs, BacklogsProps } from '@/src/Components/Backlog'
 import { useProjectsContext } from '@/src/Contexts'
-import { LoadingState } from '@/src/Core-UI/LoadingState'
 import useMainViewJumbotron from '@/src/Hooks/useMainViewJumbotron'
 import useRoleAccess from '@/src/Hooks/useRoleAccess'
 import { selectAuthUser, selectAuthUserSeatPermissions, useTypedSelector } from '@/src/Redux'
-import { MainStackParamList, ProjectStates, User } from '@/src/Types'
+import { MainStackParamList } from '@/src/Types'
 
-export const BacklogsPage = () => {
+export const BacklogsView = () => {
     // ---- Hooks ----
     const route = useRoute<RouteProp<MainStackParamList, 'Backlogs'>>();
     const {
@@ -35,7 +31,6 @@ export const BacklogsPage = () => {
         "project",
         renderProject ? renderProject.Project_ID : 0
     )
-    const navigation = useNavigation<NavigationProp<MainStackParamList>>()
 
     // ---- State ----
     const projectId = route.params.id  // Get id as projectId from route params
@@ -81,119 +76,19 @@ export const BacklogsPage = () => {
         }, [])
     )
 
-    return (
-        <BacklogsView
-            renderProject={renderProject}
-            authUser={authUser}
-            canAccessProject={canAccessProject}
-            parsedPermissions={parsedPermissions}
-            subtitle={subtitle || ''}
-            showEditToggles={showEditToggles}
-            setShowEditToggles={setShowEditToggles}
-            selectedTaskIds={selectedTaskIds}
-            setSelectedTaskIds={setSelectedTaskIds}
-            backlogsViewRefresh={backlogsViewRefresh}
-            backlogsViewRefreshing={backlogsViewRefreshing}
-        />
-    )
+    const backlogsProps: BacklogsProps = {
+        renderProject,
+        authUser,
+        canAccessProject,
+        parsedPermissions,
+        subtitle,
+        showEditToggles,
+        setShowEditToggles,
+        selectedTaskIds,
+        setSelectedTaskIds,
+        backlogsViewRefresh,
+        backlogsViewRefreshing
+    }
+
+    return <Backlogs {...backlogsProps} />
 }
-
-type BacklogsViewProps = {
-    renderProject: ProjectStates
-    authUser: User | undefined
-    canAccessProject: boolean | undefined
-    parsedPermissions: string[] | undefined
-    subtitle: string
-    showEditToggles: boolean
-    setShowEditToggles: (value: boolean) => void
-    selectedTaskIds: string[]
-    setSelectedTaskIds: React.Dispatch<React.SetStateAction<string[]>>
-    backlogsViewRefresh: () => Promise<void>
-    backlogsViewRefreshing: boolean
-}
-
-export const BacklogsView: React.FC<BacklogsViewProps> = ({
-    renderProject,
-    authUser,
-    canAccessProject,
-    parsedPermissions,
-    subtitle,
-    showEditToggles,
-    setShowEditToggles,
-    selectedTaskIds,
-    setSelectedTaskIds,
-    backlogsViewRefresh,
-    backlogsViewRefreshing
-}) => (
-    <View style={{ flex: 1, position: 'relative' }}>
-        {renderProject && (
-            <TaskBulkActionMenu
-                renderProject={renderProject}
-                selectedTaskIds={selectedTaskIds}
-                setSelectedTaskIds={setSelectedTaskIds}
-                backlogsViewRefresh={backlogsViewRefresh}
-            />
-        )}
-        <ScrollView
-            style={styles.pageContent}
-            refreshControl={
-                <RefreshControl
-                    refreshing={backlogsViewRefreshing}
-                    onRefresh={backlogsViewRefresh}
-                />
-            }
-        >
-            {!backlogsViewRefreshing && (
-                <>
-                    <TouchableOpacity onPress={() => setShowEditToggles(!showEditToggles)}>
-                        <Text style={{ color: 'blue', fontSize: 16 }}>{showEditToggles ? "OK" : "Edit"}</Text>
-                    </TouchableOpacity>
-
-                    {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
-
-                    <LoadingState
-                        singular="Project"
-                        renderItem={renderProject}
-                        permitted={canAccessProject}
-                    >
-                        {renderProject && renderProject?.backlogs?.map((backlog) => {
-                            const userHasAccess =
-                                authUser &&
-                                (renderProject.team?.organisation?.User_ID === authUser.User_ID ||
-                                    parsedPermissions?.includes(`accessBacklog.${backlog.Backlog_ID}`))
-
-                            if (!userHasAccess) return null
-
-                            return (
-                                <View style={styles.backlogItem} key={backlog.Backlog_ID}>
-                                    <BacklogWithSiblingsContainer
-                                        backlogId={backlog.Backlog_ID}
-                                        showEditToggles={showEditToggles}
-                                        selectedTaskIds={selectedTaskIds}
-                                        setSelectedTaskIds={setSelectedTaskIds}
-                                    />
-                                </View>
-                            )
-                        })}
-                    </LoadingState>
-                </>
-            )}
-        </ScrollView>
-    </View>
-)
-
-const styles = StyleSheet.create({
-    pageContent: {
-        flex: 1,
-        padding: 16
-    },
-    subtitle: {
-        fontSize: 16,
-        color: '#666',
-        textAlign: 'center',
-        marginBottom: 12,
-    },
-    backlogItem: {
-        marginBottom: 28,
-    },
-})

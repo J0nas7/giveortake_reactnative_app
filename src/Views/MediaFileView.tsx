@@ -1,13 +1,13 @@
 // External
 import { useRoute } from '@react-navigation/native';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Button, Dimensions, Image, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Alert } from 'react-native';
 import RNBlobUtil from 'react-native-blob-util';
-import Pdf from 'react-native-pdf';
 
 // Internal
+import { MediaFile } from '@/src/Components/Task';
+import { env } from '@/src/env';
 import { useTasksContext } from '../Contexts';
-import { env } from '../env';
 import { TaskMediaFile } from '../Types';
 
 export const MediaFileView = () => {
@@ -22,10 +22,11 @@ export const MediaFileView = () => {
         mediaID: string;
     };
 
-
     const [media, setMedia] = useState<TaskMediaFile | undefined>(undefined);
     const [loading, setLoading] = useState(true);
     const [fileDownloaded, setFileDownloaded] = useState(false);
+    const [fileUrl, setFileUrl] = useState<string>('')
+    const [fileName, setFileName] = useState<string>('')
 
     // Methods
     const downloadFile = async () => {
@@ -110,74 +111,25 @@ export const MediaFileView = () => {
         const checkFile = async () => {
             const exists = await checkIfFileExists();
             setFileDownloaded(exists);
+
+            if (media) {
+                const { Media_File_Path, Media_File_Type } = media;
+                setFileUrl(`${env.url.API_URL}/storage/${Media_File_Path}`);
+                setFileName(media.Media_File_Name.split('-').slice(1).join('-'));
+            }
         }
         checkFile();
     }, [media])
 
-    // Render
-    if (loading) {
-        return (
-            <View style={styles.centered}>
-                <ActivityIndicator size="large" />
-            </View>
-        );
-    }
-
-    if (!media) {
-        return (
-            <View style={styles.centered}>
-                <Text>Media not found.</Text>
-            </View>
-        );
-    }
-
-    const { Media_File_Path, Media_File_Type } = media;
-    const fileUrl = `${env.url.API_URL}/storage/${Media_File_Path}`;
-    const fileName = media.Media_File_Name.split('-').slice(1).join('-');
-
     return (
-        <View style={styles.container}>
-            <View style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 20 }}>
-                <Text style={{ textAlign: "center", fontSize: 20, marginVertical: 10 }}>{fileName}</Text>
-                {fileDownloaded ? (
-                    <Text>Downloaded</Text>
-                ) : (
-                    <Button title="Download" onPress={downloadFile} />
-                )}
-            </View>
-            {Media_File_Type === 'pdf' ? (
-                <>
-                    <Pdf
-                        source={{ uri: fileUrl, cache: true }}
-                        style={styles.pdf}
-                        onError={(error) => console.log('PDF Error:', error)}
-                    />
-                </>
-            ) : (media.Media_File_Type === "jpeg" || media.Media_File_Type === "jpg") ? (
-                <Image source={{ uri: fileUrl }} style={styles.image} resizeMode="contain" />
-            ) : (
-                <Text>Unsupported file type: {Media_File_Type}</Text>
-            )}
-        </View>
-    );
-};
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    centered: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    pdf: {
-        flex: 1,
-        width: Dimensions.get('window').width,
-    },
-    image: {
-        flex: 1,
-        width: '100%',
-    },
-});
+        <MediaFile
+            loading={loading}
+            media={media}
+            fileDownloaded={fileDownloaded}
+            fileUrl={fileUrl}
+            fileName={fileName}
+            Media_File_Type={media ? media.Media_File_Type : ""}
+            downloadFile={downloadFile}
+        />
+    )
+}

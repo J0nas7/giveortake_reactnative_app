@@ -193,3 +193,11 @@ export const modalTogglerStyles = StyleSheet.create({
     picker: { backgroundColor: '#e5e5e5', marginBottom: 12 },
     actionRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 20 }
 })
+
+export const inputStyle = {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12,
+};

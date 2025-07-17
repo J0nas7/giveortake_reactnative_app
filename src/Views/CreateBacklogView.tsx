@@ -1,14 +1,13 @@
+import { BacklogCreate, BacklogCreateProps } from '@/src/Components/Backlog';
 import { useBacklogsContext, useProjectsContext } from '@/src/Contexts';
-import { LoadingState } from '@/src/Core-UI/LoadingState';
 import useRoleAccess from '@/src/Hooks/useRoleAccess';
 import { selectAuthUser, useTypedSelector } from '@/src/Redux';
-import { Backlog, BacklogFields, MainStackParamList, ProjectStates } from '@/src/Types';
+import { Backlog, BacklogFields, MainStackParamList } from '@/src/Types';
 import { NavigationProp, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
-import { Alert, Button, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
-import { ScrollView } from 'react-native-gesture-handler';
+import { Alert } from 'react-native';
 
-export const CreateBacklog: React.FC = () => {
+export const CreateBacklogView = () => {
     // ---- Hooks ----
     const navigation = useNavigation<NavigationProp<MainStackParamList>>();
     const { readProjectById, projectById } = useProjectsContext();
@@ -68,109 +67,13 @@ export const CreateBacklog: React.FC = () => {
         navigation.navigate('Project', { id: projectId.toString(), });
     };
 
-    return (
-        <CreateBacklogView
-            projectById={projectById}
-            canManageProject={canManageProject}
-            newBacklog={newBacklog}
-            handleInputChange={handleInputChange}
-            handleCreateBacklog={handleCreateBacklog}
-        />
-    );
+    const backlogCreateProps: BacklogCreateProps = {
+        projectById,
+        canManageProject,
+        newBacklog,
+        handleInputChange,
+        handleCreateBacklog
+    }
+
+    return <BacklogCreate {...backlogCreateProps} />
 };
-
-type CreateBacklogViewProps = {
-    projectById: ProjectStates
-    canManageProject: boolean | undefined;
-    newBacklog: Backlog
-    handleInputChange: (field: BacklogFields, value: string | boolean) => void
-    handleCreateBacklog: () => Promise<void>;
-};
-
-const CreateBacklogView: React.FC<CreateBacklogViewProps> = ({
-    projectById,
-    canManageProject,
-    newBacklog,
-    handleInputChange,
-    handleCreateBacklog,
-}) => (
-    <ScrollView contentContainerStyle={styles.container}>
-        <LoadingState singular="Project" renderItem={projectById} permitted={canManageProject}>
-            <Text style={styles.heading}>Create New Backlog</Text>
-
-            <Text style={styles.label}>Backlog Name *</Text>
-            <TextInput
-                style={styles.input}
-                value={newBacklog.Backlog_Name}
-                onChangeText={(text) => handleInputChange('Backlog_Name', text)}
-            />
-
-            <Text style={styles.label}>Is Primary Backlog?</Text>
-            <Switch
-                value={newBacklog.Backlog_IsPrimary}
-                onValueChange={(val) => handleInputChange('Backlog_IsPrimary', val)}
-            />
-
-            <Text style={styles.label}>Start Date *</Text>
-            <TextInput
-                style={styles.input}
-                value={newBacklog.Backlog_StartDate}
-                onChangeText={(text) => handleInputChange('Backlog_StartDate', text)}
-                placeholder="YYYY-MM-DD"
-            />
-
-            <Text style={styles.label}>End Date</Text>
-            <TextInput
-                style={styles.input}
-                value={newBacklog.Backlog_EndDate}
-                onChangeText={(text) => handleInputChange('Backlog_EndDate', text)}
-                placeholder="YYYY-MM-DD"
-            />
-
-            <Text style={styles.label}>Backlog Description</Text>
-            <TextInput
-                style={[styles.input, styles.textArea]}
-                multiline
-                numberOfLines={5}
-                value={newBacklog.Backlog_Description}
-                onChangeText={(text) => handleInputChange('Backlog_Description', text)}
-            />
-
-            <View style={styles.buttonContainer}>
-                <Button title="Create Backlog" onPress={handleCreateBacklog} />
-            </View>
-        </LoadingState>
-    </ScrollView>
-);
-
-const styles = StyleSheet.create({
-    container: {
-        padding: 20,
-    },
-    heading: {
-        fontSize: 22,
-        fontWeight: '600',
-        marginBottom: 20,
-    },
-    label: {
-        marginTop: 12,
-        fontSize: 16,
-        fontWeight: '500',
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        padding: 10,
-        borderRadius: 6,
-        marginTop: 4,
-    },
-    textArea: {
-        height: 100,
-        textAlignVertical: 'top',
-    },
-    buttonContainer: {
-        marginTop: 20,
-    },
-});
-
-export default CreateBacklogView;

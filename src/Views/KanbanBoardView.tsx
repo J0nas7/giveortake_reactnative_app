@@ -1,26 +1,18 @@
-import { NavigationProp, RouteProp, useFocusEffect, useNavigation } from "@react-navigation/native";
+import { NavigationProp, useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import React, { useCallback, useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 // import DraggableFlatList from "react-native-draggable-flatlist";
-import { faLightbulb, faTrash, faWindowRestore } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import { faLightbulb, faWindowRestore } from "@fortawesome/free-solid-svg-icons";
 
+import { KanbanBoard } from '@/src/Components/Backlog';
 import { useBacklogsContext, useTasksContext } from "@/src/Contexts";
 import { Backlog, MainStackParamList, Status, Task } from "@/src/Types";
-import { FlatList } from "react-native-gesture-handler";
 import useMainViewJumbotron from "../Hooks/useMainViewJumbotron";
 
-type KanbanRouteProp = RouteProp<MainStackParamList, "Kanban">;
-
-type Props = {
-    route: KanbanRouteProp;
-};
-
-export const KanbanBoardView = ({ route }: Props) => {
+export const KanbanBoardView = () => {
     // Hooks
     const navigation = useNavigation<NavigationProp<MainStackParamList>>();
-    const backlogId = route.params?.id;
-    console.log("KANBAN ROUTE PARAM:", route);
+    const route = useRoute();
+    const { id: backlogId } = route.params as { id: string };
     const { backlogById, readBacklogById } = useBacklogsContext();
     const {
         tasksById,
@@ -37,8 +29,6 @@ export const KanbanBoardView = ({ route }: Props) => {
         rightIconActionRoute: "Backlog",
         rightIconActionParams: { id: ((backlogById && backlogById?.Backlog_ID) ?? "").toString() },
     })
-
-    console.log("KANBAN ROUTE PARAM:", route.params);
 
     // State
     const [backlog, setBacklog] = useState<Backlog | undefined>();
@@ -85,102 +75,13 @@ export const KanbanBoardView = ({ route }: Props) => {
         await readTasksByBacklogId(parseInt(backlogId), true)
     };
 
-    const renderTask = (task: Task, status: Status) => (
-        <TouchableOpacity
-            key={task.Task_ID}
-            style={styles.taskCard}
-            onPress={() => setTaskDetail(task)}
-        >
-            <Text style={styles.taskTitle}>{task.Task_Title}</Text>
-            <TouchableOpacity onPress={() => handleArchive(task)}>
-                <FontAwesomeIcon icon={faTrash} size={16} color="#FF3B30" />
-            </TouchableOpacity>
-        </TouchableOpacity>
-    );
-
     return (
-        <ScrollView style={styles.container}>
-            <Text style={styles.title}>Kanban Board</Text>
-            <Text style={styles.subtitle}>{backlogId} - {backlogById && backlogById.Backlog_Name}</Text>
-
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {kanbanColumns?.
-                    // Status_Order low to high:
-                    sort((a: Status, b: Status) => (a.Status_Order || 0) - (b.Status_Order || 0))
-                    .map(status => (
-                        <View key={status.Status_ID} style={styles.column}>
-                            <Text style={styles.columnTitle}>{status.Status_Name}</Text>
-                            <FlatList
-                                data={tasks.filter((t) => t.Status_ID === status.Status_ID)}
-                                keyExtractor={(item) => (item.Task_ID ?? "").toString()}
-                                renderItem={({ item }) => (
-                                    <TouchableOpacity
-                                        style={styles.taskCard}
-                                        onPress={() => navigation.navigate('Task', {
-                                            projectKey: item.backlog?.project?.Project_Key ?? "",
-                                            taskKey: (item.Task_Key ?? "").toString(),
-                                        })}
-                                    >
-                                        <Text style={styles.taskTitle}>{item.Task_Title}</Text>
-                                        {/* <TouchableOpacity onPress={() => handleArchive(item)}>
-                                        <FontAwesomeIcon icon={faTrash} size={16} color="#FF3B30" />
-                                    </TouchableOpacity> */}
-                                    </TouchableOpacity>
-                                )}
-                            /* onDragEnd={({ data }) => {
-                                 data.forEach((task) => handleMoveTask(task, status));
-                            }}*/
-                            />
-                        </View>
-                    ))
-                }
-            </ScrollView>
-        </ScrollView>
+        <KanbanBoard
+            backlogId={backlogId}
+            backlogById={backlogById}
+            kanbanColumns={kanbanColumns}
+            tasks={tasks}
+            navigation={navigation}
+        />
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        padding: 16,
-        backgroundColor: "#F9FAFB",
-    },
-    title: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        marginBottom: 4,
-    },
-    subtitle: {
-        fontSize: 16,
-        marginBottom: 16,
-    },
-    column: {
-        width: 300,
-        padding: 12,
-        marginRight: 10,
-        backgroundColor: "#fff",
-        borderRadius: 12,
-        shadowColor: "#000",
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    columnTitle: {
-        fontSize: 18,
-        fontWeight: "600",
-        marginBottom: 10,
-        color: "#333",
-    },
-    taskCard: {
-        backgroundColor: "#EFF6FF",
-        borderRadius: 8,
-        padding: 12,
-        marginBottom: 10,
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-    },
-    taskTitle: {
-        fontSize: 16,
-        color: "#1E3A8A",
-    },
-});

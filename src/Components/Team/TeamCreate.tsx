@@ -1,85 +1,11 @@
-// External
-import { faBuilding, faUsers } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
-import { NavigationProp, useNavigation, useRoute } from "@react-navigation/native";
-import React, { useEffect, useState } from "react";
-import {
-    Alert,
-    Button,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from "react-native";
-
-// Internal
-import { useOrganisationsContext, useTeamsContext } from "@/src/Contexts";
 import { LoadingState } from '@/src/Core-UI/LoadingState';
-import useRoleAccess from '@/src/Hooks/useRoleAccess';
-import { MainStackParamList, OrganisationStates, Team, TeamFields } from "@/src/Types";
+import { MainStackParamList, OrganisationStates, Team, TeamFields } from '@/src/Types';
+import { faBuilding, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { NavigationProp } from '@react-navigation/native';
+import { Button, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-export const CreateTeam = () => {
-    const navigation = useNavigation<NavigationProp<MainStackParamList>>();
-    const route = useRoute();
-    const { id: organisationId } = route.params as { id: string };
-
-    const { addTeam } = useTeamsContext();
-    const { organisationById, readOrganisationById } = useOrganisationsContext();
-    const { canModifyOrganisationSettings } = useRoleAccess(
-        organisationById ? organisationById?.User_ID : 0
-    );
-
-    const [newTeam, setNewTeam] = useState<Team>({
-        Organisation_ID: parseInt(organisationId),
-        Team_Name: "",
-        Team_Description: "",
-    });
-
-    const handleInputChange = (field: TeamFields, value: string) => {
-        setNewTeam((prev) => ({
-            ...prev,
-            [field]: value,
-        }));
-    };
-
-    const handleCreateTeam = async () => {
-        if (!organisationById) return
-        if (!newTeam.Team_Name.trim()) {
-            Alert.alert("Validation", "Please enter a team name.");
-            return;
-        }
-
-        await addTeam(parseInt(organisationId), newTeam);
-        navigation.navigate('Organisation', { id: (organisationById.Organisation_ID ?? "").toString() })
-    };
-
-    useEffect(() => {
-        if (organisationId) {
-            readOrganisationById(parseInt(organisationId));
-        }
-    }, [organisationId]);
-
-    useEffect(() => {
-        if (organisationById && !canModifyOrganisationSettings) {
-            navigation.navigate('Organisation', { id: (organisationById.Organisation_ID ?? "").toString() })
-        }
-    }, [organisationById]);
-
-    return (
-        <CreateTeamView
-            newTeam={newTeam}
-            organisationById={organisationById}
-            navigation={navigation}
-            canModifyOrganisationSettings={canModifyOrganisationSettings}
-            handleInputChange={handleInputChange}
-            handleCreateTeam={handleCreateTeam}
-        />
-    );
-};
-
-type CreateTeamViewProps = {
+type TeamCreateProps = {
     newTeam: Team;
     organisationById: OrganisationStates
     navigation: NavigationProp<MainStackParamList>
@@ -88,7 +14,7 @@ type CreateTeamViewProps = {
     handleCreateTeam: () => void;
 };
 
-export const CreateTeamView: React.FC<CreateTeamViewProps> = ({
+export const TeamCreate: React.FC<TeamCreateProps> = ({
     newTeam,
     organisationById,
     navigation,

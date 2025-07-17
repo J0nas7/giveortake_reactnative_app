@@ -1,33 +1,18 @@
 // External
-import { faBuilding, faPlus, faUsers } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faBuilding, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { NavigationProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-    Button,
-    Dimensions,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
-} from 'react-native';
 
 // Internal
-import { editorStyles } from '@/src/Components/ModalToggler';
+import { TeamDetails, TeamDetailsProps } from '@/src/Components/Team';
 import { useTeamsContext } from '@/src/Contexts';
-import { LoadingState } from '@/src/Core-UI/LoadingState';
 import useRoleAccess from '@/src/Hooks/useRoleAccess';
 import { AppDispatch, selectAuthUser, setSnackMessage, useTypedSelector } from '@/src/Redux';
 import { MainStackParamList, TeamFields, TeamStates } from '@/src/Types';
 import { useDispatch } from 'react-redux';
-import { ReadOnlyRow } from '../Components/ReadOnlyRow';
 import useMainViewJumbotron from '../Hooks/useMainViewJumbotron';
 
-const screenWidth = Dimensions.get('window').width;
-
-export const TeamDetails: React.FC = () => {
+export const TeamDetailsView = () => {
     // Hooks
     const dispatch = useDispatch<AppDispatch>()
     const route = useRoute();
@@ -90,217 +75,18 @@ export const TeamDetails: React.FC = () => {
         navigation.navigate("Organisation", { id: localTeam.Organisation_ID.toString() });
     };
 
-    return (
-        <TeamDetailsView
-            team={localTeam}
-            canManageTeamMembers={canManageTeamMembers}
-            canModifyTeamSettings={canModifyTeamSettings}
-            navigation={navigation}
-            showEditToggles={showEditToggles}
-            setShowEditToggles={setShowEditToggles}
-            onChange={handleTeamChange}
-            onSave={handleSaveChanges}
-            onDelete={handleDeleteTeam}
-            onScroll={handleScroll}
-        />
-    );
-};
+    const teamDetailsProps: TeamDetailsProps = {
+        localTeam,
+        canManageTeamMembers,
+        canModifyTeamSettings,
+        navigation,
+        showEditToggles,
+        setShowEditToggles,
+        handleTeamChange,
+        handleSaveChanges,
+        handleDeleteTeam,
+        handleScroll
+    }
 
-type TeamDetailsViewProps = {
-    team: TeamStates;
-    canManageTeamMembers: boolean | undefined
-    canModifyTeamSettings: boolean | undefined
-    navigation: NavigationProp<MainStackParamList>
-    showEditToggles: boolean;
-    setShowEditToggles: React.Dispatch<React.SetStateAction<boolean>>
-    onChange: (field: TeamFields, value: string) => void;
-    onSave: () => void;
-    onDelete: () => void;
-    onScroll?: (e: any) => void;
-};
-
-export const TeamDetailsView: React.FC<TeamDetailsViewProps> = ({
-    team,
-    canManageTeamMembers,
-    canModifyTeamSettings,
-    navigation,
-    showEditToggles,
-    setShowEditToggles,
-    onChange,
-    onSave,
-    onDelete,
-    onScroll,
-}) => (
-    <ScrollView style={styles.container} onScroll={onScroll}>
-        <LoadingState singular="Team" renderItem={team} permitted={undefined}>
-            {team && (
-                <>
-                    <View style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
-                        <Text style={styles.title}>{team.Team_Name}</Text>
-                        {canModifyTeamSettings && (
-                            <View style={{ display: "flex", flexDirection: "row", gap: 12 }}>
-                                {canManageTeamMembers && showEditToggles && (
-                                    <TouchableOpacity
-                                        onPress={() =>
-                                            navigation.navigate("TeamRolesSeatsManager", {
-                                                id: (team.Team_ID || "").toString(),
-                                            })
-                                        }
-                                    >
-                                        <FontAwesomeIcon icon={faUsers} size={20} />
-                                    </TouchableOpacity>
-                                )}
-                                <TouchableOpacity onPress={() => setShowEditToggles(!showEditToggles)}>
-                                    <Text style={{ color: 'blue', fontSize: 16 }}>{showEditToggles ? "OK" : "Edit"}</Text>
-                                </TouchableOpacity>
-                            </View>
-                        )}
-                    </View>
-
-                    {canModifyTeamSettings && showEditToggles ? (
-                        <View style={styles.section}>
-                            <View style={editorStyles.formGroup}>
-                                <Text style={editorStyles.label}>Name *</Text>
-                                <TextInput
-                                    style={[inputStyle, editorStyles.formGroupItemToggler]}
-                                    placeholder="Project Name"
-                                    value={team.Team_Name}
-                                    onChangeText={(value) => onChange('Team_Name', value)}
-                                />
-                            </View>
-
-                            <View style={editorStyles.formGroup}>
-                                <Text style={[editorStyles.label, { width: "100%" }]}>Description *</Text>
-                            </View>
-                            <TextInput
-                                style={[styles.input, styles.textArea]}
-                                placeholder="Team Description"
-                                value={team.Team_Description}
-                                onChangeText={(value) => onChange('Team_Description', value)}
-                                multiline
-                                numberOfLines={4}
-                            />
-
-                            <View style={styles.buttonGroup}>
-                                <Button title="Save Changes" onPress={onSave} />
-                                <Button title="Delete Team" color="red" onPress={onDelete} />
-                            </View>
-
-                            <TouchableOpacity
-                                style={styles.linkButton}
-                                onPress={() => navigation.navigate('CreateProject', { id: (team.Team_ID ?? "").toString() })}
-                            >
-                                <FontAwesomeIcon icon={faPlus} size={16} style={{ marginRight: 6 }} />
-                                <Text style={styles.linkText}> Create Project</Text>
-                            </TouchableOpacity>
-                        </View>
-                    ) : (
-                        <View style={styles.section}>
-                            <ReadOnlyRow label="Name" value={team.Team_Name} />
-                            <ReadOnlyRow
-                                label="Description"
-                                value={team.Team_Description || 'No description available'}
-                            />
-                        </View>
-                    )}
-
-                    {!showEditToggles && (
-                        <View style={styles.section}>
-                            <Text style={styles.title}>Projects Overview</Text>
-                            {team.projects?.map((project) => (
-                                <View key={project.Project_ID} style={styles.card}>
-                                    <Text
-                                        style={styles.link}
-                                        onPress={() =>
-                                            navigation.navigate("Project", {
-                                                id: (project.Project_ID || "").toString(),
-                                            })
-                                        }
-                                    >
-                                        {project.Project_Name}
-                                    </Text>
-                                    <ReadOnlyRow
-                                        label="Project Description"
-                                        value={project.Project_Description || 'No description available'}
-                                    />
-                                    <Text>Status: {project.Project_Status}</Text>
-                                    <Text>Start: {project.Project_Start_Date || 'N/A'}</Text>
-                                    <Text>End: {project.Project_End_Date || 'N/A'}</Text>
-                                </View>
-                            ))}
-                        </View>
-                    )}
-                </>
-            )}
-        </LoadingState>
-    </ScrollView>
-);
-
-const styles = StyleSheet.create({
-    container: {
-        padding: 16,
-        backgroundColor: '#fff',
-    },
-    section: {
-        marginBottom: 24,
-    },
-    title: {
-        fontSize: 20,
-        fontWeight: '600',
-        marginBottom: 12,
-    },
-    label: {
-        fontWeight: '500',
-        marginTop: 12,
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        padding: 10,
-        marginTop: 6,
-        borderRadius: 6,
-    },
-    textArea: {
-        height: 100,
-        textAlignVertical: 'top',
-    },
-    link: {
-        color: '#007bff',
-        marginBottom: 12,
-    },
-    card: {
-        padding: 12,
-        marginBottom: 16,
-        backgroundColor: '#f9f9f9',
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#ddd',
-    },
-    buttonGroup: {
-        marginTop: 20,
-        marginBottom: 16,
-        flexDirection: "row",
-        justifyContent: "space-between",
-    },
-    linkButton: {
-        width: "48%",
-        backgroundColor: "#EFEFFF",
-        padding: 10,
-        borderRadius: 10,
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: 8
-    },
-    linkText: {
-        fontSize: 16,
-        color: "#007AFF"
-    },
-});
-
-const inputStyle = {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 12,
+    return <TeamDetails {...teamDetailsProps} />
 };
